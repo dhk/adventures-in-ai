@@ -1,6 +1,7 @@
 # adventures-in-ai
 Idle curiosities and experiments with AI tooling
 
+## Is the US The Greatest Democracy in the World
 This is a tongue-in-cheek analysis of comparing 8 nations each of whom is somehow a democracy comparable to the USA.
 
 The idea is to see how each nation scores compared the USA. 
