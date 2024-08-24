@@ -16,7 +16,7 @@ Disclaimer:
 3. MIT license for you to take and adapt as you see fit. 
 4. the weighting algorithms are truly scary. 
 
-Observation
+Observations
 1. Claude does a good job of generating very journeyman code
 2. whenever you're looking at an analysis that claims to be weighted, or be representative of a population, make sure you undesrtand the basis of that weighting.
 3. Bias is everywhere
