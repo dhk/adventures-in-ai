@@ -10,7 +10,7 @@ The motivation for this was twofold
 * a line from a recent political speech
 * my desire to see how well claude/colab/github would play together 
 
-Disclaimer:
+Disclaimers
 1. there's no verification of input data
 2. enjoy at your own risk
 3. MIT license for you to take and adapt as you see fit. 
@@ -20,3 +20,5 @@ Observations
 1. Claude does a good job of generating very journeyman code
 2. whenever you're looking at an analysis that claims to be weighted, or be representative of a population, make sure you undesrtand the basis of that weighting.
 3. Bias is everywhere
+
+Want to argue with me/discuss this/talk about what you think? Sure, love to. https://tidycal.com/davehk/30-minute-coffee	
