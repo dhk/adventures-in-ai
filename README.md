@@ -17,4 +17,5 @@ Disclaimer:
 
 Observation
 1. Claude does a good job of generating very journeyman code
-2. whenever you're lookign at an analysis that calism to be weighted, or representative of a population, make sure you udnerstand the basis of that weighting   
+2. whenever you're looking at an analysis that claims to be weighted, or be representative of a population, make sure you undesrtand the basis of that weighting.
+3. Bias is everywhere
