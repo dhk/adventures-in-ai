@@ -1,4 +1,4 @@
-# Is the US The Greatest Democracy in the World
+# Is the US The Greatest Democracy in the World?
 This is a tongue-in-cheek analysis of comparing 8 nations each of whom is somehow a democracy comparable to the USA.
 
 The idea is to see how each nation scores compared the USA.
@@ -25,7 +25,9 @@ the [claude conversation log](user-instructions-summary.md). What I typed in to 
 
 
 ## To-Dos
-[] Covert the code to ordinary python+pandas; add commits to track evolution
+- [] Covert the code to ordinary python+pandas; add commits to track evolution
+- [] Add in the section about why those countries were chosen as democracies
+- [] Add in Ireland, since I can't be parochial about NZ, the land of my birth if I'm not parochial about Ireland, the land of mny parents')
 
 ## Do you have feedback?
 Want to argue with me/discuss this/talk about what you think? Sure, love to. https://tidycal.com/davehk/30-minute-coffeeuser-
