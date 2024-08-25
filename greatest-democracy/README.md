@@ -17,12 +17,14 @@ the [claude conversation log](user-instructions-summary.md). What I typed in to 
 3. MIT license for you to take and adapt as you see fit.
 4. the weighting algorithms are truly scary.
 
-## Observations
+## Observations & Notes
 1. Claude does a good job of generating very journeyman code
 1. whenever you're looking at an analysis that claims to be weighted, or be representative of a population, make sure you undesrtand the basis of that weighting.
 1. Bias is everywhere (lol)
 1. there's a non-trivial use case here: gather some real world data and fashion it for me
 1. Not having to do the labor of assembling the code makes it way faster for me to iterate on my ideas. This is very much what EDA tools like Tableau espouse
+1. reams of bar charts is just a bad idea. Get things in one place
+1. avoid overloading stats by not normalizing
 
 
 ## To-Dos
