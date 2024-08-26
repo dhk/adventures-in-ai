@@ -1,0 +1,15 @@
+// manifest.json
+{
+  "manifest_version": 2,
+  "name": "Server Location Finder",
+  "version": "1.0",
+  "description": "Identifies the physical location of a website's server",
+  "permissions": [
+    "activeTab",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "browser_action": {
+    "default_popup": "popup.html"
+  }
+}
