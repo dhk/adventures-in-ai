@@ -1,3 +1,6 @@
+# What does this do?
+Provides a Chrome browswer-extension that shows you the location of the web server that your page is currently pointing at
+
 # What's this all about?
 I wanted to experience the process of generating an app in a language & framework with which I'm unfamiliar. I've never created a browswer extension before although I've used JavaScript extensively in the past.
 
