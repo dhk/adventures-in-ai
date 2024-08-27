@@ -22,8 +22,8 @@ Along the way I'll include working code examples, because argument without evide
 
 * Turn the Projects list into a table
     * what's problem statement
-    * inks to code
-    * ationale for using AI
-    * iscoveries & observations along the way
+    * links to code
+    * rationale for using AI
+    * discoveries & observations along the way
 
 
