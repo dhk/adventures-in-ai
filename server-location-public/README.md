@@ -3,6 +3,7 @@ The original project is [found here](../server-location/README.md) and offers a 
 
 I decided to go full-circle; and see if I could get this code published as a Chrome Store extension
 
+![image](https://github.com/user-attachments/assets/68014592-2c87-4a76-b229-43c941511f9b)
 
 
 Caveats
