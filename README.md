@@ -11,7 +11,7 @@ Along the way I'll include working code examples, because argument without evide
 
 ## Projects
 * evaluating "The Greatest Democracy in the World" on a number of different dimensions [link here](greatest-democracy/README.md)
-* creating a browswer-extension to identify the location of a web server
+* [creating a browswer-extension](server-location/README.md) to identify the location of a web server
 * thinking about how RFM can be applied to a variety of use cases beyond the traditional customer segmentation
 * using wordcloud to let you see similarities & differences between
     * your LinkedIn profile
