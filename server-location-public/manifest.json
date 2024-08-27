@@ -1,0 +1,19 @@
+{
+    "manifest_version": 3,
+    "name": "Server Location Finder",
+    "version": "1.2",
+    "description": "Identifies the physical location of a website's server",
+    "permissions": [
+      "activeTab"
+    ],
+    "host_permissions": [
+      "http://ip-api.com/*"
+    ],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": "ramen-goblin-128.png"
+    },
+    "icons": {
+      "128": "ramen-goblin-128.png"
+    }
+  }
