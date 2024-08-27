@@ -1,5 +1,9 @@
 # Experiments in AI: Google-worthy code
+The original project is [found here](../server-location/README.md) and offers a browswer-bar popup showing you the server location of a page you're currently on.
+
 I decided to go full-circle; and see if I could get this code published as a Chrome Store extension
+
+
 
 Caveats
 * I had to used [imresizer.com](https://imresizer.com/) to create the correctly sized icons
