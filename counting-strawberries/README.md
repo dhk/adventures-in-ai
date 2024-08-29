@@ -1,7 +1,7 @@
 # Situation: Asking LLMs to answer the question `how many Rs in the word "strawberry"` gives a variety of inconsistent answers.
 
 ## Background
-This investigation takes inspiration from [this article][(how many Rs in the word "strawberry"](https://hammadulhaq.medium.com/the-curious-case-of-spelling-strawberry-401cb7d5b100) and I draw some conclusions and offer advice to tech & business leaders
+This investigation takes inspiration from [this article](how many Rs in the word "strawberry"](https://hammadulhaq.medium.com/the-curious-case-of-spelling-strawberry-401cb7d5b100) and I draw some conclusions and offer advice to tech & business leaders
 
 
 ## Key Takeaways
