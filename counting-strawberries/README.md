@@ -1,7 +1,14 @@
 # Situation: Asking LLMs to answer the question `how many Rs in the word "strawberry"` gives a variety of inconsistent answers.
 
 ## Background
-This investigation takes inspiration from [this article](how many Rs in the word "strawberry"](https://hammadulhaq.medium.com/the-curious-case-of-spelling-strawberry-401cb7d5b100) and I draw some conclusions and offer advice to tech & business leaders
+This investigation takes inspiration from [this article](https://hammadulhaq.medium.com/the-curious-case-of-spelling-strawberry-401cb7d5b100) and I draw some conclusions and offer advice to tech & business leaders.
+
+It seems a very straightforward question:
+>how many Rs in the word "strawberry"
+
+Your answer should be 0 or 3. It's zero if you insist that the letter "R" is different from the letter "r"
+
+However, and contrary to ordinary expectations, LLMs give us varying answers of 1, 2 and 3
 
 
 ## Key Takeaways
