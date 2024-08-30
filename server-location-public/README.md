@@ -11,7 +11,10 @@ I decided to go full-circle; and see if I could get this code published as a Chr
 * I had to ask Claude to change the manifest version from V.2 to V.3. This is probably beause the version changed since Claude last Learned
 * After a couple of iterations with the review team, the app was accepted for publication and is available in the Chrome Store
 
-## Where to find it.
-The app is available in the [Chrome Web store](chrome://extensions/?id=makphdkahgmkhdjjicjngcoghbclnmom), for Chrome only.
+## Where to find it
+The app is available in the [Chrome Web store](chrome://extensions/?id=makphdkahgmkhdjjicjngcoghbclnmom).
 
 Alternatively, search for "Server Location Finder"
+
+![image](https://github.com/user-attachments/assets/da3e46ae-130a-4a5d-bf0a-91e1ee600a56)
+
