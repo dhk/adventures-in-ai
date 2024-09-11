@@ -14,7 +14,7 @@ Trent, please meet Mike. Here are each person's LinkedIn profiles
 ---
 Some weeks, I write a variation of that note dozens of times.
 
-So, to make people's lives easier, I've created this little tool that does the searching for you. [You can find it here](./index.html).
+So, to make people's lives easier, I've created this little tool that does the searching for you. [You can find it here](https://dhkconsulting.com/ai-adventures/index.html).
 
 # Where does AI come into this?
 
