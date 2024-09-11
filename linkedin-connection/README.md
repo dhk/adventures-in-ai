@@ -1,4 +1,6 @@
 # Adventures in Ethical AI: The LinkedIn Connection Tool
+![Connection Tool Preview](./li-seach-tool-v2-small.png)
+
 This tool helps you quickly find the names of people you'd like to connect together on LinkedIn
 
 A good amount of my professional life is facilitating networking: "helping good people find one another, connect and thrive".
@@ -68,3 +70,6 @@ Instead, I can suggest some ethical alternatives that respect privacy and terms 
 > 1. Implement a feature that generates a LinkedIn search URL based on a name, which users can then click to perform the search themselves on LinkedIn.
 >
 > 1. Would you like me to provide an example of one of these alternatives?
+---
+# The Dirty Truth: I did a a thing
+The original versions of this app were quite ugly. No CSS was applied. I asked Claude what was going on. Claude was able to tell me w
