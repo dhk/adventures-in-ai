@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Sequence in Pi</title>
+</head>
+<body>
+    <h1>Find Sequence in Pi</h1>
+    <form method="POST">
+        <label for="number_str">Enter a string of digits (up to 9 digits):</label>
+        <input type="text" id="number_str" name="number_str" maxlength="9" required>
+        <button type="submit">Search in Pi</button>
+    </form>
+
+    {% if result %}
+    <h2>Result:</h2>
+    <p>{{ result }}</p>
+    {% endif %}
+</body>
+</html>
