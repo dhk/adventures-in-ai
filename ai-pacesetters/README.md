@@ -11,7 +11,7 @@ The data are provided in two formats - Markdown, for easy visualziation; and as 
 [Supporting Data, in CSV format](./ai-pacesetters.csv)
 
 ## Data with Outstrip Factor
-![AI Pacesetters with Outstrip Factor Table(ai-pacesetters-with-outstrip-factor.png)
+![AI Pacesetters with Outstrip Factor Table](ai-pacesetters-with-outstrip-factor.png)
 
 [Supporting Data, in Markdown format](./ai-pacesetters-with-outstrip-factor.md)
 
