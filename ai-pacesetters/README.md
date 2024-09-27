@@ -16,3 +16,5 @@ The data are provided in two formats - Markdown, for easy visualziation; and as 
 [Supporting Data, in Markdown format](./ai-pacesetters-with-outstrip-factor.md)
 
 [Supporting Data, in CSV format](./ai-pacesetters-with-outstrip-factor.csv)
+
+---
