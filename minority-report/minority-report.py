@@ -1,29 +1,28 @@
 from flask import Flask, render_template, request
-import openai
+from openai import OpenAI
+
+client = OpenAI(api_key='YOUR_OPENAI_API_KEY')
 import anthropic  # Assuming Claude's API client is available
 
 app = Flask(__name__)
 
 # Set up API keys for OpenAI and Claude
-openai.api_key = 'YOUR_OPENAI_API_KEY'
 claude_client = anthropic.Client(api_key='YOUR_CLAUDE_API_KEY')
 # For Gemini, you would add a similar setup
 
 # Define functions to query each API
 def get_chatgpt_response(question):
-    response = openai.Completion.create(
-        model="gpt-4",
-        prompt=question,
-        max_tokens=100
-    )
-    return response['choices'][0]['text']
+    response = client.completions.create(model="gpt-4",
+    prompt=question,
+    max_tokens=100)
+    return response.choices[0].text
 
 def get_claude_response(question):
     response = claude_client.completion(
         prompt=question,
         max_tokens_to_sample=100
     )
-    return response['completion']
+    return response.completion
 
 # This is a placeholder for the Gemini API function
 def get_gemini_response(question):
