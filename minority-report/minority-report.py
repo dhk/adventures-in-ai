@@ -1,6 +1,14 @@
 from flask import Flask, render_template, request
 from openai import OpenAI
 
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv()
+openai_api_key = os.getenv('OPENAI_API_KEY')
+claude_api_key = os.getenv('CLAUDE_API_KEY')
+
 client = OpenAI(api_key='YOUR_OPENAI_API_KEY')
 import anthropic  # Assuming Claude's API client is available
 
