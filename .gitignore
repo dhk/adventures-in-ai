@@ -19,7 +19,7 @@ lib64/
 parts/
 sdist/
 var/
-wheels/
+Bwheels/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -161,3 +161,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 .DS_Store
+
+# DHK random adds
+node_modules/
