@@ -65,7 +65,32 @@ module.exports = {
         'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
         'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+            color: 'inherit',
+            a: {
+              color: '#2c5aa0',
+              '&:hover': {
+                color: '#1e4080',
+              },
+            },
+            strong: {
+              color: 'inherit',
+            },
+            code: {
+              color: 'inherit',
+              backgroundColor: '#f5f5f5',
+              padding: '0.2em 0.4em',
+              borderRadius: '4px',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 } 
