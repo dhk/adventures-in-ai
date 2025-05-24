@@ -2,20 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply antialiased;
+  }
+
+  h1 {
+    @apply text-4xl font-extrabold text-primary tracking-tight;
+  }
+
+  h2 {
+    @apply text-3xl font-bold text-primary;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold text-text-dark;
+  }
+
+  h4 {
+    @apply text-xl font-semibold text-text-dark;
+  }
+
+  p {
+    @apply text-base text-text-dark leading-relaxed;
+  }
+}
+
+@layer components {
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+
+  .section-header {
+    @apply bg-accent text-white text-sm font-bold px-sm py-xs rounded-sm uppercase tracking-wider inline-block mb-sm;
+  }
+
+  .hero-section {
+    @apply bg-gradient-to-br from-primary to-secondary text-white py-3xl text-center;
+  }
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground-rgb: 255, 255, 255;
+    --background-rgb: 0, 0, 0;
   }
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
 }

@@ -47,3 +47,7 @@ next-env.d.ts
 # lib directory
 !src/lib/
 !src/lib/*
+
+# documentation
+/docs/
+docs/

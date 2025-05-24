@@ -1,0 +1,327 @@
+/* Dave Holmes-Kinsella Brand CSS */
+/* Based on brand document visual design */
+
+:root {
+  /* Color Palette */
+  --primary-blue: #2c5aa0;
+  --secondary-blue: #1e4080;
+  --accent-green: #4CAF50;
+  --bright-green: #66BB6A;
+  --light-green: #81C784;
+  --dark-text: #2c2c2c;
+  --medium-text: #555555;
+  --light-text: #777777;
+  --white: #ffffff;
+  --light-gray: #f5f5f5;
+  --medium-gray: #e0e0e0;
+  
+  /* Typography Scale */
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem;  /* 36px */
+  --font-size-5xl: 3rem;     /* 48px */
+  
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
+  --spacing-2xl: 3rem;     /* 48px */
+  --spacing-3xl: 4rem;     /* 64px */
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 50%;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Base Typography */
+body {
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.6;
+  color: var(--dark-text);
+  background-color: var(--white);
+}
+
+/* Headings */
+h1, .h1 {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.2;
+  color: var(--primary-blue);
+  margin: 0 0 var(--spacing-lg) 0;
+  letter-spacing: -0.025em;
+}
+
+h2, .h2 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
+  color: var(--primary-blue);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+h3, .h3 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  color: var(--dark-text);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+h4, .h4 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  color: var(--dark-text);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+/* Section Headers (like WHY, HOW, WHAT) */
+.section-header {
+  background-color: var(--accent-green);
+  color: var(--white);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Body Text */
+p, .body-text {
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--dark-text);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.body-text-large {
+  font-size: var(--font-size-lg);
+  line-height: 1.6;
+  color: var(--dark-text);
+}
+
+.body-text-small {
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--medium-text);
+}
+
+/* Brand Colors */
+.text-primary { color: var(--primary-blue); }
+.text-secondary { color: var(--secondary-blue); }
+.text-accent { color: var(--accent-green); }
+.text-white { color: var(--white); }
+.text-muted { color: var(--light-text); }
+
+.bg-primary { background-color: var(--primary-blue); }
+.bg-secondary { background-color: var(--secondary-blue); }
+.bg-accent { background-color: var(--accent-green); }
+.bg-light { background-color: var(--light-gray); }
+.bg-white { background-color: var(--white); }
+
+/* Layout Components */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.hero-section {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  color: var(--white);
+  padding: var(--spacing-3xl) 0;
+  text-align: center;
+}
+
+.hero-section h1 {
+  color: var(--white);
+  font-size: var(--font-size-5xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Profile/Avatar Styles */
+.profile-image {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  border: 4px solid var(--white);
+  box-shadow: var(--shadow-lg);
+  object-fit: cover;
+}
+
+/* Golden Circle Layout */
+.golden-circle-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin: var(--spacing-2xl) 0;
+}
+
+.golden-circle-item {
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.golden-circle-why {
+  background-color: var(--primary-blue);
+  color: var(--white);
+}
+
+.golden-circle-how {
+  background-color: var(--accent-green);
+  color: var(--white);
+}
+
+.golden-circle-what {
+  background-color: var(--bright-green);
+  color: var(--white);
+}
+
+/* Tag/Label Styles */
+.tag {
+  display: inline-block;
+  background-color: var(--light-green);
+  color: var(--white);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin: var(--spacing-xs);
+}
+
+/* Icon Styles */
+.icon {
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.icon-large {
+  width: 48px;
+  height: 48px;
+}
+
+/* Strength Cards */
+.strength-card {
+  background: var(--accent-green);
+  color: var(--white);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  margin: var(--spacing-md);
+}
+
+.strength-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--spacing-md) auto;
+  fill: var(--white);
+}
+
+/* Quote/Highlight Styles */
+.quote {
+  font-size: var(--font-size-lg);
+  font-style: italic;
+  color: var(--medium-text);
+  border-left: 4px solid var(--accent-green);
+  padding-left: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+}
+
+.highlight {
+  background-color: var(--accent-green);
+  color: var(--white);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+/* LinkedIn Handle Style */
+.linkedin-handle {
+  font-family: 'Courier New', monospace;
+  color: var(--primary-blue);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: var(--font-size-3xl);
+  }
+  
+  .golden-circle-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .card {
+    padding: var(--spacing-lg);
+  }
+  
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+}
+
+/* Utility Classes */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.font-bold { font-weight: var(--font-weight-bold); }
+.font-semibold { font-weight: var(--font-weight-semibold); }
+.font-medium { font-weight: var(--font-weight-medium); }
+
+.uppercase { text-transform: uppercase; }
+.capitalize { text-transform: capitalize; }
+
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
+
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mt-xl { margin-top: var(--spacing-xl); }
+
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }

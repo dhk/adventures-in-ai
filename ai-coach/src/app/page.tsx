@@ -49,30 +49,44 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-8 bg-gradient-to-br from-blue-500 to-purple-600">
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold mb-8 text-center">OpenAI Test</h1>
-        
-        <button
-          onClick={testOpenAI}
-          disabled={loading}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4"
-        >
-          {loading ? 'Testing...' : 'Test OpenAI Connection'}
-        </button>
+    <main>
+      <div className="hero-section bg-gradient-to-br from-primary to-secondary py-3xl">
+        <div className="container mx-auto px-md text-center">
+          <h1 className="text-5xl font-extrabold text-white mb-lg tracking-tight">
+            AI Coach
+          </h1>
+          <p className="text-lg text-white/90 mb-xl max-w-2xl mx-auto">
+            Your personal AI life coach, powered by advanced language models to help you achieve your goals.
+          </p>
+        </div>
+      </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-            Error: {error}
-          </div>
-        )}
+      <div className="container mx-auto px-md py-2xl">
+        <div className="card bg-white rounded-lg shadow-md p-xl max-w-2xl mx-auto">
+          <h2 className="text-2xl font-bold text-primary mb-lg">Test Connection</h2>
+          
+          <button
+            onClick={testOpenAI}
+            disabled={loading}
+            className="w-full bg-accent hover:bg-accent-bright text-white font-semibold py-md px-lg rounded-md disabled:opacity-50 disabled:cursor-not-allowed mb-md transition-colors duration-200"
+          >
+            {loading ? 'Testing...' : 'Test OpenAI Connection'}
+          </button>
 
-        {response && (
-          <div className="p-4 bg-green-100 rounded-lg">
-            <h2 className="font-semibold mb-2">Response:</h2>
-            <p className="whitespace-pre-wrap">{response}</p>
-          </div>
-        )}
+          {error && (
+            <div className="mb-md p-md bg-red-100 text-red-700 rounded-md">
+              <h3 className="font-semibold mb-xs">Error</h3>
+              <p>{error}</p>
+            </div>
+          )}
+
+          {response && (
+            <div className="p-md bg-gray-light rounded-md">
+              <h3 className="font-semibold text-primary mb-xs">Response:</h3>
+              <p className="whitespace-pre-wrap text-text-dark">{response}</p>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );
