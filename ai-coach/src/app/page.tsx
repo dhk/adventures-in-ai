@@ -64,17 +64,19 @@ export default function Home() {
     };
 
     try {
-      const result = await fetch('/api/chat', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: inputMessage }],
-        }),
+        body: JSON.stringify({ messages: [newUserMessage] }),
       });
 
-      const data: ChatResponse = await result.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: ChatResponse = await response.json();
       
       if (data.error) {
         throw new Error(data.error);
@@ -90,7 +92,7 @@ export default function Home() {
       setQuestionCount(prev => prev + 1);
       setInputMessage('');
     } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+      setError(err.message || 'An error occurred while sending your message.');
       console.error('Error sending message:', err);
     } finally {
       setLoading(false);

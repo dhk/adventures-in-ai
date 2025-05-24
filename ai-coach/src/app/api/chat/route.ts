@@ -1,54 +1,57 @@
-import { NextResponse } from 'next/server';
-import openai, { config } from '@/lib/openai';
+import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
+import { rateLimit, getRateLimitHeaders, createRateLimitResponse } from '@/lib/rateLimit';
 
-// Debug log for environment variable
-console.log('API Key exists:', !!process.env.OPENAI_API_KEY);
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-export async function POST(req: Request) {
+// Rate limit configuration
+const RATE_LIMIT_CONFIG = {
+  tokensPerInterval: 20,    // 20 requests
+  interval: 3600 * 1000,    // per hour (in milliseconds)
+};
+
+export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
+    const body = await req.json();
+    const { messages } = body;
 
-    if (!config.apiKey) {
-      console.error('OpenAI API key is missing');
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured in environment' },
-        { status: 500 }
-      );
-    }
-
-    // Validate messages format
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json(
-        { error: 'Invalid messages format' },
-        { status: 400 }
+    if (!messages) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Messages are required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     const completion = await openai.chat.completions.create({
-      model: config.model,
-      messages: [
-        {
-          role: 'system',
-          content: config.systemMessage
-        },
-        ...messages
-      ],
-      temperature: config.temperature,
-      max_tokens: config.maxTokens,
+      model: 'gpt-3.5-turbo',
+      messages,
+      temperature: 0.7,
+      max_tokens: 500,
     });
 
-    return NextResponse.json({
-      message: completion.choices[0].message.content
-    });
+    return new NextResponse(
+      JSON.stringify({ message: completion.choices[0].message }),
+      { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
   } catch (error: any) {
-    console.error('OpenAI API error:', error);
-    return NextResponse.json(
+    console.error('Error in chat API:', error);
+    
+    return new NextResponse(
+      JSON.stringify({
+        error: 'Internal Server Error',
+        details: error.message
+      }),
       { 
-        error: error?.message || 'An error occurred during your request.',
-        details: error?.response?.data || error
-      },
-      { status: 500 }
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
   }
 } 
