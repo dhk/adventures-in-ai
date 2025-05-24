@@ -1,22 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Coach
 
-## Getting Started
+A Next.js application that provides AI-powered life coaching using OpenAI's GPT models.
 
-First, run the development server:
+## Setup
+
+1. Clone the repository
+2. Install dependencies:
+```bash
+npm install
+```
+
+## Environment Variables
+
+The application requires an OpenAI API key to function. The key should be available in your environment as `OPENAI_API_KEY`. 
+
+There are two ways to provide this:
+1. Set it in your shell environment (recommended for development)
+2. Create a `.env.local` file with the key (for deployment)
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   │   └── chat/         # OpenAI chat endpoint
+│   │   └── layout.tsx    # Root layout
+│   └── layout.tsx        # Root layout
+└── lib/                   # Shared libraries
+    └── openai.ts         # OpenAI configuration and client
+```
+
+## OpenAI Integration
+
+The OpenAI integration is configured in `src/lib/openai.ts`. Key configuration options:
+
+- Model: gpt-3.5-turbo
+- Max Tokens: 500
+- Temperature: 0.7
+
+The system message sets the AI to act as a professional life coach.
+
+### API Endpoints
+
+#### POST /api/chat
+
+Accepts chat messages and returns AI responses.
+
+Request body:
+```json
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Your message here"
+    }
+  ]
+}
+```
+
+Response:
+```json
+{
+  "message": "AI response here"
+}
+```
+
+Error Response:
+```json
+{
+  "error": "Error message",
+  "details": "Additional error details"
+}
+```
+
+## Development
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The application will be available at [http://localhost:3000](http://localhost:3000).
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

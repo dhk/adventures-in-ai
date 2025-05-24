@@ -1,19 +1,14 @@
-import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
+import openai, { config } from '@/lib/openai';
 
 // Debug log for environment variable
 console.log('API Key exists:', !!process.env.OPENAI_API_KEY);
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',  // Provide empty string as fallback
-});
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!config.apiKey) {
       console.error('OpenAI API key is missing');
       return NextResponse.json(
         { error: 'OpenAI API key not configured in environment' },
@@ -30,16 +25,16 @@ export async function POST(req: Request) {
     }
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',  // Using a more widely available model
+      model: config.model,
       messages: [
         {
           role: 'system',
-          content: 'You are a professional life coach focused on helping people achieve their goals through actionable advice and meaningful insights.'
+          content: config.systemMessage
         },
         ...messages
       ],
-      temperature: 0.7,
-      max_tokens: 500,
+      temperature: config.temperature,
+      max_tokens: config.maxTokens,
     });
 
     return NextResponse.json({

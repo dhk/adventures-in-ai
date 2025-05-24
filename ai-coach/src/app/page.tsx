@@ -2,6 +2,12 @@
 
 import { useState } from 'react';
 
+interface ChatResponse {
+  message?: string;
+  error?: string;
+  details?: unknown;
+}
+
 export default function Home() {
   const [response, setResponse] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -10,6 +16,7 @@ export default function Home() {
   const testOpenAI = async () => {
     setLoading(true);
     setError(null);
+    
     try {
       const result = await fetch('/api/chat', {
         method: 'POST',
@@ -26,15 +33,16 @@ export default function Home() {
         }),
       });
 
-      const data = await result.json();
+      const data: ChatResponse = await result.json();
       
       if (data.error) {
         throw new Error(data.error);
       }
       
-      setResponse(data.message);
+      setResponse(data.message || '');
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
+      console.error('Error testing OpenAI:', err);
     } finally {
       setLoading(false);
     }
