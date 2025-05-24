@@ -110,7 +110,7 @@ export default function Home() {
             AI Coach
           </h1>
           <p className="text-lg text-white/90 mb-xl max-w-2xl mx-auto">
-            Your personal AI life coach, powered by advanced language models to help you achieve your goals.
+            Your careerAI coach, powered by advanced language models to help you achieve your goals. Backed by 25 years of coaching, mentoring and career discovery.
           </p>
         </div>
       </div>
