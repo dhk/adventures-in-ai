@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 interface ChatMessage {
@@ -31,9 +31,14 @@ export default function Home() {
   const [questionCount, setQuestionCount] = useState(0);
   const [email, setEmail] = useState('');
   const [isEmailSubmitted, setIsEmailSubmitted] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   const MAX_QUESTIONS_BEFORE_EMAIL = 10;
   const MAX_QUESTIONS_TOTAL = 30;
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +107,23 @@ export default function Home() {
     }
   };
 
+  if (!isClient) {
+    return (
+      <main className="min-h-screen">
+        <div className="hero-section bg-gradient-to-br from-primary to-secondary py-3xl">
+          <div className="container mx-auto px-md text-center">
+            <h1 className="text-5xl font-extrabold text-white mb-lg tracking-tight">
+              AI Coach
+            </h1>
+            <p className="text-lg text-white/90 mb-xl max-w-2xl mx-auto">
+              Your networking coach, powered by advanced language models to help you achieve your goals.
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen">
       <div className="hero-section bg-gradient-to-br from-primary to-secondary py-3xl">
@@ -110,7 +132,7 @@ export default function Home() {
             AI Coach
           </h1>
           <p className="text-lg text-white/90 mb-xl max-w-2xl mx-auto">
-            Your careerAI coach, powered by advanced language models to help you achieve your goals. Backed by 25 years of coaching, mentoring and career discovery.
+            Your personal AI life coach, powered by advanced language models to help you achieve your goals.
           </p>
         </div>
       </div>
@@ -121,7 +143,7 @@ export default function Home() {
           <div className="flex-1">
             <div className="card bg-white rounded-lg shadow-md p-xl">
               <div className="flex justify-between items-center mb-lg">
-                <h2 className="text-2xl font-bold text-primary">Chat with AI Coach</h2>
+                <h2 className="text-2xl font-bold text-primary">Chat with DHK's AI Coach</h2>
                 <span className="text-sm text-text-medium">
                   Questions: {questionCount}/{MAX_QUESTIONS_TOTAL}
                 </span>
@@ -187,7 +209,7 @@ export default function Home() {
               <div className="space-y-md max-h-[600px] overflow-y-auto">
                 {messages.map((msg, index) => (
                   <div
-                    key={index}
+                    key={`${msg.timestamp}-${index}`}
                     className={`p-md rounded-md ${
                       msg.role === 'user' ? 'bg-gray-light' : 'bg-primary/5'
                     }`}
