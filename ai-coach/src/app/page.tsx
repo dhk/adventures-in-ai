@@ -18,7 +18,7 @@ const formatTime = (timestamp: string) => {
 };
 
 interface ChatResponse {
-  message?: string;
+  message?: string | { role: string; content: string };
   error?: string;
   details?: unknown;
 }
@@ -59,7 +59,7 @@ export default function Home() {
     
     const newUserMessage: ChatMessage = {
       role: 'user',
-      content: inputMessage,
+      content: inputMessage.trim(),
       timestamp: new Date().toISOString(),
     };
 
@@ -69,11 +69,17 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ messages: [newUserMessage] }),
+        body: JSON.stringify({
+          messages: [{
+            role: 'user',
+            content: inputMessage.trim()
+          }]
+        }),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const data: ChatResponse = await response.json();
@@ -82,9 +88,13 @@ export default function Home() {
         throw new Error(data.error);
       }
 
+      if (!data.message) {
+        throw new Error('No message received from the API');
+      }
+
       const newAssistantMessage: ChatMessage = {
         role: 'assistant',
-        content: data.message || '',
+        content: typeof data.message === 'string' ? data.message : data.message.content,
         timestamp: new Date().toISOString(),
       };
 
@@ -92,11 +102,14 @@ export default function Home() {
       setQuestionCount(prev => prev + 1);
       setInputMessage('');
     } catch (err: any) {
-      setError(err.message || 'An error occurred while sending your message.');
       console.error('Error sending message:', err);
-    } finally {
+      setError(err.message || 'An error occurred while sending your message.');
+      // Reset loading state but keep the message so user can try again
       setLoading(false);
+      return;
     }
+    
+    setLoading(false);
   };
 
   const handleEmailSubmit = (e: React.FormEvent) => {
