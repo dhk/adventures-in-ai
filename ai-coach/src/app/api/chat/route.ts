@@ -32,8 +32,18 @@ export async function POST(req: NextRequest) {
       max_tokens: 500,
     });
 
+    // Extract token usage from the response
+    const usage = {
+      promptTokens: completion.usage?.prompt_tokens || 0,
+      completionTokens: completion.usage?.completion_tokens || 0,
+      totalTokens: completion.usage?.total_tokens || 0,
+    };
+
     return new NextResponse(
-      JSON.stringify({ message: completion.choices[0].message }),
+      JSON.stringify({ 
+        message: completion.choices[0].message,
+        usage 
+      }),
       { 
         status: 200,
         headers: { 'Content-Type': 'application/json' }
