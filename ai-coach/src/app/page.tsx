@@ -313,6 +313,49 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Professional Links Footer */}
+      <footer className="bg-gray-50 border-t border-gray-100 py-8 mt-auto">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-gray-600">
+            <a 
+              href="https://dhkconsulting.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-primary transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              </svg>
+              DHK Consulting
+            </a>
+            <div className="h-4 w-px bg-gray-300 hidden sm:block" />
+            <a 
+              href="https://dhkondata.substack.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-primary transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2" />
+              </svg>
+              DHK on Data
+            </a>
+            <div className="h-4 w-px bg-gray-300 hidden sm:block" />
+            <a 
+              href="https://tidycal.com/davehk/30-minute-coffee" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-primary transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Book a Coffee Chat
+            </a>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
