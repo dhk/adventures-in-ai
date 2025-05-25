@@ -128,33 +128,33 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
-      <div className="hero-section bg-gradient-to-br from-primary to-secondary py-3xl">
-        <div className="container mx-auto px-md text-center">
-          <h1 className="text-5xl font-extrabold text-white mb-lg tracking-tight">
+      <div className="hero-section bg-gradient-to-br from-primary to-secondary py-12 sm:py-3xl">
+        <div className="container mx-auto px-4 sm:px-md text-center">
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-white mb-4 sm:mb-lg tracking-tight">
             AI Coach
           </h1>
-          <p className="text-lg text-white/90 mb-xl max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-white/90 mb-6 sm:mb-xl max-w-2xl mx-auto">
             Your personal AI life coach, powered by advanced language models to help you achieve your goals.
           </p>
         </div>
       </div>
 
-      <div className="container mx-auto px-md py-2xl">
-        <div className="flex gap-xl">
+      <div className="container mx-auto px-4 sm:px-md py-6 sm:py-2xl">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-xl">
           {/* Chat Interface */}
-          <div className="flex-1">
-            <div className="card bg-white rounded-lg shadow-md p-xl">
-              <div className="flex justify-between items-center mb-lg">
-                <h2 className="text-2xl font-bold text-primary">Chat with DHK's AI Coach</h2>
+          <div className="flex-1 order-2 lg:order-1">
+            <div className="card bg-white rounded-lg shadow-md p-4 sm:p-xl">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-lg gap-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-primary">Chat with DHK's AI Coach</h2>
                 <span className="text-sm text-text-medium">
                   Questions: {questionCount}/{MAX_QUESTIONS_TOTAL}
                 </span>
               </div>
 
               {questionCount >= MAX_QUESTIONS_BEFORE_EMAIL && !isEmailSubmitted ? (
-                <form onSubmit={handleEmailSubmit} className="mb-lg">
-                  <div className="mb-md">
-                    <label htmlFor="email" className="block text-sm font-medium text-text-medium mb-xs">
+                <form onSubmit={handleEmailSubmit} className="mb-4 sm:mb-lg w-full">
+                  <div className="mb-3 sm:mb-md">
+                    <label htmlFor="email" className="block text-sm font-medium text-text-medium mb-2">
                       Enter your email to continue
                     </label>
                     <input
@@ -162,24 +162,24 @@ export default function Home() {
                       id="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-md py-sm border border-gray-medium rounded-md"
+                      className="w-full px-3 py-2 sm:px-md sm:py-sm border border-gray-medium rounded-md"
                       placeholder="your@email.com"
                     />
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-accent hover:bg-accent-bright text-white font-semibold py-md px-lg rounded-md transition-colors duration-200"
+                    className="w-full bg-accent hover:bg-accent-bright text-white font-semibold py-3 sm:py-md px-4 sm:px-lg rounded-md transition-colors duration-200"
                   >
                     Submit Email
                   </button>
                 </form>
               ) : (
-                <form onSubmit={handleSubmit} className="mb-lg">
-                  <div className="mb-md">
+                <form onSubmit={handleSubmit} className="mb-4 sm:mb-lg">
+                  <div className="mb-3 sm:mb-md">
                     <textarea
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      className="w-full px-md py-sm border border-gray-medium rounded-md"
+                      className="w-full px-3 py-2 sm:px-md sm:py-sm border border-gray-medium rounded-md"
                       placeholder="Ask your question..."
                       rows={4}
                       disabled={loading || questionCount >= MAX_QUESTIONS_TOTAL}
@@ -188,7 +188,7 @@ export default function Home() {
                   <button
                     type="submit"
                     disabled={loading || !inputMessage.trim() || questionCount >= MAX_QUESTIONS_TOTAL}
-                    className="w-full bg-accent hover:bg-accent-bright text-white font-semibold py-md px-lg rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    className="w-full bg-accent hover:bg-accent-bright text-white font-semibold py-3 sm:py-md px-4 sm:px-lg rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
                     {loading ? 'Sending...' : 'Send Message'}
                   </button>
@@ -196,8 +196,8 @@ export default function Home() {
               )}
 
               {error && (
-                <div className="mb-md p-md bg-red-100 text-red-700 rounded-md">
-                  <h3 className="font-semibold mb-xs">Error</h3>
+                <div className="mb-3 sm:mb-md p-3 sm:p-md bg-red-100 text-red-700 rounded-md">
+                  <h3 className="font-semibold mb-1 sm:mb-xs">Error</h3>
                   <p>{error}</p>
                 </div>
               )}
@@ -205,18 +205,18 @@ export default function Home() {
           </div>
 
           {/* Chat History */}
-          <div className="w-96">
-            <div className="card bg-white rounded-lg shadow-md p-xl sticky top-xl">
-              <h2 className="text-xl font-bold text-primary mb-lg">Chat History</h2>
-              <div className="space-y-md max-h-[600px] overflow-y-auto">
+          <div className="w-full lg:w-96 order-1 lg:order-2">
+            <div className="card bg-white rounded-lg shadow-md p-4 sm:p-xl sticky top-4">
+              <h2 className="text-lg sm:text-xl font-bold text-primary mb-4 sm:mb-lg">Chat History</h2>
+              <div className="space-y-3 sm:space-y-md max-h-[400px] lg:max-h-[600px] overflow-y-auto">
                 {messages.map((msg, index) => (
                   <div
                     key={`${msg.timestamp}-${index}`}
-                    className={`p-md rounded-md ${
+                    className={`p-3 sm:p-md rounded-md ${
                       msg.role === 'user' ? 'bg-gray-light' : 'bg-primary/5'
                     }`}
                   >
-                    <div className="flex justify-between items-center mb-xs">
+                    <div className="flex justify-between items-center mb-1 sm:mb-xs">
                       <span className="font-semibold text-sm text-text-medium">
                         {msg.role === 'user' ? 'You' : 'AI Coach'}
                       </span>
@@ -224,13 +224,13 @@ export default function Home() {
                         {formatTime(msg.timestamp)}
                       </span>
                     </div>
-                    <div className="prose prose-sm max-w-none">
+                    <div className="prose prose-sm max-w-none break-words">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                   </div>
                 ))}
                 {messages.length === 0 && (
-                  <p className="text-text-light text-center italic">
+                  <p className="text-text-light text-center italic text-sm">
                     No messages yet. Start the conversation!
                   </p>
                 )}
