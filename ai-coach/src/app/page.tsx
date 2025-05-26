@@ -7,6 +7,8 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  feedback?: 'up' | 'down' | null;
+  id: string;
 }
 
 interface TokenUsage {
@@ -52,6 +54,25 @@ export default function Home() {
     setIsClient(true);
   }, []);
 
+  const handleFeedback = (messageId: string, feedback: 'up' | 'down') => {
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, feedback: msg.feedback === feedback ? null : feedback }
+          : msg
+      )
+    );
+    // TODO: Send feedback to backend when we implement authentication
+  };
+
+  const createNewMessage = (role: 'user' | 'assistant', content: string): ChatMessage => ({
+    role,
+    content,
+    timestamp: new Date().toISOString(),
+    id: Math.random().toString(36).substr(2, 9),
+    feedback: null
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
@@ -69,11 +90,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     
-    const newUserMessage: ChatMessage = {
-      role: 'user',
-      content: inputMessage.trim(),
-      timestamp: new Date().toISOString(),
-    };
+    const newUserMessage = createNewMessage('user', inputMessage.trim());
 
     try {
       const response = await fetch('/api/chat', {
@@ -112,11 +129,9 @@ export default function Home() {
         }));
       }
 
-      const newAssistantMessage: ChatMessage = {
-        role: 'assistant',
-        content: typeof data.message === 'string' ? data.message : data.message.content,
-        timestamp: new Date().toISOString(),
-      };
+      const newAssistantMessage = createNewMessage('assistant', 
+        typeof data.message === 'string' ? data.message : data.message.content
+      );
 
       setMessages(prev => [...prev, newUserMessage, newAssistantMessage]);
       setQuestionCount(prev => prev + 1);
@@ -278,7 +293,7 @@ export default function Home() {
               <div className="space-y-3 sm:space-y-md max-h-[400px] lg:max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-medium/50 scrollbar-track-transparent">
                 {messages.map((msg, index) => (
                   <div
-                    key={`${msg.timestamp}-${index}`}
+                    key={msg.id}
                     className={`p-4 rounded-lg transition-all ${
                       msg.role === 'user' ? 'bg-gray-light hover:bg-gray-light/80' : 'bg-primary/5 hover:bg-primary/10'
                     }`}
@@ -294,6 +309,57 @@ export default function Home() {
                     <div className="prose prose-sm max-w-none break-words">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
+                    
+                    {msg.role === 'assistant' && (
+                      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-200">
+                        <button
+                          onClick={() => handleFeedback(msg.id, 'up')}
+                          className={`flex items-center gap-2 text-sm transition-colors ${
+                            msg.feedback === 'up' 
+                              ? 'text-green-600 font-medium' 
+                              : 'text-gray-500 hover:text-green-600'
+                          }`}
+                        >
+                          <svg 
+                            className={`w-5 h-5 transition-transform ${msg.feedback === 'up' ? 'scale-110' : ''}`} 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" 
+                            />
+                          </svg>
+                          Helpful
+                        </button>
+                        <button
+                          onClick={() => handleFeedback(msg.id, 'down')}
+                          className={`flex items-center gap-2 text-sm transition-colors ${
+                            msg.feedback === 'down' 
+                              ? 'text-red-600 font-medium' 
+                              : 'text-gray-500 hover:text-red-600'
+                          }`}
+                        >
+                          <svg 
+                            className={`w-5 h-5 transition-transform ${msg.feedback === 'down' ? 'scale-110' : ''}`} 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5 0v2a2 2 0 01-2 2h-2.5" 
+                            />
+                          </svg>
+                          Not Helpful
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {messages.length === 0 && (
