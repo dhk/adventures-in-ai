@@ -52,3 +52,8 @@ Assuredly, the architecture will change as I discover stuff.
 
 But, without a plan we're nowhere. 
 
+So
+- the plan is in this document
+- [here's the architecture](architecture.md) - how it'll all hang together.
+- [discovery motes](discoveries.md) - things I found along the way that were confounding, or non-obvious to me. 
+
