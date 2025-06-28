@@ -26,7 +26,7 @@ flowchart TD
 
     Ah: 
     ```
-    Please create a mermaid ML that shows how wisdom comes from experience, experience comes from making bad decisions and bad decisiosn come from ignorance
+    Please create a mermaid ML that shows how wisdom comes from experience, experience comes from making bad decisions and bad decisions come from ignorance
     ```
     and then
     ```
