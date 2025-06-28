@@ -3,6 +3,7 @@
 This document is where I'll provide developer notes, outlining my discoveries along the way.
 
 ## 2025-06-28
+### Creating Architecture Diagrams
 I need to create an architecture diagram. I want to keep it simple 
 
 I asked ChatGPT
@@ -11,7 +12,7 @@ What’s a good markup tool for creating architecture diagrams in GitHub using C
 ```
 
 It recommended Mermaid and gave an example:
-
+```
 ```mermaid
 flowchart TD
     A[Raw Data] --> B[ETL Pipeline]
@@ -34,9 +35,23 @@ Make it a top down diagram ,showing how things are built on top of each other.
 ```
 And I got
 
+```
 ```mermaid 
 flowchart TB
 Ignorance --> Bad_Decisions
 Bad_Decisions --> Experience
 Experience --> Wisdom
 ```
+
+which renders as 
+```mermaid 
+flowchart TB
+Ignorance --> Bad_Decisions
+Bad_Decisions --> Experience
+Experience --> Wisdom
+```
+
+
+
+### First puzzle: getting it to render
+By default, mermaid won't render in codespace. So, you have to install a [preview extension](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
