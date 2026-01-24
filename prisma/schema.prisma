@@ -1,12 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -49,6 +45,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  chats         Chat[]
 }
 
 model VerificationToken {
@@ -58,3 +55,33 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model Chat {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  title     String    @default("New Chat")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+  feedback  Feedback?
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  content   String
+  role      String   // 'user' or 'assistant'
+  createdAt DateTime @default(now())
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  chatId    String   @unique
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  rating    Boolean  // true for thumbs up, false for thumbs down
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+} 

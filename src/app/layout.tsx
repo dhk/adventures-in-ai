@@ -1,9 +1,9 @@
 import React from 'react'
-import './globals.css'
 import { Inter } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
-import { Providers } from '@/components/Providers'
+import { SessionProvider } from '@auth/nextjs/react'
 import { Auth } from '@/components/Auth'
+import './globals.css'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -22,14 +22,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.className}>
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="min-h-screen bg-gray-light text-text-dark">
-        <Providers>
+      <body>
+        <SessionProvider>
           <header className="p-4 border-b">
             <Auth />
           </header>
@@ -37,8 +31,8 @@ export default function RootLayout({
             {children}
           </main>
           <Toaster position="top-right" />
-        </Providers>
+        </SessionProvider>
       </body>
     </html>
   )
-}
+} 

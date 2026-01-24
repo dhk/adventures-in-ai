@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import ReactMarkdown from 'react-markdown';
 
 interface ChatMessage {
@@ -33,6 +34,7 @@ interface ChatResponse {
 }
 
 export default function Home() {
+  const { data: session } = useSession();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -77,6 +79,11 @@ export default function Home() {
     e.preventDefault();
     if (!inputMessage.trim()) return;
     
+    if (!session) {
+      setError('Please sign in to send messages.');
+      return;
+    }
+
     if (questionCount >= MAX_QUESTIONS_TOTAL) {
       setError('You have reached the maximum number of questions for this session.');
       return;
