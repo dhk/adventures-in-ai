@@ -13,7 +13,7 @@ Our extension processes the following information:
 - The URL of the website you are currently visiting
 - The IP address of the server hosting the website you are visiting
 
-It's important to note that while we process this information to provide our service, we do not collect, store, or retain any of this data. All this information is kept in your browswer and we have no access to it.
+It's important to note that while we process this information to provide our service, we do not collect, store, or retain any of this data. All this information is kept in your browser and we have no access to it.
 
 ## 3. How We Use Information
 

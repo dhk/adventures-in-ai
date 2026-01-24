@@ -1,16 +1,22 @@
 # What does this do?
-Provides a Chrome browswer-extension that shows you the location of the web server that your page is currently pointing at
+## Project Summary
+- Status: Prototype
+- Problem: Identify the origin server location for the current page
+- Why AI: Rapidly prototype an unfamiliar app type (browser extension)
+- Artifacts: Extension code, transcript, screenshots
+
+Provides a Chrome browser extension that shows you the location of the web server your page is currently pointing at.
 <img width="837" alt="image" src="https://github.com/user-attachments/assets/337635f2-fe33-446a-8606-08a3709fff44">
 
 ## What's this all about?
-I wanted to experience the process of generating an app in a language & framework with which I'm unfamiliar. I've never created a browswer extension before although I've used JavaScript extensively in the past.
+I wanted to experience the process of generating an app in a language and framework with which I'm unfamiliar. I've never created a browser extension before, although I've used JavaScript extensively in the past.
 
-I've saved the [conversation transcript here](server-location-chat.MD)
+I've saved the [conversation transcript here](server-location-chat.MD).
 
 ## Observations
 1. Based on cursory inspection, the code seems correct.
 2. The hardest part of this was splitting the generated code up into the correct files (and that's no big lift, for sure)
-3. (And this is based on some other work as well)AI-assisted code generation makes it possible to prototype product features that work -- the idea is that I can show people wireframes or I can give people scrappy-apps with which to interact. This seems like a significant change in feature discovery.
+3. (And this is based on some other work as well) AI-assisted code generation makes it possible to prototype product features that work. The idea is that I can show people wireframes or I can give people scrappy apps with which to interact. This seems like a significant change in feature discovery.
 
 ## To Dos
 - [ ] add coordinates, and a map link (people like maps)

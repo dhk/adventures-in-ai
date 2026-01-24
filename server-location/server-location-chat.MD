@@ -1,14 +1,14 @@
-# This is the unedited transcript of the claude.ai session that created the server-location browser popup
+# This is the unedited transcript of the Claude.ai session that created the server-location browser popup
 The critical requests were
-1. make me a browswer extension to identify the server's phhysical location of a website
-1. can I run this myself, on my own browswer, without needing to list it
+1. make me a browser extension to identify the server's physical location of a website
+1. can I run this myself, on my own browser, without needing to list it
 
 The second request was in response to Claude telling me how to submit the extension for approval through the app store. That was beyond scope of this examination, although it would be interesting to see if it passes muster.
 # Conversation Transcript: Browser Extension for Server Location
 
 ## Initial Request
 
-**Human:** make me a browswer extension to identify the server's phhysical location of a website
+**Human:** make me a browser extension to identify the server's physical location of a website
 
 **Assistant:** I can help you create a browser extension to identify the physical location of a website's server. Let's break this down into steps and create a simple Chrome extension for this purpose.
 
@@ -163,7 +163,7 @@ Remember, this extension uses a third-party API (ip-api.com). You should disclos
 
 Would you like any clarification on these steps or help with preparing any specific part of the submission?
 
-**Human:** can I run this myself, on my own browswer, without needing to list it
+**Human:** can I run this myself, on my own browser, without needing to list it
 
 **Assistant:** Absolutely! You can run this extension on your own browser without publishing it to the Chrome Web Store. This is called "loading an unpacked extension" and it's perfect for personal use or during development. Here's how to do it:
 

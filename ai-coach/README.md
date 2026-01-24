@@ -1,5 +1,11 @@
 # AI Coach - Next.js Career Coaching Application
 
+## Project Summary
+- Status: Prototype
+- Problem: Provide accessible, on-demand career coaching
+- Why AI: Personalized, conversational coaching at low cost
+- Artifacts: `src/`, `prisma/`, deployment docs
+
 An AI-powered career coaching application built with Next.js, TypeScript, and OpenAI.
 
 ## Features
