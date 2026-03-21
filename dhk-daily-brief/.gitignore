@@ -1,0 +1,20 @@
+# Audio files — don't commit personal audio
+*.mp3
+*.m4a
+*.mp4
+*.wav
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Secrets — never commit
+.env
+*.key
+secrets.json
