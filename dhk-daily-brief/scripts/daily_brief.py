@@ -69,6 +69,130 @@ def fail(msg):
     print(f"  ❌  {msg}")
 
 
+def wait_for_audio_files(
+    *,
+    audio_dir: Path,
+    target_date: str,
+    slugs: list[str],
+    audio_format: str,
+    max_wait_minutes: float,
+    poll_interval_seconds: float,
+) -> list[str]:
+    """
+    Rolling-window wait for new audio files.
+
+    Rules:
+      1) Wait up to max_wait_minutes for a first file.
+      2) Every time a NEW file appears, reset the timer for max_wait_minutes.
+      3) If no new file appears within the current window, stop waiting.
+    """
+    header("Waiting for new audio files")
+    wait_s = max(0.0, max_wait_minutes * 60.0)
+    poll_s = max(1.0, poll_interval_seconds)
+
+    seen: set[str] = set()
+    deadline = time.monotonic() + wait_s
+    expected = {slug: audio_dir / f"{target_date}-{slug}.{audio_format}" for slug in slugs}
+
+    print(f"  Window: {max_wait_minutes:.1f} min, poll: {poll_s:.0f}s")
+    print("  Timer resets whenever a NEW audio file appears.")
+
+    while time.monotonic() < deadline:
+        new_files = []
+        for slug, path in expected.items():
+            if slug in seen:
+                continue
+            if path.exists() and path.stat().st_size > 0:
+                seen.add(slug)
+                new_files.append(slug)
+
+        if new_files:
+            for slug in new_files:
+                ok(f"Detected: {target_date}-{slug}.{audio_format}")
+            deadline = time.monotonic() + wait_s
+            continue
+
+        time.sleep(poll_s)
+
+    if seen:
+        ok(f"Quiet period reached; proceeding with {len(seen)} detected file(s).")
+    else:
+        warn("No new files detected before timeout window; proceeding.")
+    return list(seen)
+
+
+def _json_walk_status_values(obj):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k.lower() == "status" and isinstance(v, str):
+                yield v.lower()
+            yield from _json_walk_status_values(v)
+    elif isinstance(obj, list):
+        for item in obj:
+            yield from _json_walk_status_values(item)
+
+
+def _audio_completed_from_status_payload(payload: object) -> bool:
+    """
+    Best-effort check for completed audio artifacts in nlm studio status JSON.
+    """
+    if payload is None:
+        return False
+    # Conservative heuristic:
+    # - If any status is explicitly in-progress/pending/processing, not ready.
+    # - Ready when at least one status is completed/succeeded/done.
+    statuses = list(_json_walk_status_values(payload))
+    if not statuses:
+        return False
+    if any(s in {"in_progress", "pending", "processing", "running"} for s in statuses):
+        return False
+    return any(s in {"completed", "succeeded", "success", "done"} for s in statuses)
+
+
+def wait_for_studio_audio_ready(
+    *,
+    notebooks: dict[str, str],
+    max_wait_minutes: float,
+    poll_interval_seconds: float,
+) -> list[str]:
+    """
+    Poll `nlm studio status <notebook_id> --json` until audio is ready.
+    Returns slugs that appear ready before timeout.
+    """
+    header("Waiting for NotebookLM studio audio readiness")
+    wait_s = max(0.0, max_wait_minutes * 60.0)
+    poll_s = max(1.0, poll_interval_seconds)
+    deadline = time.monotonic() + wait_s
+    ready: set[str] = set()
+
+    while time.monotonic() < deadline and len(ready) < len(notebooks):
+        for slug, notebook_id in notebooks.items():
+            if slug in ready:
+                continue
+            result = run_with_retries(
+                [NLM_CLI, "studio", "status", notebook_id, "--json"],
+                timeout_s=45,
+                retries=1,
+            )
+            if result.returncode != 0:
+                continue
+            try:
+                payload = json.loads(result.stdout)
+            except json.JSONDecodeError:
+                continue
+            if _audio_completed_from_status_payload(payload):
+                ready.add(slug)
+                ok(f"Studio ready: {slug}")
+
+        if len(ready) < len(notebooks):
+            time.sleep(poll_s)
+
+    not_ready = [slug for slug in notebooks.keys() if slug not in ready]
+    if not_ready:
+        warn(f"Studio not ready before timeout: {', '.join(not_ready)}")
+    return list(ready)
+
+
 # ── NotebookLM: Find notebooks for date ────────────────────────────────────────
 
 def find_notebooks_for_date(target_date: str) -> dict:
@@ -316,6 +440,14 @@ Examples:
                         help="HTTP timeout in seconds (default: 30)")
     parser.add_argument("--audio-format", choices=["mp3", "m4a"], default=None,
                         help="Saved output format (default from config, fallback: mp3)")
+    parser.add_argument("--wait-for-audio", action="store_true",
+                        help="In upload-only mode, wait for new audio files to appear before uploading")
+    parser.add_argument("--wait-for-studio-status", action="store_true",
+                        help="In non-upload-only mode, poll `nlm studio status` before download")
+    parser.add_argument("--max-wait-minutes", type=float, default=15.0,
+                        help="Wait window in minutes (default: 15)")
+    parser.add_argument("--poll-interval-seconds", type=float, default=20.0,
+                        help="Polling interval while waiting (default: 20)")
     args = parser.parse_args()
 
     target_date = args.date
@@ -362,11 +494,35 @@ Examples:
         notebooks = find_notebooks_for_date(target_date)
         if not notebooks:
             sys.exit(1)
+        if args.wait_for_studio_status and not args.dry_run:
+            # Keep only notebooks whose studio artifacts are ready by timeout.
+            ready_slugs = set(
+                wait_for_studio_audio_ready(
+                    notebooks=notebooks,
+                    max_wait_minutes=args.max_wait_minutes,
+                    poll_interval_seconds=args.poll_interval_seconds,
+                )
+            )
+            notebooks = {slug: nb_id for slug, nb_id in notebooks.items() if slug in ready_slugs}
+            if not notebooks:
+                warn("No notebooks became ready within the wait window.")
+                sys.exit(1)
     else:
+        waited_found = []
+        if args.wait_for_audio:
+            waited_found = wait_for_audio_files(
+                audio_dir=audio_dir,
+                target_date=target_date,
+                slugs=slugs,
+                audio_format=audio_format,
+                max_wait_minutes=args.max_wait_minutes,
+                poll_interval_seconds=args.poll_interval_seconds,
+            )
+
         # In upload-only mode, infer from existing files
         for slug in slugs:
             audio_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
-            if audio_path.exists():
+            if slug in waited_found or audio_path.exists():
                 notebooks[slug] = None  # no notebook id needed
 
     # ── Step 2: Download audio ──────────────────────────────────────────────
@@ -396,6 +552,21 @@ Examples:
         print(f"  Downloaded: {', '.join(downloaded) or 'none'}")
         print(f"  Files in: {audio_dir}\n")
         return
+
+    # Optional second guard: after studio-status gating + download, apply rolling
+    # quiet-window file wait before upload to catch late-arriving files.
+    if args.wait_for_studio_status and args.wait_for_audio and not args.upload_only and not args.dry_run:
+        pre_upload_found = wait_for_audio_files(
+            audio_dir=audio_dir,
+            target_date=target_date,
+            slugs=slugs,
+            audio_format=audio_format,
+            max_wait_minutes=args.max_wait_minutes,
+            poll_interval_seconds=args.poll_interval_seconds,
+        )
+        for slug in pre_upload_found:
+            if slug not in downloaded:
+                downloaded.append(slug)
 
     # ── Step 3: Upload to element.fm ────────────────────────────────────────
     header("Uploading to element.fm — DHK Daily Brief")

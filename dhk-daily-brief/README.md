@@ -135,11 +135,32 @@ python3 scripts/daily_brief.py --download-only
 python3 scripts/daily_brief.py --upload-only
 python3 scripts/daily_brief.py --audio-dir "/path/to/podcasts"
 python3 scripts/daily_brief.py --audio-format mp3
+python3 scripts/daily_brief.py --upload-only --wait-for-audio --max-wait-minutes 15 --poll-interval-seconds 20
+python3 scripts/daily_brief.py --wait-for-studio-status --max-wait-minutes 20 --poll-interval-seconds 20
 ```
 
 The script writes a per-date manifest for idempotency at:
 
 - `~/.local/state/dhk-daily-brief/manifest-YYYY-MM-DD.json`
+
+Upload-only waiting behavior:
+
+- `--wait-for-audio` enables rolling-window waiting for `YYYY-MM-DD-<slug>.<format>` files.
+- It waits up to `--max-wait-minutes` for a first file.
+- Whenever a new file appears, the timer resets for another `--max-wait-minutes`.
+- If no new file appears within a window, it proceeds with files found so far.
+
+NotebookLM status waiting (recommended when downloading in the same run):
+
+- `--wait-for-studio-status` polls `nlm studio status <notebook_id> --json`.
+- It waits up to `--max-wait-minutes` for studio readiness per notebook.
+- Notebooks not ready by timeout are skipped (reported in output).
+
+Combined guard mode:
+
+- Use both `--wait-for-studio-status` and `--wait-for-audio` in the same run.
+- The pipeline first waits for NotebookLM studio readiness.
+- After download, it applies the rolling quiet-window file wait before upload.
 
 Newsletter tracking for label migration:
 
