@@ -153,6 +153,7 @@ Upload-only waiting behavior:
 NotebookLM status waiting (recommended when downloading in the same run):
 
 - `--wait-for-studio-status` polls `nlm studio status <notebook_id> --json`.
+- It first waits for matching `reading-list-YYYY-MM-DD-NN ...` notebooks to appear.
 - It waits up to `--max-wait-minutes` for studio readiness per notebook.
 - Notebooks not ready by timeout are skipped (reported in output).
 

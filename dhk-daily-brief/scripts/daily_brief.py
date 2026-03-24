@@ -193,6 +193,29 @@ def wait_for_studio_audio_ready(
     return list(ready)
 
 
+def wait_for_notebooks_for_date(
+    *,
+    target_date: str,
+    max_wait_minutes: float,
+    poll_interval_seconds: float,
+) -> dict[str, str]:
+    """
+    Wait for reading-list notebooks for target date to appear.
+    """
+    header("Waiting for notebooks to appear")
+    wait_s = max(0.0, max_wait_minutes * 60.0)
+    poll_s = max(1.0, poll_interval_seconds)
+    deadline = time.monotonic() + wait_s
+
+    while time.monotonic() < deadline:
+        notebooks = find_notebooks_for_date(target_date)
+        if notebooks:
+            return notebooks
+        time.sleep(poll_s)
+
+    return {}
+
+
 # ── NotebookLM: Find notebooks for date ────────────────────────────────────────
 
 def find_notebooks_for_date(target_date: str) -> dict:
@@ -491,9 +514,19 @@ Examples:
     # ── Step 1: Find notebooks ──────────────────────────────────────────────
     notebooks = {}
     if not args.upload_only:
-        notebooks = find_notebooks_for_date(target_date)
+        if args.wait_for_studio_status and not args.dry_run:
+            notebooks = wait_for_notebooks_for_date(
+                target_date=target_date,
+                max_wait_minutes=args.max_wait_minutes,
+                poll_interval_seconds=args.poll_interval_seconds,
+            )
+        else:
+            notebooks = find_notebooks_for_date(target_date)
+
         if not notebooks:
+            warn("No notebooks found before timeout/discovery step.")
             sys.exit(1)
+
         if args.wait_for_studio_status and not args.dry_run:
             # Keep only notebooks whose studio artifacts are ready by timeout.
             ready_slugs = set(
