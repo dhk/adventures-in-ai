@@ -139,6 +139,18 @@ python3 scripts/daily_brief.py --upload-only --wait-for-audio --max-wait-minutes
 python3 scripts/daily_brief.py --wait-for-studio-status --max-wait-minutes 20 --poll-interval-seconds 20
 ```
 
+Default behavior now includes both waits:
+
+- `--wait-for-studio-status` is ON by default
+- `--wait-for-audio` is ON by default
+
+Opt out when needed:
+
+```bash
+python3 scripts/daily_brief.py --no-wait-for-studio-status
+python3 scripts/daily_brief.py --no-wait-for-audio
+```
+
 The script writes a per-date manifest for idempotency at:
 
 - `~/.local/state/dhk-daily-brief/manifest-YYYY-MM-DD.json`

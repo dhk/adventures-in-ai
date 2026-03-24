@@ -463,10 +463,10 @@ Examples:
                         help="HTTP timeout in seconds (default: 30)")
     parser.add_argument("--audio-format", choices=["mp3", "m4a"], default=None,
                         help="Saved output format (default from config, fallback: mp3)")
-    parser.add_argument("--wait-for-audio", action="store_true",
-                        help="In upload-only mode, wait for new audio files to appear before uploading")
-    parser.add_argument("--wait-for-studio-status", action="store_true",
-                        help="In non-upload-only mode, poll `nlm studio status` before download")
+    parser.add_argument("--wait-for-audio", dest="wait_for_audio", action=argparse.BooleanOptionalAction, default=True,
+                        help="Wait for new audio files before upload (default: on; disable with --no-wait-for-audio)")
+    parser.add_argument("--wait-for-studio-status", dest="wait_for_studio_status", action=argparse.BooleanOptionalAction, default=True,
+                        help="Poll `nlm studio status` before download (default: on; disable with --no-wait-for-studio-status)")
     parser.add_argument("--max-wait-minutes", type=float, default=15.0,
                         help="Wait window in minutes (default: 15)")
     parser.add_argument("--poll-interval-seconds", type=float, default=20.0,
