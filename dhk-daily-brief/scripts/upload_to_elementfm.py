@@ -19,7 +19,7 @@ from pathlib import Path
 
 # Local imports (same directory)
 from elementfm_client import ElementFmClient, ElementFmConfig
-from podcast_config import parse_episode_title_from_filename
+from podcast_config import elementfm_episode_description, parse_episode_title_from_filename
 from subprocess_utils import run_with_retries
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -52,7 +52,8 @@ def main():
     parser.add_argument("audio_file", help="Path to audio file (.m4a or .mp3)")
     parser.add_argument("--title", help="Episode title (auto-generated from filename if not set)")
     parser.add_argument("--dry-run", action="store_true", help="Show what would happen, don't upload")
-    parser.add_argument("--timeout", type=float, default=30.0, help="HTTP timeout in seconds (default: 30)")
+    parser.add_argument("--timeout", type=float, default=30.0, help="HTTP timeout for JSON calls in seconds (default: 30)")
+    parser.add_argument("--upload-timeout", type=float, default=900.0, help="Minimum upload timeout in seconds (default: 900)")
     args = parser.parse_args()
 
     if not API_KEY:
@@ -73,6 +74,7 @@ def main():
             base_url=BASE_URL,
         ),
         timeout_s=args.timeout,
+        upload_timeout_s=args.upload_timeout,
     )
     episode_number = client.get_next_episode_number()
 
@@ -107,7 +109,13 @@ def main():
 def _create_upload_publish(client: ElementFmClient, title: str, episode_number: int, mp3_path: Path) -> None:
     # Step 2: Create episode
     print("  Creating episode ...", end=" ", flush=True)
-    episode = client.create_episode(title=title, season_number=1, episode_number=episode_number)
+    desc = elementfm_episode_description(title)
+    episode = client.create_episode(
+        title=title,
+        season_number=1,
+        episode_number=episode_number,
+        description=desc,
+    )
     if "error" in episode:
         print(f"\n  ❌ Create failed: {episode['error']}")
         sys.exit(1)
@@ -125,7 +133,11 @@ def _create_upload_publish(client: ElementFmClient, title: str, episode_number: 
         sys.exit(1)
     print("✓")
 
-    # Step 4: Publish
+    # Step 4: Description + publish (element.fm requires description)
+    patch = client.patch_episode(episode_id=episode_id, data={"description": desc})
+    if "error" in patch:
+        print(f"\n  ⚠️  Could not set description: {patch['error']}")
+
     print("  Publishing ...", end=" ", flush=True)
     result = client.publish_episode(episode_id=episode_id)
     if "error" in result:

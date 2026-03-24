@@ -31,9 +31,12 @@ from elementfm_client import ElementFmClient, ElementFmConfig
 from podcast_config import (
     CATEGORY_SLUGS,
     CATEGORY_TITLES,
+    elementfm_episode_description,
     manifest_path_for_date,
+    parse_audio_filename,
     parse_episode_title_from_filename,
     parse_reading_list_notebook_title,
+    slug_for_category_title,
     resolve_audio_dir,
     resolve_audio_format,
 )
@@ -216,6 +219,157 @@ def wait_for_notebooks_for_date(
     return {}
 
 
+def _parse_iso_date(date_str: str) -> date:
+    return datetime.strptime(date_str, "%Y-%m-%d").date()
+
+
+def cleanup_old_items(*, audio_dir: Path, cutoff_date_str: str, apply: bool) -> int:
+    """
+    Cleanup mode (dry-run by default).
+
+    Deletes local podcast audio files older than cutoff_date in the expected naming scheme.
+    Deletes NotebookLM reading-list notebooks older than cutoff_date ONLY if a downloaded audio
+    file exists for that (date, category slug).
+    """
+    header(f"Cleanup mode (cutoff: {cutoff_date_str})")
+    if not audio_dir.exists():
+        warn(f"Audio directory not found: {audio_dir}")
+        return 1
+
+    cutoff_date = _parse_iso_date(cutoff_date_str)
+
+    # 1) Audio files (local)
+    supported_exts = {"mp3", "m4a"}
+    allowed_slugs = set(CATEGORY_SLUGS.values())
+
+    audio_deletions: list[tuple[Path, str, str]] = []  # (path, dt, slug)
+    audio_keys: set[tuple[str, str]] = set()  # (dt, slug)
+    audio_kept_wrong_slug: list[tuple[Path, str, str]] = []
+    audio_kept_wrong_ext: list[tuple[Path, str, str]] = []
+
+    for path in audio_dir.iterdir():
+        if not path.is_file():
+            continue
+        parsed = parse_audio_filename(path.name)
+        if not parsed:
+            continue
+        dt, slug, ext = parsed
+        if _parse_iso_date(dt) < cutoff_date:
+            if slug in allowed_slugs and ext in supported_exts:
+                audio_deletions.append((path, dt, slug))
+                audio_keys.add((dt, slug))
+            elif slug not in allowed_slugs:
+                audio_kept_wrong_slug.append((path, dt, slug))
+            elif ext not in supported_exts:
+                audio_kept_wrong_ext.append((path, dt, slug))
+
+    # 2) Notebooks (NotebookLM)
+    nlm_result = run_with_retries(
+        [NLM_CLI, "notebook", "list", "--json"],
+        timeout_s=60,
+        retries=2,
+        initial_backoff_s=1.0,
+    )
+    if nlm_result.returncode != 0:
+        warn(f"nlm notebook list failed: {nlm_result.stderr.strip() or nlm_result.stdout.strip()}")
+        return 1
+
+    try:
+        notebooks_payload = json.loads(nlm_result.stdout)
+    except json.JSONDecodeError:
+        warn("Could not parse nlm output as JSON.")
+        return 1
+
+    notebooks = notebooks_payload.get("notebooks", []) if isinstance(notebooks_payload, dict) else notebooks_payload
+
+    notebook_deletions: list[tuple[str, str, str]] = []  # (nb_id, dt, slug)
+    notebook_kept_no_audio: list[tuple[str, str, str]] = []
+
+    for nb in notebooks:
+        title = nb.get("title", "")
+        nb_id = nb.get("id", "")
+        if not isinstance(title, str) or not isinstance(nb_id, str):
+            continue
+        parsed = parse_reading_list_notebook_title(title)
+        if not parsed:
+            continue
+        dt, _nn, category_title = parsed
+        slug = slug_for_category_title(category_title)
+        if not slug:
+            continue
+        nb_dt = _parse_iso_date(dt)
+        if nb_dt >= cutoff_date:
+            continue
+        if (dt, slug) in audio_keys:
+            notebook_deletions.append((nb_id, dt, slug))
+        else:
+            notebook_kept_no_audio.append((nb_id, dt, slug))
+
+    print(f"  Mode: {'APPLY' if apply else 'DRY-RUN'}")
+    print(f"  Audio deletions:    {len(audio_deletions)}")
+    print(f"  Notebook deletions: {len(notebook_deletions)}")
+    print(f"  Notebooks kept (no audio): {len(notebook_kept_no_audio)}")
+    print(f"  Audio kept (wrong slug): {len(audio_kept_wrong_slug)}")
+    print(f"  Audio kept (wrong ext):  {len(audio_kept_wrong_ext)}")
+
+    if audio_deletions:
+        print("\n  Audio to delete:")
+        for path, dt, slug in sorted(audio_deletions, key=lambda x: (x[1], x[2], str(x[0]))):
+            print(f"    - {path}  ({dt} / {slug})")
+
+    if notebook_deletions:
+        print("\n  Notebooks to delete:")
+        for nb_id, dt, slug in sorted(notebook_deletions, key=lambda x: (x[1], x[2], x[0])):
+            print(f"    - {nb_id}  ({dt} / {slug})")
+
+    if notebook_kept_no_audio:
+        print("\n  Notebooks kept (no matching audio):")
+        for nb_id, dt, slug in sorted(notebook_kept_no_audio, key=lambda x: (x[1], x[2], x[0])):
+            print(f"    - {nb_id}  ({dt} / {slug})")
+
+    if audio_kept_wrong_slug:
+        print("\n  Audio kept (filename matches pattern but slug not one of ours):")
+        for path, dt, slug in sorted(audio_kept_wrong_slug, key=lambda x: (x[1], x[2], str(x[0]))):
+            print(f"    - {path}  ({dt} / {slug})")
+
+    if audio_kept_wrong_ext:
+        print("\n  Audio kept (filename matches pattern but ext is not mp3/m4a):")
+        for path, dt, slug in sorted(audio_kept_wrong_ext, key=lambda x: (x[1], x[2], str(x[0]))):
+            print(f"    - {path}  ({dt} / {slug})")
+
+    if not apply:
+        print("\nDry-run complete. No deletions performed.")
+        return 0
+
+    ok("Applying deletions...")
+
+    audio_errors = 0
+    for path, _dt, _slug in audio_deletions:
+        try:
+            path.unlink()
+        except Exception as e:
+            audio_errors += 1
+            warn(f"Audio delete failed: {path} ({e})")
+
+    notebook_errors = 0
+    for nb_id, _dt, _slug in notebook_deletions:
+        del_res = run_with_retries(
+            [NLM_CLI, "notebook", "delete", "--confirm", nb_id],
+            timeout_s=60,
+            retries=0,
+        )
+        if del_res.returncode != 0:
+            notebook_errors += 1
+            warn(f"Notebook delete failed: {nb_id} ({del_res.stderr.strip() or del_res.stdout.strip()})")
+
+    if audio_errors or notebook_errors:
+        warn(f"Cleanup completed with errors: audio_errors={audio_errors}, notebook_errors={notebook_errors}")
+        return 1
+
+    ok("Cleanup complete.")
+    return 0
+
+
 # ── NotebookLM: Find notebooks for date ────────────────────────────────────────
 
 def find_notebooks_for_date(target_date: str) -> dict:
@@ -260,12 +414,14 @@ def find_notebooks_for_date(target_date: str) -> dict:
         if dt != target_date:
             continue
 
-        for expected_category, slug in CATEGORY_SLUGS.items():
-            if expected_category == category_title or expected_category in category_title:
-                prev = best.get(slug)
-                if prev is None or nn > prev[0]:
-                    best[slug] = (nn, nb_id)
-                    best_titles[slug] = title
+        slug = slug_for_category_title(category_title)
+        if slug:
+            prev = best.get(slug)
+            if prev is None or nn > prev[0]:
+                best[slug] = (nn, nb_id)
+                best_titles[slug] = title
+        else:
+            warn(f"Unrecognized reading-list category (no slug): {title!r}")
 
     found = {slug: nb_id for slug, (_nn, nb_id) in best.items()}
     for slug, nb_id in found.items():
@@ -388,7 +544,13 @@ def _upload_and_publish_mp3(client: ElementFmClient, mp3_path: Path, title: str,
     if not episode_id:
         # Create episode
         print(f"      Creating episode ...", end=" ", flush=True)
-        episode = client.create_episode(title=title, season_number=1, episode_number=episode_number)
+        desc = elementfm_episode_description(title)
+        episode = client.create_episode(
+            title=title,
+            season_number=1,
+            episode_number=episode_number,
+            description=desc,
+        )
         if "error" in episode:
             fail(f"Create failed: {episode['error']}")
             entry["create_error"] = episode.get("error")
@@ -416,8 +578,12 @@ def _upload_and_publish_mp3(client: ElementFmClient, mp3_path: Path, title: str,
     else:
         ok("Audio already uploaded (per manifest), skipping upload")
 
-    # Publish
+    # Publish (element.fm requires a non-empty episode description)
     if not entry.get("published"):
+        desc = elementfm_episode_description(title)
+        patch = client.patch_episode(episode_id=str(episode_id), data={"description": desc})
+        if "error" in patch:
+            warn(f"Set description failed: {patch['error']} — publish may still fail")
         print(f"      Publishing ...", end=" ", flush=True)
         result = client.publish_episode(episode_id=str(episode_id))
         if "error" in result:
@@ -460,7 +626,9 @@ Examples:
     parser.add_argument("--audio-dir", default=None,
                         help="Audio directory (overrides config). Default: iCloud Personal Podcast")
     parser.add_argument("--timeout", type=float, default=30.0,
-                        help="HTTP timeout in seconds (default: 30)")
+                        help="HTTP timeout for JSON API calls in seconds (default: 30)")
+    parser.add_argument("--upload-timeout", type=float, default=900.0,
+                        help="Minimum per-attempt timeout for MP3 uploads in seconds; actual may be higher from file size (default: 900)")
     parser.add_argument("--audio-format", choices=["mp3", "m4a"], default=None,
                         help="Saved output format (default from config, fallback: mp3)")
     parser.add_argument("--wait-for-audio", dest="wait_for_audio", action=argparse.BooleanOptionalAction, default=True,
@@ -471,6 +639,12 @@ Examples:
                         help="Wait window in minutes (default: 15)")
     parser.add_argument("--poll-interval-seconds", type=float, default=20.0,
                         help="Polling interval while waiting (default: 20)")
+    parser.add_argument("--cleanup-old", action="store_true",
+                        help="Cleanup mode: delete downloaded audio + matching reading-list notebooks older than cutoff date (dry-run by default).")
+    parser.add_argument("--cleanup-apply", action="store_true",
+                        help="In cleanup mode, actually perform deletions (default is dry-run).")
+    parser.add_argument("--cleanup-cutoff-date", default=date.today().strftime("%Y-%m-%d"),
+                        help="Cutoff date for cleanup (YYYY-MM-DD). Older than this are eligible (default: today).")
     args = parser.parse_args()
 
     target_date = args.date
@@ -493,6 +667,15 @@ Examples:
 """)
 
     # Validate
+    if args.cleanup_old:
+        sys.exit(
+            cleanup_old_items(
+                audio_dir=audio_dir,
+                cutoff_date_str=args.cleanup_cutoff_date,
+                apply=args.cleanup_apply,
+            )
+        )
+
     if not args.dry_run and not args.download_only:
         if not API_KEY:
             fail("CLAUDE_ELEMENT_FM_KEY not set. Run: source ~/.zshrc")
@@ -527,8 +710,17 @@ Examples:
             warn("No notebooks found before timeout/discovery step.")
             sys.exit(1)
 
+        missing_nb = [s for s in slugs if s not in notebooks]
+        if missing_nb:
+            warn(
+                "No NotebookLM notebook matched for: "
+                + ", ".join(missing_nb)
+                + " (skill may have skipped an empty category, or the notebook title/category differs)."
+            )
+
         if args.wait_for_studio_status and not args.dry_run:
             # Keep only notebooks whose studio artifacts are ready by timeout.
+            before_studio = dict(notebooks)
             ready_slugs = set(
                 wait_for_studio_audio_ready(
                     notebooks=notebooks,
@@ -537,6 +729,13 @@ Examples:
                 )
             )
             notebooks = {slug: nb_id for slug, nb_id in notebooks.items() if slug in ready_slugs}
+            dropped = set(before_studio.keys()) - set(notebooks.keys())
+            if dropped:
+                warn(
+                    "Studio audio not ready in time (skipped these slugs — "
+                    "re-run with --no-wait-for-studio-status or increase --max-wait-minutes): "
+                    + ", ".join(sorted(dropped))
+                )
             if not notebooks:
                 warn("No notebooks became ready within the wait window.")
                 sys.exit(1)
@@ -614,6 +813,7 @@ Examples:
             base_url=BASE_URL,
         ),
         timeout_s=args.timeout,
+        upload_timeout_s=args.upload_timeout,
     )
 
     for slug in downloaded:

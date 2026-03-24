@@ -20,6 +20,32 @@ class TestPodcastConfig(unittest.TestCase):
         )
         self.assertEqual(parsed, ("2026-03-21", 3, "🧠 Things to Think About"))
 
+    def test_parse_audio_filename(self):
+        parsed = podcast_config.parse_audio_filename("2026-03-21-news.mp3")
+        self.assertEqual(parsed, ("2026-03-21", "news", "mp3"))
+
+    def test_slug_for_category_title(self):
+        slug = podcast_config.slug_for_category_title("📰 News & Current Affairs")
+        self.assertEqual(slug, "news")
+
+    def test_elementfm_episode_description_nonempty(self):
+        d = podcast_config.elementfm_episode_description("🧠 Things — Mar 24, 2026")
+        self.assertTrue(len(d) > 10)
+
+    def test_category_title_to_slug_variants(self):
+        self.assertEqual(
+            podcast_config.category_title_to_slug("📰 News & Current Affairs"),
+            "news",
+        )
+        self.assertEqual(
+            podcast_config.category_title_to_slug("News and Current Affairs"),
+            "news",
+        )
+        self.assertEqual(
+            podcast_config.category_title_to_slug("🧠 Things to Think About"),
+            "think",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -151,6 +151,8 @@ python3 scripts/daily_brief.py --no-wait-for-studio-status
 python3 scripts/daily_brief.py --no-wait-for-audio
 ```
 
+Large MP3 uploads to element.fm may need a longer timeout than JSON calls. Use `--upload-timeout` (default 900s); each upload also scales from file size up to 1 hour.
+
 The script writes a per-date manifest for idempotency at:
 
 - `~/.local/state/dhk-daily-brief/manifest-YYYY-MM-DD.json`
@@ -174,6 +176,30 @@ Combined guard mode:
 - Use both `--wait-for-studio-status` and `--wait-for-audio` in the same run.
 - The pipeline first waits for NotebookLM studio readiness.
 - After download, it applies the rolling quiet-window file wait before upload.
+
+### Cleanup mode
+
+Dry-run (show what would be deleted):
+
+```bash
+python3 scripts/daily_brief.py --cleanup-old
+```
+
+Actually delete:
+
+```bash
+python3 scripts/daily_brief.py --cleanup-old --cleanup-apply
+```
+
+Optional cutoff date (default: today):
+
+```bash
+python3 scripts/daily_brief.py --cleanup-old --cleanup-cutoff-date 2026-03-20
+```
+
+Cleanup behavior:
+- Deletes local podcast audio files older than the cutoff date (matching `YYYY-MM-DD-<slug>.mp3|m4a`).
+- Deletes NotebookLM `reading-list-*` notebooks older than the cutoff date only when a downloaded audio file exists for that notebook’s date+category.
 
 Newsletter tracking for label migration:
 

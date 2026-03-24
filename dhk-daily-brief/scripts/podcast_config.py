@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import unicodedata
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -145,4 +146,84 @@ def parse_reading_list_notebook_title(title: str) -> Optional[tuple[str, int, st
     if not m:
         return None
     return (m.group("date"), int(m.group("nn")), m.group("category"))
+
+
+def parse_audio_filename(filename: str) -> Optional[tuple[str, str, str]]:
+    """
+    Parse '<YYYY-MM-DD>-<slug>.<ext>' into (date, slug, ext).
+    Returns None if the filename doesn't match the expected pattern.
+    """
+    m = FILENAME_RE.match(Path(filename).name)
+    if not m:
+        return None
+    dt = m.group("date")
+    slug = m.group("slug")
+    ext = m.group("ext").lower()
+    return (dt, slug, ext)
+
+
+def elementfm_episode_description(title: str) -> str:
+    """
+    Non-empty show notes / description text required by element.fm before publish.
+    """
+    t = (title or "").strip()
+    if not t:
+        return "DHK Daily Brief — personal reading-list audio overview."
+    return f"{t} Personal reading-list audio overview (DHK Daily Brief)."
+
+
+def _strip_leading_non_letters(s: str) -> str:
+    """Strip leading emoji / punctuation until first letter or digit (category labels)."""
+    i = 0
+    while i < len(s):
+        ch = s[i]
+        if ch.isspace():
+            i += 1
+            continue
+        cat = unicodedata.category(ch)
+        if cat.startswith("L") or cat.startswith("N"):
+            break
+        i += 1
+    return s[i:].strip()
+
+
+def _normalize_category_label(s: str) -> str:
+    t = unicodedata.normalize("NFKC", s).strip()
+    t = _strip_leading_non_letters(t)
+    t = t.lower().replace(" and ", " & ")
+    t = re.sub(r"\s+", " ", t)
+    return t
+
+
+def category_title_to_slug(category_title: str) -> Optional[str]:
+    """
+    Map NotebookLM notebook category segment (after date/nn) to news | think | professional.
+    Handles minor title variations (e.g. 'and' vs '&', missing emoji).
+    """
+    if not category_title:
+        return None
+    ct = category_title.strip()
+    if ct in CATEGORY_SLUGS:
+        return CATEGORY_SLUGS[ct]
+    for expected_title, slug in CATEGORY_SLUGS.items():
+        if expected_title in ct or ct in expected_title:
+            return slug
+    norm = _normalize_category_label(ct)
+    for expected_title, slug in CATEGORY_SLUGS.items():
+        exp = _normalize_category_label(expected_title)
+        if norm == exp or exp in norm or norm in exp:
+            return slug
+    # Conservative keyword fallbacks (only for our three fixed categories)
+    if "professional" in norm and "reading" in norm:
+        return "professional"
+    if "things to think" in norm:
+        return "think"
+    if "news" in norm and ("current" in norm or "affairs" in norm):
+        return "news"
+    return None
+
+
+def slug_for_category_title(category_title: str) -> Optional[str]:
+    """Backward-compatible name; use category_title_to_slug."""
+    return category_title_to_slug(category_title)
 
