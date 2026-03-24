@@ -1,0 +1,148 @@
+from __future__ import annotations
+
+import json
+import os
+import re
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional
+
+
+DEFAULT_AUDIO_DIR = (
+    Path.home()
+    / "Library"
+    / "Mobile Documents"
+    / "com~apple~CloudDocs"
+    / "Personal Podcast"
+)
+
+AUDIO_FORMAT_DEFAULT = "mp3"
+ALLOWED_AUDIO_FORMATS = {"mp3", "m4a"}
+
+
+CONFIG_PATH = Path.home() / ".config" / "dhk-daily-brief" / "config.json"
+STATE_DIR = Path.home() / ".local" / "state" / "dhk-daily-brief"
+
+
+CATEGORY_SLUGS: dict[str, str] = {
+    "📰 News & Current Affairs": "news",
+    "🧠 Things to Think About": "think",
+    "💼 Professional Reading": "professional",
+}
+
+CATEGORY_TITLES: dict[str, str] = {v: k for k, v in CATEGORY_SLUGS.items()}
+
+
+FILENAME_RE = re.compile(
+    r"^(?P<date>\d{4}-\d{2}-\d{2})-(?P<slug>[a-z0-9_-]+)\.(?P<ext>[A-Za-z0-9]+)$"
+)
+
+
+READING_LIST_NOTEBOOK_RE = re.compile(
+    r"^reading-list-(?P<date>\d{4}-\d{2}-\d{2})-(?P<nn>\d{2})\s+(?P<category>.+)$"
+)
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    try:
+        data = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return {}
+    try:
+        parsed = json.loads(data)
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def ensure_dirs() -> None:
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def resolve_audio_dir(*, cli_audio_dir: Optional[str] = None) -> Path:
+    """
+    Resolve audio directory precedence:
+      1) CLI override
+      2) ~/.config/dhk-daily-brief/config.json (audio_dir)
+      3) DEFAULT_AUDIO_DIR (iCloud Personal Podcast)
+    """
+    if cli_audio_dir:
+        return Path(cli_audio_dir).expanduser()
+
+    cfg = _read_json(CONFIG_PATH)
+    audio_dir = cfg.get("audio_dir")
+    if isinstance(audio_dir, str) and audio_dir.strip():
+        return Path(audio_dir).expanduser()
+
+    env_audio_dir = os.environ.get("DHK_DAILY_BRIEF_AUDIO_DIR")
+    if isinstance(env_audio_dir, str) and env_audio_dir.strip():
+        return Path(env_audio_dir).expanduser()
+
+    return DEFAULT_AUDIO_DIR
+
+
+def resolve_audio_format(*, cli_audio_format: Optional[str] = None) -> str:
+    """
+    Resolve output audio format precedence:
+      1) CLI override (--audio-format)
+      2) ~/.config/dhk-daily-brief/config.json (audio_format)
+      3) default 'mp3'
+    """
+    candidate = (cli_audio_format or "").strip().lower()
+    if candidate:
+        if candidate in ALLOWED_AUDIO_FORMATS:
+            return candidate
+        return AUDIO_FORMAT_DEFAULT
+
+    cfg = _read_json(CONFIG_PATH)
+    cfg_format = str(cfg.get("audio_format", "")).strip().lower()
+    if cfg_format in ALLOWED_AUDIO_FORMATS:
+        return cfg_format
+
+    return AUDIO_FORMAT_DEFAULT
+
+
+def manifest_path_for_date(target_date: str) -> Path:
+    ensure_dirs()
+    return STATE_DIR / f"manifest-{target_date}.json"
+
+
+def parse_episode_title_from_filename(filename: str) -> str:
+    """
+    Turn '2026-03-21-news.m4a' into '📰 News & Current Affairs — Mar 21, 2026'.
+    Falls back to a humanized stem.
+    """
+    stem = Path(filename).stem
+    parts = stem.split("-")
+    if len(parts) >= 4:
+        try:
+            dt = datetime.strptime(f"{parts[0]}-{parts[1]}-{parts[2]}", "%Y-%m-%d")
+            slug = parts[3].lower()
+            category = CATEGORY_TITLES.get(slug, " ".join(parts[3:]).title())
+            return f"{category} — {dt.strftime('%b %d, %Y')}"
+        except ValueError:
+            pass
+    return stem.replace("-", " ").replace("_", " ").title()
+
+
+@dataclass(frozen=True)
+class NotebookMatch:
+    notebook_id: str
+    date: str
+    nn: int
+    title: str
+    category_title: str
+
+
+def parse_reading_list_notebook_title(title: str) -> Optional[tuple[str, int, str]]:
+    """
+    Parse 'reading-list-YYYY-MM-DD-NN <CATEGORY>' into (date, nn, category).
+    Returns None if not matched.
+    """
+    m = READING_LIST_NOTEBOOK_RE.match(title.strip())
+    if not m:
+        return None
+    return (m.group("date"), int(m.group("nn")), m.group("category"))
+

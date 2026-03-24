@@ -48,6 +48,13 @@ gmail_read_message(messageId=<id>)
 **Fetch ALL emails before doing anything else.** This keeps tool calls front-loaded
 and avoids hitting the per-turn tool call limit mid-workflow.
 
+While fetching each email, also capture sender metadata for tracking:
+- sender display name (if available)
+- sender email (if available)
+- subject
+- message id
+- date
+
 **HTML-only emails**: Some emails (e.g. JournalClub.io) return an empty plain-text
 body with a note to view the HTML version. When this happens:
 - Use the subject line and snippet to create a minimal source entry
@@ -72,6 +79,42 @@ Classify every email as one of:
 
 ### Ambiguity rule:
 Default to **to-do** if any action is implied, even loosely.
+
+### Newsletter sender tracking (for migration to Gmail labels)
+
+Maintain a running sender registry at:
+
+`dhk-daily-brief/data/newsletter_sender_registry.json`
+
+For every non-to-do newsletter item seen in starred triage, update sender stats:
+- increment `count`
+- update `last_seen`
+- preserve `first_seen`
+- append category usage counters (`news`, `think`, `professional`)
+- store `last_subject`
+- maintain a small set/list of representative `subjects` (cap at 20)
+
+If sender email is unavailable, use sender display name as fallback key.
+
+Schema guidance:
+```
+{
+  "version": 1,
+  "updated_at": "ISO-8601",
+  "senders": {
+    "sender_key": {
+      "name": "...",
+      "email": "...",
+      "first_seen": "YYYY-MM-DD",
+      "last_seen": "YYYY-MM-DD",
+      "count": 12,
+      "categories": {"news": 7, "think": 4, "professional": 1},
+      "last_subject": "...",
+      "subjects": ["...", "..."]
+    }
+  }
+}
+```
 
 ### Show triage table before acting:
 
@@ -247,6 +290,10 @@ and remind the user the files will be available once the overviews complete (typ
 
 📋 Todoist — Today Pile:
   → 1 grouped task added with 3 to-dos
+
+🧾 Sender registry:
+  • `dhk-daily-brief/data/newsletter_sender_registry.json` updated
+  • Include top senders touched today (name/email + count)
 
 Nothing was deleted or archived in Gmail.
 Files saved to ~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast

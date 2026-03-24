@@ -10,8 +10,8 @@ Usage:
 Then subscribe in Overcast to: http://<your-mac-ip>:8765/feed.rss
 """
 
+import argparse
 import os
-import glob
 import hashlib
 import mimetypes
 import socket
@@ -20,9 +20,13 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from email.utils import formatdate
 import time
+from urllib.parse import quote, unquote
+from xml.sax.saxutils import escape
 
-PODCAST_DIR = Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs" / "Personal Podcast"
-PORT = 8765
+from podcast_config import parse_episode_title_from_filename, resolve_audio_dir
+
+PODCAST_DIR: Path | None = None
+DEFAULT_PORT = 8765
 FEED_TITLE = "DHK Personal Podcast"
 FEED_DESCRIPTION = "NotebookLM audio overviews — personal reading list"
 FEED_AUTHOR = "DHK"
@@ -40,7 +44,7 @@ def get_local_ip():
 
 def slugify(name):
     """Make a URL-safe slug from a filename."""
-    return name.replace(" ", "%20")
+    return quote(name, safe="")
 
 def file_to_pub_date(path):
     """Convert file mtime to RFC 2822 date string."""
@@ -48,32 +52,12 @@ def file_to_pub_date(path):
     return formatdate(mtime, usegmt=True)
 
 def parse_episode_title(filename):
-    """
-    Turn filenames like '2026-03-21-news.m4a' into readable titles.
-    Falls back to the stem if pattern doesn't match.
-    """
-    stem = Path(filename).stem
-    parts = stem.split("-")
-    
-    # Try to parse YYYY-MM-DD-category pattern
-    if len(parts) >= 4:
-        try:
-            date_str = f"{parts[0]}-{parts[1]}-{parts[2]}"
-            date = datetime.strptime(date_str, "%Y-%m-%d")
-            category = " ".join(parts[3:]).title()
-            category_emoji = {
-                "news": "📰 News & Current Affairs",
-                "think": "🧠 Things to Think About", 
-                "professional": "💼 Professional Reading",
-            }.get(parts[3].lower(), category)
-            return f"{category_emoji} — {date.strftime('%b %d, %Y')}"
-        except ValueError:
-            pass
-    
-    return stem.replace("-", " ").replace("_", " ").title()
+    return parse_episode_title_from_filename(filename)
 
 def generate_rss(base_url):
     """Generate the RSS feed XML."""
+    if PODCAST_DIR is None:
+        raise RuntimeError("PODCAST_DIR not initialized")
     files = []
     for ext in AUDIO_EXTENSIONS:
         files.extend(PODCAST_DIR.glob(f"*{ext}"))
@@ -94,13 +78,13 @@ def generate_rss(base_url):
         
         items.append(f"""
     <item>
-      <title>{title}</title>
+      <title>{escape(title)}</title>
       <enclosure url="{url}" length="{size}" type="{mime}"/>
       <guid isPermaLink="false">{guid}</guid>
       <pubDate>{pub_date}</pubDate>
-      <description>{title}</description>
+      <description>{escape(title)}</description>
       <itunes:duration>0</itunes:duration>
-      <itunes:author>{FEED_AUTHOR}</itunes:author>
+      <itunes:author>{escape(FEED_AUTHOR)}</itunes:author>
     </item>""")
     
     now = formatdate(usegmt=True)
@@ -131,7 +115,8 @@ class FeedHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         local_ip = get_local_ip()
-        base_url = f"http://{local_ip}:{PORT}"
+        port = self.server.server_address[1]
+        base_url = f"http://{local_ip}:{port}"
 
         if self.path == "/feed.rss" or self.path == "/":
             rss = generate_rss(base_url)
@@ -143,7 +128,11 @@ class FeedHandler(BaseHTTPRequestHandler):
             self.wfile.write(data)
 
         elif self.path.startswith("/audio/"):
-            filename = self.path[7:].replace("%20", " ")
+            filename = unquote(self.path[7:])
+            if PODCAST_DIR is None:
+                self.send_response(500)
+                self.end_headers()
+                return
             filepath = PODCAST_DIR / filename
             if filepath.exists() and filepath.suffix.lower() in AUDIO_EXTENSIONS:
                 size = os.path.getsize(filepath)
@@ -154,7 +143,11 @@ class FeedHandler(BaseHTTPRequestHandler):
                 self.send_header("Accept-Ranges", "bytes")
                 self.end_headers()
                 with open(filepath, "rb") as f:
-                    self.wfile.write(f.read())
+                    while True:
+                        chunk = f.read(1024 * 256)
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
             else:
                 self.send_response(404)
                 self.end_headers()
@@ -164,8 +157,16 @@ class FeedHandler(BaseHTTPRequestHandler):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Serve a local RSS feed for your podcast folder")
+    parser.add_argument("--audio-dir", default=None, help="Audio directory (overrides config)")
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Port to serve on (default: 8765)")
+    args = parser.parse_args()
+
+    global PODCAST_DIR
+    PODCAST_DIR = resolve_audio_dir(cli_audio_dir=args.audio_dir)
+
     local_ip = get_local_ip()
-    feed_url = f"http://{local_ip}:{PORT}/feed.rss"
+    feed_url = f"http://{local_ip}:{args.port}/feed.rss"
     
     if not PODCAST_DIR.exists():
         print(f"⚠️  Podcast folder not found: {PODCAST_DIR}")
@@ -197,7 +198,7 @@ Press Ctrl+C to stop.
 ─────────────────────────────────────────────────
 """)
 
-    server = HTTPServer(("0.0.0.0", PORT), FeedHandler)
+    server = HTTPServer(("0.0.0.0", args.port), FeedHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -55,6 +55,38 @@ export CLAUDE_ELEMENT_FM_KEY='your-element-fm-api-key'
 
 Then reload: `source ~/.zshrc`
 
+### Config file (optional)
+
+By default the scripts use the iCloud “Personal Podcast” folder:
+
+- `~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast`
+
+You can override this by creating:
+
+- `~/.config/dhk-daily-brief/config.json`
+
+Example:
+
+```json
+{
+  "audio_dir": "/Users/dhk/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast",
+  "audio_format": "mp3"
+}
+```
+
+Precedence:
+
+- CLI `--audio-dir ...` (highest)
+- `~/.config/dhk-daily-brief/config.json` `"audio_dir"`
+- `DHK_DAILY_BRIEF_AUDIO_DIR` env var
+- Default iCloud folder (lowest)
+
+Audio format:
+
+- Supported: `mp3`, `m4a`
+- Default: `mp3`
+- CLI override: `--audio-format mp3|m4a`
+
 ### Install Scripts
 
 ```bash
@@ -92,6 +124,43 @@ for cat in news think professional; do
 done
 ```
 
+### `daily_brief.py`
+
+End-to-end runner: finds NotebookLM reading-list notebooks for a date, downloads audio via `nlm`, and uploads to element.fm.
+
+```bash
+python3 scripts/daily_brief.py
+python3 scripts/daily_brief.py --date 2026-03-19
+python3 scripts/daily_brief.py --download-only
+python3 scripts/daily_brief.py --upload-only
+python3 scripts/daily_brief.py --audio-dir "/path/to/podcasts"
+python3 scripts/daily_brief.py --audio-format mp3
+```
+
+The script writes a per-date manifest for idempotency at:
+
+- `~/.local/state/dhk-daily-brief/manifest-YYYY-MM-DD.json`
+
+Newsletter tracking for label migration:
+
+- Sender registry file: `dhk-daily-brief/data/newsletter_sender_registry.json`
+- Updated by the `reading-list-builder` skill during starred triage runs.
+
+### `suggest_gmail_label_filters.py`
+
+Reads the sender registry and ranks likely newsletter senders to help migrate from starred-based triage to a Gmail label workflow.
+
+```bash
+# default suggestions
+python3 scripts/suggest_gmail_label_filters.py
+
+# stricter threshold + include one copy/paste OR query
+python3 scripts/suggest_gmail_label_filters.py --min-count 3 --top 20 --emit-or-query
+
+# bias toward one listening category
+python3 scripts/suggest_gmail_label_filters.py --preferred-category think
+```
+
 ### `personal_podcast_rss.py`
 
 Local RSS feed server — serves your iCloud Personal Podcast folder as a podcast
@@ -100,6 +169,12 @@ feed. Alternative to element.fm for Overcast on same WiFi.
 ```bash
 python3 ~/scripts/personal_podcast_rss.py
 # Then subscribe in Overcast to: http://<your-mac-ip>:8765/feed.rss
+```
+
+Optional overrides:
+
+```bash
+python3 ~/scripts/personal_podcast_rss.py --audio-dir "/path/to/podcasts" --port 8765
 ```
 
 ---
