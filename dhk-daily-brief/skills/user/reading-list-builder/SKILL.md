@@ -212,8 +212,8 @@ studio_create(
   notebook_id=<id>,
   artifact_type="audio",
   audio_format="deep_dive",
-  audio_length="default",
-  focus_prompt="Open with the 3-5 most important ideas or takeaways across all the sources — give me the signal first. Then go deeper on each piece in turn. Close with any commentary, opinions, or open questions raised in the material. Prioritize insight over summary.",
+  audio_length="long",
+  focus_prompt="Open with the 3-5 most important ideas or takeaways across all the sources — give me the signal first. Then go deeper on each piece in turn. Close with any commentary, opinions, or open questions raised in the material. Prioritize insight over summary. Target roughly 12 minutes of content.",
   confirm=True
 )
 ```
