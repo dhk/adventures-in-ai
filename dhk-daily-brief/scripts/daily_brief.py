@@ -219,6 +219,36 @@ def wait_for_notebooks_for_date(
     return {}
 
 
+def fetch_studio_titles(notebooks: dict[str, str]) -> dict[str, str]:
+    """
+    Fetch the renamed studio artifact titles set by Phase 1.
+    Returns {slug: rich_title} for slugs where a title was found.
+    """
+    header("Fetching studio artifact titles")
+    titles: dict[str, str] = {}
+    for slug, notebook_id in notebooks.items():
+        result = run_with_retries(
+            [NLM_CLI, "studio", "status", notebook_id, "--json"],
+            timeout_s=45,
+            retries=1,
+        )
+        if result.returncode != 0:
+            warn(f"Could not fetch studio status for {slug}")
+            continue
+        try:
+            payload = json.loads(result.stdout)
+            artifacts = payload if isinstance(payload, list) else payload.get("artifacts", [])
+            for artifact in artifacts if isinstance(artifacts, list) else []:
+                t = artifact.get("title") or artifact.get("name")
+                if t and t.strip():
+                    titles[slug] = t.strip()
+                    ok(f"{slug}: {t[:80]}")
+                    break
+        except (json.JSONDecodeError, AttributeError):
+            continue
+    return titles
+
+
 def _parse_iso_date(date_str: str) -> date:
     return datetime.strptime(date_str, "%Y-%m-%d").date()
 
@@ -496,7 +526,7 @@ def convert_to_mp3(input_path: Path, output_path: Path):
         sys.exit(1)
 
 
-def upload_to_elementfm(client: ElementFmClient, audio_path: Path, *, dry_run: bool, manifest: dict) -> bool:
+def upload_to_elementfm(client: ElementFmClient, audio_path: Path, *, dry_run: bool, manifest: dict, rich_description: str | None = None) -> bool:
     """Convert, upload, and publish one episode. Returns True on success."""
     title = parse_episode_title_from_filename(audio_path.name)
 
@@ -533,18 +563,18 @@ def upload_to_elementfm(client: ElementFmClient, audio_path: Path, *, dry_run: b
             convert_to_mp3(audio_path, mp3_path)
             print("✓")
 
-            return _upload_and_publish_mp3(client, mp3_path, title, episode_number, entry)
+            return _upload_and_publish_mp3(client, mp3_path, title, episode_number, entry, rich_description)
     else:
         mp3_path = audio_path
-        return _upload_and_publish_mp3(client, mp3_path, title, episode_number, entry)
+        return _upload_and_publish_mp3(client, mp3_path, title, episode_number, entry, rich_description)
 
-def _upload_and_publish_mp3(client: ElementFmClient, mp3_path: Path, title: str, episode_number: int, entry: dict) -> bool:
+def _upload_and_publish_mp3(client: ElementFmClient, mp3_path: Path, title: str, episode_number: int, entry: dict, rich_description: str | None = None) -> bool:
     episode_id = entry.get("episode_id")
 
     if not episode_id:
         # Create episode
         print(f"      Creating episode ...", end=" ", flush=True)
-        desc = elementfm_episode_description(title)
+        desc = elementfm_episode_description(title, rich_description)
         episode = client.create_episode(
             title=title,
             season_number=1,
@@ -580,7 +610,7 @@ def _upload_and_publish_mp3(client: ElementFmClient, mp3_path: Path, title: str,
 
     # Publish (element.fm requires a non-empty episode description)
     if not entry.get("published"):
-        desc = elementfm_episode_description(title)
+        desc = elementfm_episode_description(title, rich_description)
         patch = client.patch_episode(episode_id=str(episode_id), data={"description": desc})
         if "error" in patch:
             warn(f"Set description failed: {patch['error']} — publish may still fail")
@@ -608,15 +638,12 @@ def main():
 Examples:
   python3 daily_brief.py                     # run full pipeline for today
   python3 daily_brief.py --date 2026-03-19   # run for a specific date
-  python3 daily_brief.py --download-only     # nlm download only, skip upload
   python3 daily_brief.py --upload-only       # element.fm upload only (files must exist)
   python3 daily_brief.py --dry-run           # preview without doing anything
         """
     )
     parser.add_argument("--date", default=date.today().strftime("%Y-%m-%d"),
                         help="Date to process (YYYY-MM-DD, default: today)")
-    parser.add_argument("--download-only", action="store_true",
-                        help="Download audio only, skip element.fm upload")
     parser.add_argument("--upload-only", action="store_true",
                         help="Upload to element.fm only (audio files must already exist)")
     parser.add_argument("--dry-run", action="store_true",
@@ -659,7 +686,7 @@ Examples:
 ║       From Inbox to Earbuds                     ║
 ╚══════════════════════════════════════════════════╝
   Date:     {target_date}
-  Mode:     {"dry-run" if args.dry_run else "download-only" if args.download_only else "upload-only" if args.upload_only else "full pipeline"}
+  Mode:     {"dry-run" if args.dry_run else "upload-only" if args.upload_only else "full pipeline"}
   Slugs:    {", ".join(slugs)}
   Format:   {audio_format}
   Audio dir: {audio_dir}
@@ -676,7 +703,7 @@ Examples:
             )
         )
 
-    if not args.dry_run and not args.download_only:
+    if not args.dry_run:
         if not API_KEY:
             fail("CLAUDE_ELEMENT_FM_KEY not set. Run: source ~/.zshrc")
             sys.exit(1)
@@ -694,10 +721,10 @@ Examples:
         except Exception:
             manifest = {"date": target_date, "episodes": {}}
 
-    # ── Step 1: Find notebooks ──────────────────────────────────────────────
+    # ── Step 1: Find notebooks + wait for studio readiness ─────────────────
     notebooks = {}
-    if not args.upload_only:
-        if args.wait_for_studio_status and not args.dry_run:
+    if not args.dry_run:
+        if args.wait_for_studio_status and not args.upload_only:
             notebooks = wait_for_notebooks_for_date(
                 target_date=target_date,
                 max_wait_minutes=args.max_wait_minutes,
@@ -706,7 +733,7 @@ Examples:
         else:
             notebooks = find_notebooks_for_date(target_date)
 
-        if not notebooks:
+        if not args.upload_only and not notebooks:
             warn("No notebooks found before timeout/discovery step.")
             sys.exit(1)
 
@@ -718,8 +745,7 @@ Examples:
                 + " (skill may have skipped an empty category, or the notebook title/category differs)."
             )
 
-        if args.wait_for_studio_status and not args.dry_run:
-            # Keep only notebooks whose studio artifacts are ready by timeout.
+        if args.wait_for_studio_status and notebooks:
             before_studio = dict(notebooks)
             ready_slugs = set(
                 wait_for_studio_audio_ready(
@@ -736,59 +762,21 @@ Examples:
                     "re-run with --no-wait-for-studio-status or increase --max-wait-minutes): "
                     + ", ".join(sorted(dropped))
                 )
-            if not notebooks:
+            if not args.upload_only and not notebooks:
                 warn("No notebooks became ready within the wait window.")
                 sys.exit(1)
-    else:
-        waited_found = []
-        if args.wait_for_audio:
-            waited_found = wait_for_audio_files(
-                audio_dir=audio_dir,
-                target_date=target_date,
-                slugs=slugs,
-                audio_format=audio_format,
-                max_wait_minutes=args.max_wait_minutes,
-                poll_interval_seconds=args.poll_interval_seconds,
-            )
 
-        # In upload-only mode, infer from existing files
-        for slug in slugs:
-            audio_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
-            if slug in waited_found or audio_path.exists():
-                notebooks[slug] = None  # no notebook id needed
+    # ── Step 2: Fetch rich titles from studio artifacts ─────────────────────
+    # Phase 1 renames each artifact with the NotebookLM title + bullets + sources.
+    # We use that as the Element.fm episode description.
+    rich_titles: dict[str, str] = {}
+    if notebooks and not args.dry_run:
+        rich_titles = fetch_studio_titles(notebooks)
 
-    # ── Step 2: Download audio ──────────────────────────────────────────────
-    downloaded = []
-    if not args.upload_only:
-        header("Downloading audio overviews")
-        for slug in slugs:
-            nb_id = notebooks.get(slug)
-            if not nb_id:
-                warn(f"No notebook found for slug: {slug} — skipping")
-                continue
-            output_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
-            success = download_audio(nb_id, output_path, args.dry_run, output_format=audio_format)
-            if success:
-                downloaded.append(slug)
-    else:
-        # Check which files exist
-        for slug in slugs:
-            audio_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
-            if audio_path.exists():
-                downloaded.append(slug)
-            else:
-                warn(f"File not found, skipping: {audio_path.name}")
-
-    if args.download_only:
-        header("Done (download-only mode)")
-        print(f"  Downloaded: {', '.join(downloaded) or 'none'}")
-        print(f"  Files in: {audio_dir}\n")
-        return
-
-    # Optional second guard: after studio-status gating + download, apply rolling
-    # quiet-window file wait before upload to catch late-arriving files.
-    if args.wait_for_studio_status and args.wait_for_audio and not args.upload_only and not args.dry_run:
-        pre_upload_found = wait_for_audio_files(
+    # ── Step 3: Wait for audio files then check what's available ────────────
+    # Phase 1 handles downloading to iCloud. We just wait for the files to appear.
+    if args.wait_for_audio and not args.dry_run:
+        wait_for_audio_files(
             audio_dir=audio_dir,
             target_date=target_date,
             slugs=slugs,
@@ -796,9 +784,14 @@ Examples:
             max_wait_minutes=args.max_wait_minutes,
             poll_interval_seconds=args.poll_interval_seconds,
         )
-        for slug in pre_upload_found:
-            if slug not in downloaded:
-                downloaded.append(slug)
+
+    available = []
+    for slug in slugs:
+        audio_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
+        if audio_path.exists() or args.dry_run:
+            available.append(slug)
+        else:
+            warn(f"File not found, skipping: {audio_path.name}")
 
     # ── Step 3: Upload to element.fm ────────────────────────────────────────
     header("Uploading to element.fm — DHK Daily Brief")
@@ -816,13 +809,13 @@ Examples:
         upload_timeout_s=args.upload_timeout,
     )
 
-    for slug in downloaded:
+    for slug in available:
         audio_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
-        if not audio_path.exists():
-            warn(f"File not found after download: {audio_path.name}")
+        if not audio_path.exists() and not args.dry_run:
+            warn(f"File not found: {audio_path.name}")
             failed.append(slug)
             continue
-        success = upload_to_elementfm(client, audio_path, dry_run=args.dry_run, manifest=manifest)
+        success = upload_to_elementfm(client, audio_path, dry_run=args.dry_run, manifest=manifest, rich_description=rich_titles.get(slug))
         try:
             manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
         except Exception:
@@ -835,7 +828,7 @@ Examples:
     # ── Summary ─────────────────────────────────────────────────────────────
     header("Summary")
     print(f"  Date:       {target_date}")
-    print(f"  Downloaded: {len(downloaded)} — {', '.join(downloaded) or 'none'}")
+    print(f"  Available:  {len(available)} — {', '.join(available) or 'none'}")
     print(f"  Uploaded:   {len(uploaded)} — {', '.join(uploaded) or 'none'}")
     if failed:
         print(f"  Failed:     {len(failed)} — {', '.join(failed)}")

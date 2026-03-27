@@ -6,9 +6,11 @@ from dhk_daily_brief_imports import podcast_config
 class TestPodcastConfig(unittest.TestCase):
     def test_parse_episode_title_from_filename_known_slug(self):
         title = podcast_config.parse_episode_title_from_filename("2026-03-21-news.m4a")
-        self.assertIn("📰 News & Current Affairs", title)
-        self.assertIn("Mar", title)
-        self.assertIn("2026", title)
+        self.assertEqual(title, "reading list - news - 2026-03-21")
+
+    def test_parse_episode_title_from_filename_professional(self):
+        title = podcast_config.parse_episode_title_from_filename("2026-03-01-professional.mp3")
+        self.assertEqual(title, "reading list - professional - 2026-03-01")
 
     def test_parse_episode_title_from_filename_fallback(self):
         title = podcast_config.parse_episode_title_from_filename("weird_name-file.m4a")
@@ -28,9 +30,15 @@ class TestPodcastConfig(unittest.TestCase):
         slug = podcast_config.slug_for_category_title("📰 News & Current Affairs")
         self.assertEqual(slug, "news")
 
-    def test_elementfm_episode_description_nonempty(self):
-        d = podcast_config.elementfm_episode_description("🧠 Things — Mar 24, 2026")
-        self.assertTrue(len(d) > 10)
+    def test_elementfm_episode_description_fallback(self):
+        d = podcast_config.elementfm_episode_description("reading list - think - 2026-03-24")
+        self.assertIn("DHK Daily Brief", d)
+        self.assertIn("think", d)
+
+    def test_elementfm_episode_description_rich(self):
+        rich = "How Power Profits From Chaos\n\n• Idea one\n• Idea two\n\nSources: Noahpinion"
+        d = podcast_config.elementfm_episode_description("reading list - think - 2026-03-24", rich)
+        self.assertEqual(d, rich)
 
     def test_category_title_to_slug_variants(self):
         self.assertEqual(

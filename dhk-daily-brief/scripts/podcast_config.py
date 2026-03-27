@@ -112,17 +112,17 @@ def manifest_path_for_date(target_date: str) -> Path:
 
 def parse_episode_title_from_filename(filename: str) -> str:
     """
-    Turn '2026-03-21-news.m4a' into '📰 News & Current Affairs — Mar 21, 2026'.
+    Turn '2026-03-21-news.mp3' into 'reading list - news - 2026-03-21'.
     Falls back to a humanized stem.
     """
     stem = Path(filename).stem
     parts = stem.split("-")
     if len(parts) >= 4:
         try:
-            dt = datetime.strptime(f"{parts[0]}-{parts[1]}-{parts[2]}", "%Y-%m-%d")
+            datetime.strptime(f"{parts[0]}-{parts[1]}-{parts[2]}", "%Y-%m-%d")
+            date_str = f"{parts[0]}-{parts[1]}-{parts[2]}"
             slug = parts[3].lower()
-            category = CATEGORY_TITLES.get(slug, " ".join(parts[3:]).title())
-            return f"{category} — {dt.strftime('%b %d, %Y')}"
+            return f"reading list - {slug} - {date_str}"
         except ValueError:
             pass
     return stem.replace("-", " ").replace("_", " ").title()
@@ -162,14 +162,17 @@ def parse_audio_filename(filename: str) -> Optional[tuple[str, str, str]]:
     return (dt, slug, ext)
 
 
-def elementfm_episode_description(title: str) -> str:
+def elementfm_episode_description(title: str, rich_description: Optional[str] = None) -> str:
     """
-    Non-empty show notes / description text required by element.fm before publish.
+    Episode description for element.fm. Uses the rich Phase 1 description (NotebookLM
+    title + bullets + sources) if available; otherwise falls back to a simple string.
     """
+    if rich_description and rich_description.strip():
+        return rich_description.strip()
     t = (title or "").strip()
     if not t:
         return "DHK Daily Brief — personal reading-list audio overview."
-    return f"{t} Personal reading-list audio overview (DHK Daily Brief)."
+    return f"DHK Daily Brief — {t}"
 
 
 def _strip_leading_non_letters(s: str) -> str:
