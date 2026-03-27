@@ -131,19 +131,31 @@ class ElementFmClient:
 
     def list_episodes(self) -> list[dict[str, Any]]:
         """
-        Best-effort: returns a list of episodes. The API response shape may vary.
+        Returns all episodes, handling pagination (API returns 10 per page).
         """
-        result = self.request("GET", "/episodes")
-        for key in ("episodes", "results", "items", "data"):
-            value = result.get(key)
-            if isinstance(value, list):
-                return [e for e in value if isinstance(e, dict)]
-        # Some responses include pagination metadata plus list nested differently.
-        if isinstance(result.get("episodes"), dict):
-            inner = result["episodes"].get("results")
-            if isinstance(inner, list):
-                return [e for e in inner if isinstance(e, dict)]
-        return []
+        all_episodes: list[dict[str, Any]] = []
+        page = 1
+        while True:
+            result = self.request("GET", f"/episodes?page={page}")
+            batch: list[dict[str, Any]] = []
+            for key in ("episodes", "results", "items", "data"):
+                value = result.get(key)
+                if isinstance(value, list):
+                    batch = [e for e in value if isinstance(e, dict)]
+                    break
+            if not batch:
+                if isinstance(result.get("episodes"), dict):
+                    inner = result["episodes"].get("results")
+                    if isinstance(inner, list):
+                        batch = [e for e in inner if isinstance(e, dict)]
+            if not batch:
+                break
+            all_episodes.extend(batch)
+            total = result.get("total_episodes", 0)
+            if len(all_episodes) >= total:
+                break
+            page += 1
+        return all_episodes
 
     def total_episodes(self) -> int:
         result = self.request("GET", "/episodes")

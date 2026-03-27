@@ -31,6 +31,7 @@ from elementfm_client import ElementFmClient, ElementFmConfig
 from podcast_config import (
     CATEGORY_SLUGS,
     CATEGORY_TITLES,
+    STATE_DIR,
     elementfm_episode_description,
     manifest_path_for_date,
     parse_audio_filename,
@@ -112,6 +113,9 @@ def wait_for_audio_files(
         if new_files:
             for slug in new_files:
                 ok(f"Detected: {target_date}-{slug}.{audio_format}")
+            if seen == set(expected.keys()):
+                ok("All expected files found.")
+                break
             deadline = time.monotonic() + wait_s
             continue
 
@@ -512,6 +516,21 @@ def download_audio(notebook_id: str, output_path: Path, dry_run: bool, *, output
 
 # ── element.fm API ─────────────────────────────────────────────────────────────
 
+def _is_real_mp3(path: Path) -> bool:
+    """Return True only if the file's magic bytes indicate actual MP3 content."""
+    try:
+        with open(path, "rb") as f:
+            header = f.read(12)
+        # ID3 tag (most MP3s) or sync word FF FB/FA/F3/F2 (raw MPEG frame)
+        if header[:3] == b"ID3":
+            return True
+        if len(header) >= 2 and header[0] == 0xFF and (header[1] & 0xE0) == 0xE0:
+            return True
+        return False
+    except OSError:
+        return False
+
+
 def convert_to_mp3(input_path: Path, output_path: Path):
     """Convert audio to MP3 via ffmpeg."""
     cmd = [
@@ -555,18 +574,18 @@ def upload_to_elementfm(client: ElementFmClient, audio_path: Path, *, dry_run: b
         print("      [dry-run] would upload and publish")
         return True
 
-    # Convert if needed
-    if audio_path.suffix.lower() != ".mp3":
+    # Convert if needed — check actual file content, not just extension
+    # (Phase 1 skill may save M4A files with a .mp3 extension)
+    needs_convert = audio_path.suffix.lower() != ".mp3" or not _is_real_mp3(audio_path)
+    if needs_convert:
         print(f"      Converting to mp3 ...", end=" ", flush=True)
         with tempfile.TemporaryDirectory() as td:
             mp3_path = Path(td) / (audio_path.stem + ".mp3")
             convert_to_mp3(audio_path, mp3_path)
             print("✓")
-
             return _upload_and_publish_mp3(client, mp3_path, title, episode_number, entry, rich_description)
     else:
-        mp3_path = audio_path
-        return _upload_and_publish_mp3(client, mp3_path, title, episode_number, entry, rich_description)
+        return _upload_and_publish_mp3(client, audio_path, title, episode_number, entry, rich_description)
 
 def _upload_and_publish_mp3(client: ElementFmClient, mp3_path: Path, title: str, episode_number: int, entry: dict, rich_description: str | None = None) -> bool:
     episode_id = entry.get("episode_id")
@@ -628,6 +647,132 @@ def _upload_and_publish_mp3(client: ElementFmClient, mp3_path: Path, title: str,
     return True
 
 
+# ── Status ─────────────────────────────────────────────────────────────────────
+
+SLUGS_ALL = ["news", "think", "professional"]
+
+
+def _manifest_status_line(slug: str, entry: dict) -> str:
+    if not entry:
+        return "  —  not started"
+    if entry.get("published"):
+        ep = entry.get("episode_number")
+        ep_str = f"  (#{ep})" if isinstance(ep, int) else ""
+        return f"  ✓  published{ep_str}"
+    if entry.get("upload_error") or entry.get("create_error"):
+        err = entry.get("upload_error") or entry.get("create_error")
+        return f"  ✗  error: {err}"
+    if entry.get("audio_uploaded"):
+        return "  ↑  uploaded (not yet published)"
+    if entry.get("episode_id"):
+        return "  …  episode created (not uploaded)"
+    return "  —  in progress"
+
+
+def _is_complete(manifest: dict) -> bool:
+    eps = manifest.get("episodes", {})
+    return all(eps.get(s, {}).get("published") for s in SLUGS_ALL)
+
+
+def _print_manifest(manifest: dict, audio_dir: Path, audio_format: str):
+    target_date = manifest.get("date", "?")
+    eps = manifest.get("episodes", {})
+    for slug in SLUGS_ALL:
+        entry = eps.get(slug, {})
+        audio_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
+        file_str = "  📁 file ready" if audio_path.exists() else ""
+        print(f"  {slug:14s}{_manifest_status_line(slug, entry)}{file_str}")
+
+
+def show_status(target_date: str, audio_dir: Path, audio_format: str):
+    # ── Today ──────────────────────────────────────────────────────────────
+    header(f"Status — {target_date}")
+    today_path = manifest_path_for_date(target_date)
+    if today_path.exists():
+        try:
+            today_manifest = json.loads(today_path.read_text(encoding="utf-8"))
+        except Exception:
+            today_manifest = {}
+    else:
+        today_manifest = {}
+
+    files_on_disk: set[str] = set()
+    for slug in SLUGS_ALL:
+        for ext in (audio_format, "mp3", "m4a"):
+            if (audio_dir / f"{target_date}-{slug}.{ext}").exists():
+                files_on_disk.add(slug)
+                break
+
+    if today_manifest:
+        _print_manifest(today_manifest, audio_dir, audio_format)
+        all_published = _is_complete(today_manifest)
+        eps = today_manifest.get("episodes", {})
+        has_error = any(
+            eps.get(s, {}).get("upload_error") or eps.get(s, {}).get("create_error")
+            for s in SLUGS_ALL
+        )
+        any_unpublished = not all_published
+    else:
+        print("  No manifest yet — checking for audio files on disk:")
+        for slug in SLUGS_ALL:
+            if slug in files_on_disk:
+                path = next(
+                    audio_dir / f"{target_date}-{slug}.{ext}"
+                    for ext in (audio_format, "mp3", "m4a")
+                    if (audio_dir / f"{target_date}-{slug}.{ext}").exists()
+                )
+                size_mb = path.stat().st_size / 1_048_576
+                print(f"  {slug:14s}  📁 {path.name}  ({size_mb:.1f} MB)")
+            else:
+                print(f"  {slug:14s}  —  no file found")
+        all_published = False
+        has_error = False
+        any_unpublished = True
+
+    # ── Last completed ─────────────────────────────────────────────────────
+    header("Last completed run")
+    manifests = sorted(STATE_DIR.glob("manifest-*.json"), reverse=True)
+    last_complete = None
+    for path in manifests:
+        date_str = path.stem.replace("manifest-", "")
+        if date_str == target_date:
+            continue
+        try:
+            m = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if _is_complete(m):
+            last_complete = m
+            break
+
+    if last_complete:
+        print(f"  Date: {last_complete.get('date', '?')}")
+        _print_manifest(last_complete, audio_dir, audio_format)
+    else:
+        print("  No completed runs found in history.")
+
+    # ── Next step ──────────────────────────────────────────────────────────
+    header("Next step")
+    if all_published:
+        print("  ✓  All episodes published — nothing to do.")
+    elif has_error:
+        print("  ✗  Some episodes errored. Retry:")
+        print("     daily-brief --upload-only")
+    elif files_on_disk and not today_manifest:
+        print("  Files are ready but not uploaded. Run:")
+        print("     daily-brief --upload-only")
+    elif files_on_disk and any_unpublished:
+        print("  Some episodes not yet published. Run:")
+        print("     daily-brief --upload-only")
+    elif not files_on_disk:
+        print("  No audio files found. Run the full pipeline:")
+        print("     daily-brief")
+    else:
+        print("  Run the full pipeline:")
+        print("     daily-brief")
+    print()
+
+
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
@@ -638,12 +783,17 @@ def main():
 Examples:
   python3 daily_brief.py                     # run full pipeline for today
   python3 daily_brief.py --date 2026-03-19   # run for a specific date
+  python3 daily_brief.py --download-only     # nlm download only, skip upload
   python3 daily_brief.py --upload-only       # element.fm upload only (files must exist)
   python3 daily_brief.py --dry-run           # preview without doing anything
         """
     )
     parser.add_argument("--date", default=date.today().strftime("%Y-%m-%d"),
                         help="Date to process (YYYY-MM-DD, default: today)")
+    parser.add_argument("--show-status", action="store_true",
+                        help="Show pipeline status for today and the last completed run, then exit")
+    parser.add_argument("--download-only", action="store_true",
+                        help="Download audio from NotebookLM only, skip element.fm upload")
     parser.add_argument("--upload-only", action="store_true",
                         help="Upload to element.fm only (audio files must already exist)")
     parser.add_argument("--dry-run", action="store_true",
@@ -686,7 +836,7 @@ Examples:
 ║       From Inbox to Earbuds                     ║
 ╚══════════════════════════════════════════════════╝
   Date:     {target_date}
-  Mode:     {"dry-run" if args.dry_run else "upload-only" if args.upload_only else "full pipeline"}
+  Mode:     {"dry-run" if args.dry_run else "download-only" if args.download_only else "upload-only" if args.upload_only else "full pipeline"}
   Slugs:    {", ".join(slugs)}
   Format:   {audio_format}
   Audio dir: {audio_dir}
@@ -694,6 +844,12 @@ Examples:
 """)
 
     # Validate
+    if args.show_status:
+        audio_dir = resolve_audio_dir(cli_audio_dir=args.audio_dir)
+        audio_format = resolve_audio_format(cli_audio_format=args.audio_format)
+        show_status(target_date, audio_dir, audio_format)
+        sys.exit(0)
+
     if args.cleanup_old:
         sys.exit(
             cleanup_old_items(
@@ -703,7 +859,7 @@ Examples:
             )
         )
 
-    if not args.dry_run:
+    if not args.dry_run and not args.download_only:
         if not API_KEY:
             fail("CLAUDE_ELEMENT_FM_KEY not set. Run: source ~/.zshrc")
             sys.exit(1)
@@ -724,7 +880,9 @@ Examples:
     # ── Step 1: Find notebooks + wait for studio readiness ─────────────────
     notebooks = {}
     if not args.dry_run:
-        if args.wait_for_studio_status and not args.upload_only:
+        if args.upload_only:
+            notebooks = {}  # audio files already on disk; no need to query nlm
+        elif args.wait_for_studio_status:
             notebooks = wait_for_notebooks_for_date(
                 target_date=target_date,
                 max_wait_minutes=args.max_wait_minutes,
@@ -773,8 +931,23 @@ Examples:
     if notebooks and not args.dry_run:
         rich_titles = fetch_studio_titles(notebooks)
 
-    # ── Step 3: Wait for audio files then check what's available ────────────
-    # Phase 1 handles downloading to iCloud. We just wait for the files to appear.
+    # ── Step 3: Download audio from NotebookLM (if not upload-only) ─────────
+    if not args.upload_only:
+        header("Downloading audio overviews")
+        for slug in slugs:
+            nb_id = notebooks.get(slug)
+            if not nb_id:
+                warn(f"No notebook found for slug: {slug} — skipping")
+                continue
+            output_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
+            download_audio(nb_id, output_path, args.dry_run, output_format=audio_format)
+
+    if args.download_only:
+        header("Done (download-only mode)")
+        print(f"  Files in: {audio_dir}\n")
+        return
+
+    # ── Step 4: Wait for audio files then check what's available ────────────
     if args.wait_for_audio and not args.dry_run:
         wait_for_audio_files(
             audio_dir=audio_dir,
