@@ -87,19 +87,20 @@ def wait_for_audio_files(
 
     Rules:
       1) Wait up to max_wait_minutes for a first file.
-      2) Every time a NEW file appears, reset the timer for max_wait_minutes.
+      2) Once the first file appears, reset the timer to 5 minutes for remaining files.
       3) If no new file appears within the current window, stop waiting.
     """
     header("Waiting for new audio files")
     wait_s = max(0.0, max_wait_minutes * 60.0)
+    after_first_wait_s = 5.0 * 60.0  # 5 min window once first file found
     poll_s = max(1.0, poll_interval_seconds)
 
     seen: set[str] = set()
     deadline = time.monotonic() + wait_s
     expected = {slug: audio_dir / f"{target_date}-{slug}.{audio_format}" for slug in slugs}
 
-    print(f"  Window: {max_wait_minutes:.1f} min, poll: {poll_s:.0f}s")
-    print("  Timer resets whenever a NEW audio file appears.")
+    print(f"  Window: {max_wait_minutes:.1f} min (then 5 min per file), poll: {poll_s:.0f}s")
+    print("  Timer resets to 5 min whenever a NEW audio file appears.")
 
     while time.monotonic() < deadline:
         new_files = []
@@ -116,7 +117,7 @@ def wait_for_audio_files(
             if seen == set(expected.keys()):
                 ok("All expected files found.")
                 break
-            deadline = time.monotonic() + wait_s
+            deadline = time.monotonic() + after_first_wait_s
             continue
 
         time.sleep(poll_s)

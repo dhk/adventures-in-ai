@@ -53,6 +53,23 @@ class TestPodcastConfig(unittest.TestCase):
             podcast_config.category_title_to_slug("🧠 Things to Think About"),
             "think",
         )
+        # Skill sometimes generates variant titles — emoji is the reliable signal
+        self.assertEqual(
+            podcast_config.category_title_to_slug("📰 Today's News"),
+            "news",
+        )
+        self.assertEqual(
+            podcast_config.category_title_to_slug("📰 Weekend Reading"),
+            "news",
+        )
+        self.assertEqual(
+            podcast_config.category_title_to_slug("🧠 Ideas Worth Considering"),
+            "think",
+        )
+        self.assertEqual(
+            podcast_config.category_title_to_slug("💼 Tech & Career"),
+            "professional",
+        )
 
 
 if __name__ == "__main__":

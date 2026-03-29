@@ -216,12 +216,21 @@ def category_title_to_slug(category_title: str) -> Optional[str]:
         exp = _normalize_category_label(expected_title)
         if norm == exp or exp in norm or norm in exp:
             return slug
-    # Conservative keyword fallbacks (only for our three fixed categories)
+    # Emoji fallback — emoji in the notebook title is a reliable category signal
+    if "📰" in ct:
+        return "news"
+    if "🧠" in ct:
+        return "think"
+    if "💼" in ct:
+        return "professional"
+    # Keyword fallbacks
     if "professional" in norm and "reading" in norm:
         return "professional"
     if "things to think" in norm:
         return "think"
-    if "news" in norm and ("current" in norm or "affairs" in norm):
+    if "news" in norm:
+        return "news"
+    if "reading" in norm and ("weekend" in norm or "weekly" in norm or "today" in norm):
         return "news"
     return None
 
