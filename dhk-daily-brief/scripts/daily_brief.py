@@ -73,7 +73,7 @@ def fail(msg):
     print(f"  ❌  {msg}")
 
 
-def wait_for_audio_files(
+def iter_audio_files_as_found(
     *,
     audio_dir: Path,
     target_date: str,
@@ -81,16 +81,16 @@ def wait_for_audio_files(
     audio_format: str,
     max_wait_minutes: float,
     poll_interval_seconds: float,
-) -> list[str]:
+):
     """
-    Rolling-window wait for new audio files.
+    Generator: yields slugs one at a time as each audio file appears on disk.
 
     Rules:
-      1) Wait up to max_wait_minutes for a first file.
+      1) Wait up to max_wait_minutes for the first file.
       2) Once the first file appears, reset the timer to 5 minutes for remaining files.
-      3) If no new file appears within the current window, stop waiting.
+      3) Stop when all files found or the window expires.
     """
-    header("Waiting for new audio files")
+    header("Waiting for audio files")
     wait_s = max(0.0, max_wait_minutes * 60.0)
     after_first_wait_s = 5.0 * 60.0  # 5 min window once first file found
     poll_s = max(1.0, poll_interval_seconds)
@@ -99,8 +99,7 @@ def wait_for_audio_files(
     deadline = time.monotonic() + wait_s
     expected = {slug: audio_dir / f"{target_date}-{slug}.{audio_format}" for slug in slugs}
 
-    print(f"  Window: {max_wait_minutes:.1f} min (then 5 min per file), poll: {poll_s:.0f}s")
-    print("  Timer resets to 5 min whenever a NEW audio file appears.")
+    print(f"  Initial window: {max_wait_minutes:.1f} min, then 5 min per file. Poll: {poll_s:.0f}s")
 
     while time.monotonic() < deadline:
         new_files = []
@@ -114,19 +113,17 @@ def wait_for_audio_files(
         if new_files:
             for slug in new_files:
                 ok(f"Detected: {target_date}-{slug}.{audio_format}")
+                yield slug
             if seen == set(expected.keys()):
                 ok("All expected files found.")
-                break
+                return
             deadline = time.monotonic() + after_first_wait_s
             continue
 
         time.sleep(poll_s)
 
-    if seen:
-        ok(f"Quiet period reached; proceeding with {len(seen)} detected file(s).")
-    else:
-        warn("No new files detected before timeout window; proceeding.")
-    return list(seen)
+    if not seen:
+        warn("No audio files detected before timeout.")
 
 
 def _json_walk_status_values(obj):
@@ -948,26 +945,7 @@ Examples:
         print(f"  Files in: {audio_dir}\n")
         return
 
-    # ── Step 4: Wait for audio files then check what's available ────────────
-    if args.wait_for_audio and not args.dry_run:
-        wait_for_audio_files(
-            audio_dir=audio_dir,
-            target_date=target_date,
-            slugs=slugs,
-            audio_format=audio_format,
-            max_wait_minutes=args.max_wait_minutes,
-            poll_interval_seconds=args.poll_interval_seconds,
-        )
-
-    available = []
-    for slug in slugs:
-        audio_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
-        if audio_path.exists() or args.dry_run:
-            available.append(slug)
-        else:
-            warn(f"File not found, skipping: {audio_path.name}")
-
-    # ── Step 3: Upload to element.fm ────────────────────────────────────────
+    # ── Step 4: Upload to element.fm (streaming — upload each file as it lands) ─
     header("Uploading to element.fm — DHK Daily Brief")
     uploaded = []
     failed = []
@@ -983,12 +961,12 @@ Examples:
         upload_timeout_s=args.upload_timeout,
     )
 
-    for slug in available:
+    def _upload_slug(slug: str):
         audio_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
         if not audio_path.exists() and not args.dry_run:
             warn(f"File not found: {audio_path.name}")
             failed.append(slug)
-            continue
+            return
         success = upload_to_elementfm(client, audio_path, dry_run=args.dry_run, manifest=manifest, rich_description=rich_titles.get(slug))
         try:
             manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
@@ -999,9 +977,28 @@ Examples:
         else:
             failed.append(slug)
 
+    if args.wait_for_audio and not args.dry_run:
+        for slug in iter_audio_files_as_found(
+            audio_dir=audio_dir,
+            target_date=target_date,
+            slugs=slugs,
+            audio_format=audio_format,
+            max_wait_minutes=args.max_wait_minutes,
+            poll_interval_seconds=args.poll_interval_seconds,
+        ):
+            _upload_slug(slug)
+    else:
+        for slug in slugs:
+            audio_path = audio_dir / f"{target_date}-{slug}.{audio_format}"
+            if audio_path.exists() or args.dry_run:
+                _upload_slug(slug)
+            else:
+                warn(f"File not found, skipping: {audio_path.name}")
+
     # ── Summary ─────────────────────────────────────────────────────────────
     header("Summary")
     print(f"  Date:       {target_date}")
+    available = sorted(set(uploaded) | set(failed))
     print(f"  Available:  {len(available)} — {', '.join(available) or 'none'}")
     print(f"  Uploaded:   {len(uploaded)} — {', '.join(uploaded) or 'none'}")
     if failed:
