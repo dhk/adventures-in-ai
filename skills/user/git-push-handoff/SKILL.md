@@ -1,6 +1,6 @@
 ---
 name: git-push-handoff
-description: Run the end-of-phase git ritual: stage, commit, push, and generate a structured handoff note for the next session. Use this skill whenever the user says anything like "commit and push", "wrap up this phase", "end of phase", "push my changes", "generate a handoff note", "write a handoff", "close out this session", "ready to push", or "/push". Triggers any time a development phase is ending and work needs to be committed, pushed, and handed off cleanly.
+description: "Run the end-of-phase git ritual: stage, commit, push, and generate a structured handoff note for the next session. Use this skill whenever the user says anything like 'commit and push', 'wrap up this phase', 'end of phase', 'push my changes', 'generate a handoff note', 'write a handoff', 'close out this session', 'ready to push', or '/push'. Triggers any time a development phase is ending and work needs to be committed, pushed, and handed off cleanly."
 ---
 
 # Git Push + Handoff
