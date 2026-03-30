@@ -54,6 +54,12 @@ The skill defaults to red team if no mode is specified.
 
 ---
 
+## Proof of Concept
+
+See [mmr-test.md](mmr-test.md) for the test prompt and a full example response.
+
+---
+
 ## How it works
 
 ```
@@ -99,23 +105,6 @@ RECOMMENDED NEXT STEP: [one concrete action]
 
 ---
 
-## Proof of concept test
-
-To verify end-to-end setup, paste this into a Claude Code session:
-
-```
-Red team the following proposal using both your own judgment and Codex via MCP.
-
-PROPOSAL:
-We should migrate our data pipeline from batch processing to real-time streaming
-using Kafka. This will reduce latency from hours to seconds and allow us to
-react to events as they happen. The migration can be completed in one sprint.
-```
-
-A working setup returns two distinct critiques and a synthesis. Codex should surface at least one issue Claude didn't lead with — if both outputs are identical, something is wrong with the independence of the calls.
-
----
-
 ## Extending to more models
 
 Once PAL-MCP-Server is installed, additional models (Gemini, GPT-4o) can be added to the fan-out. See `docs/multi-model-review-workflow.md` for the full architecture discussion and PAL setup instructions.
@@ -127,5 +116,6 @@ Once PAL-MCP-Server is installed, additional models (Gemini, GPT-4o) can be adde
 ```
 multi-model-review/
 ├── SKILL.md      — Claude's instructions (loaded at trigger time)
+├── mmr-test.md   — proof of concept test prompt and example output
 └── README.md     — this file
 ```
