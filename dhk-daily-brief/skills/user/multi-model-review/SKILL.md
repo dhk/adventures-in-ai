@@ -48,10 +48,11 @@ If unclear, default to `/review-redteam`.
 
 ---
 
-## Step 1: Claude's Review
+## Step 1: Run Both Reviews in Parallel
 
-Before calling Codex, Claude completes its own full review using the selected mode.
-Do not call Codex first — independent reviews are more valuable than sequential ones.
+Call the Codex MCP tool AND complete Claude's own review at the same time.
+Do NOT wait for Codex before forming your own view — parallel execution preserves independence.
+Do NOT show the user anything until both reviews are complete.
 
 ### Red Team prompt (Claude's own)
 Find at least 5 failure modes. Label each High / Med / Low severity.
@@ -75,7 +76,7 @@ Focus on: logic errors, edge cases, maintainability. Do not comment on style.
 
 ---
 
-## Step 2: Call Codex via MCP
+## Step 2: Codex Prompt (runs in parallel with Step 1)
 
 Call the `codex` MCP tool with the appropriate prompt below.
 Pass the original content verbatim — do not summarize or pre-process it.
@@ -138,16 +139,24 @@ Assume the proposal is wrong. What breaks first?
 
 ---
 
-## Step 3: Synthesize
+## Step 3: Show Raw Outputs, Then Synthesize
 
-Compare Claude's review and Codex's review. Produce a synthesis in this format:
+**CRITICAL: Always show both raw reviews separately before synthesizing.**
+Do not collapse them into a single pre-synthesized response. The user needs to see
+what each model contributed independently — that visibility is the whole point.
+
+Output in this exact order:
 
 ```
 ## Claude's [Mode] Review
-[findings]
+[Claude's full findings, unmerged]
+
+---
 
 ## Codex's [Mode] Review
-[findings]
+[Codex's full findings, verbatim or closely paraphrased — do not filter]
+
+---
 
 ## Synthesis
 
@@ -164,6 +173,9 @@ THE CRUX: [the single most important unresolved question]
 
 RECOMMENDED NEXT STEP: [one concrete action]
 ```
+
+The DIVERGENT — Codex only section is the highest-value output. If it is empty,
+something went wrong — re-prompt Codex with "What did Claude likely miss?"
 
 ### Signal vs. Noise
 
