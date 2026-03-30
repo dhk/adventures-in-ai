@@ -22,16 +22,16 @@ Runs one of four review modes against any content — proposal, draft, design do
 ## Prerequisites
 
 **1. Codex CLI installed**
-\`\`\`bash
+```bash
 npm install -g @openai/codex
 codex login   # or: export OPENAI_API_KEY=your-key
-\`\`\`
+```
 
 **2. Codex registered as an MCP server in Claude Code**
-\`\`\`bash
+```bash
 claude mcp add codex -- npx codex mcp-server
 claude mcp list   # verify it appears
-\`\`\`
+```
 
 ---
 
@@ -39,14 +39,14 @@ claude mcp list   # verify it appears
 
 Trigger phrases (any of these will activate the skill):
 
-- \`"red team this proposal"\`
-- \`"review this with Codex"\`
-- \`"get a second opinion on this"\`
-- \`"steelman this draft"\`
-- \`"have Codex critique this"\`
-- \`"multi-model review"\`
-- \`"debate this"\`
-- \`"review this code with another model"\`
+- `"red team this proposal"`
+- `"review this with Codex"`
+- `"get a second opinion on this"`
+- `"steelman this draft"`
+- `"have Codex critique this"`
+- `"multi-model review"`
+- `"debate this"`
+- `"review this code with another model"`
 
 The skill defaults to red team if no mode is specified.
 
@@ -54,7 +54,7 @@ The skill defaults to red team if no mode is specified.
 
 ## How it works
 
-\`\`\`
+```
 You (prompt)
     ↓
 Claude reviews independently   →   Claude's findings
@@ -64,7 +64,7 @@ Claude calls Codex via MCP     →   Codex's findings
 Claude synthesizes both
     ↓
 Consensus / Divergence / Crux / Next Step
-\`\`\`
+```
 
 Claude always reviews first, before calling Codex. This keeps the reviews independent — if Claude saw Codex's output first, it would anchor on it.
 
@@ -72,7 +72,7 @@ Claude always reviews first, before calling Codex. This keeps the reviews indepe
 
 ## Output format
 
-\`\`\`
+```
 ## Claude's [Mode] Review
 [findings]
 
@@ -93,7 +93,7 @@ DIVERGENT — Codex only:
 THE CRUX: [single most important unresolved question]
 
 RECOMMENDED NEXT STEP: [one concrete action]
-\`\`\`
+```
 
 ---
 
@@ -101,14 +101,14 @@ RECOMMENDED NEXT STEP: [one concrete action]
 
 To verify end-to-end setup, paste this into a Claude Code session:
 
-\`\`\`
+```
 Red team the following proposal using both your own judgment and Codex via MCP.
 
 PROPOSAL:
 We should migrate our data pipeline from batch processing to real-time streaming
 using Kafka. This will reduce latency from hours to seconds and allow us to
 react to events as they happen. The migration can be completed in one sprint.
-\`\`\`
+```
 
 A working setup returns two distinct critiques and a synthesis. Codex should surface at least one issue Claude didn't lead with — if both outputs are identical, something is wrong with the independence of the calls.
 
@@ -116,14 +116,14 @@ A working setup returns two distinct critiques and a synthesis. Codex should sur
 
 ## Extending to more models
 
-Once PAL-MCP-Server is installed, additional models (Gemini, GPT-4o) can be added to the fan-out. See \`docs/multi-model-review-workflow.md\` for the full architecture discussion and PAL setup instructions.
+Once PAL-MCP-Server is installed, additional models (Gemini, GPT-4o) can be added to the fan-out. See `docs/multi-model-review-workflow.md` for the full architecture discussion and PAL setup instructions.
 
 ---
 
 ## Files
 
-\`\`\`
+```
 multi-model-review/
 ├── SKILL.md      — Claude's instructions (loaded at trigger time)
 └── README.md     — this file
-\`\`\`
+```
