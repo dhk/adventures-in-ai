@@ -2,6 +2,8 @@
 
 A Claude skill that orchestrates adversarial, multi-perspective reviews using Claude as the orchestrator and OpenAI Codex as a second-opinion reviewer via MCP.
 
+![Multi-model review architecture](architecture.svg)
+
 The core insight: **the value is in the divergence**. When two models trained on different data, tuned differently, flag different things — that's the signal worth investigating. Consensus is noise. Disagreement is the finding.
 
 ---
