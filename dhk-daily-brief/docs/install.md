@@ -23,18 +23,20 @@ export CLAUDE_ELEMENT_FM_KEY='your-element-fm-api-key'
 
 Reload: `source ~/.zshrc`
 
+Optional: pin the repo root for `~/bin` wrappers (see section 4):
+
+```zsh
+export DHK_DAILY_BRIEF_REPO="$HOME/Documents/dev/adventures-in-ai"
+```
+
 ---
 
 ## 2. Config file
 
-Create `~/.config/dhk-daily-brief/config.json`:
+Create `~/.config/dhk-daily-brief/config.json`. Copy [config/config.example.json](../config/config.example.json) and edit paths.
 
-```json
-{
-  "audio_dir": "~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast",
-  "audio_format": "mp3"
-}
-```
+- `audio_dir` / `audio_format` — where Phase 2 writes and reads podcast files.
+- `repo_root` — absolute or `~`-expanded path to your **adventures-in-ai** clone (parent of `dhk-daily-brief/`). Required if you install `run-reading-list.sh` and `daily-brief` into `~/bin` and do **not** set `DHK_DAILY_BRIEF_REPO`.
 
 ---
 
@@ -59,18 +61,19 @@ nlm login
 
 ## 4. Install shell wrappers
 
+From your clone root (the directory that contains `dhk-daily-brief/` and `bin/`):
+
 ```bash
-cp ~/Documents/dev/adventures-in-ai/dhk-daily-brief/scripts/*.py ~/.local/share/dhk-daily-brief/scripts/
-mkdir -p ~/bin
+REPO="$HOME/Documents/dev/adventures-in-ai"   # adjust if needed
 
-# run-reading-list.sh — launchd entry point
-cp ~/Documents/dev/adventures-in-ai/bin/run-reading-list.sh ~/bin/
-chmod +x ~/bin/run-reading-list.sh
+# One-time: deploy skill + Python to ~/.local/share (also done automatically each launchd run)
+"$REPO/dhk-daily-brief/scripts/sync-to-local.sh"
 
-# daily-brief — ad-hoc Phase 2 wrapper
-cp ~/Documents/dev/adventures-in-ai/bin/daily-brief ~/bin/
-chmod +x ~/bin/daily-brief
+mkdir -p "$HOME/bin"
+"$REPO/dhk-daily-brief/scripts/sync-to-local.sh" --install-bin
 ```
+
+`--install-bin` copies `bin/dhk-common.sh`, `bin/run-reading-list.sh`, and `bin/daily-brief` into `~/bin/` and marks the two entry scripts executable.
 
 Ensure `~/bin` is on your PATH in `~/.zshrc`:
 
@@ -80,7 +83,20 @@ export PATH="$HOME/bin:$PATH"
 
 ---
 
-## 5. Gmail label filters
+## 5. Git hooks (optional)
+
+To refresh `~/.local/share/dhk-daily-brief/` after every `git pull` or branch checkout **without** waiting for the next launchd run:
+
+```bash
+cd /path/to/adventures-in-ai
+git config core.hooksPath .githooks
+```
+
+Hooks run [`dhk-daily-brief/scripts/sync-to-local.sh`](../scripts/sync-to-local.sh) (no `--install-bin`).
+
+---
+
+## 6. Gmail label filters
 
 Create three Gmail labels: `newsletter/news`, `newsletter/think`, `newsletter/pro`.
 
@@ -88,17 +104,20 @@ Add filters for each sender in [process-overview.md](../process-overview.md#news
 
 ---
 
-## 6. launchd (automated 6am run)
+## 7. launchd (automated 6am local time)
 
-Install the launch agent:
+The plist template uses `StartCalendarInterval` at **6:00** in the Mac’s **system timezone**. For 6am Pacific, set the machine timezone to `America/Los_Angeles` (or adjust the hour in the plist).
+
+Install the launch agent (substitute your home directory into log paths):
 
 ```bash
-cp ~/Documents/dev/adventures-in-ai/dhk-daily-brief/com.dhk.reading-list.plist \
-   ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.dhk.reading-list.plist
+REPO="$HOME/Documents/dev/adventures-in-ai"
+sed "s|__HOME__|${HOME}|g" "$REPO/dhk-daily-brief/com.dhk.reading-list.plist" \
+  > "$HOME/Library/LaunchAgents/com.dhk.reading-list.plist"
+launchctl load "$HOME/Library/LaunchAgents/com.dhk.reading-list.plist"
 ```
 
-The agent runs `run-reading-list.sh` at 6:00am PT daily. Logs go to `~/logs/reading-list/YYYY-MM-DD.log`.
+The agent runs `$HOME/bin/run-reading-list.sh`. Per-run logs: `~/logs/reading-list/YYYY-MM-DD.log`. launchd stdout/stderr: `~/logs/reading-list/launchd.log`.
 
 To run manually at any time:
 
@@ -108,7 +127,7 @@ run-reading-list.sh
 
 ---
 
-## 7. Verify
+## 8. Verify
 
 ```bash
 # Check pipeline status for today
@@ -122,6 +141,8 @@ daily-brief --dry-run
 
 ## Updating
 
-The launchd script syncs the skill and Python scripts from the repo at each run — no manual copy step needed after initial setup.
+`run-reading-list.sh` runs [`dhk-daily-brief/scripts/sync-to-local.sh`](../scripts/sync-to-local.sh) at the start of every scheduled (and manual) run, so the live skill and Python under `~/.local/share/dhk-daily-brief/` stay aligned with your clone.
 
-To update: pull the repo, then the next run picks up changes automatically.
+After `git pull`, either rely on that sync on the next run, use the git hooks (section 5), or run `dhk-daily-brief/scripts/sync-to-local.sh` once by hand.
+
+If you change the bin scripts, re-run `sync-to-local.sh --install-bin` to refresh `~/bin/`.

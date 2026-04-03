@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Wrapper for Phase 2 script (prefers synced copy under ~/.local/share).
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${HERE}/dhk-common.sh"
+
+REPO_ROOT="$(dhk_daily_brief_repo_root "${HERE}")"
+BRIEF_ROOT="${REPO_ROOT}/dhk-daily-brief"
+SYNCED="${HOME}/.local/share/dhk-daily-brief/scripts/daily_brief.py"
+
+if [[ -f "${SYNCED}" ]]; then
+  exec python3 "${SYNCED}" "$@"
+fi
+
+exec python3 "${BRIEF_ROOT}/scripts/daily_brief.py" "$@"

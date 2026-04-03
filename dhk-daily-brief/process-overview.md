@@ -91,11 +91,14 @@ Runs as a Python script after Phase 1 completes.
 
 ## Automation
 
-- **Trigger:** launchd at 6:00am PT daily
-- **Script:** `~/bin/run-reading-list.sh`
+- **Trigger:** launchd at 6:00am local time daily (see [`docs/install.md`](docs/install.md) — use Pacific timezone on the Mac for 6am PT)
+- **Script:** `~/bin/run-reading-list.sh` (versioned under repo [`bin/run-reading-list.sh`](../bin/run-reading-list.sh))
 - **Guard:** checks manifest before running — exits early if all 3 episodes already published
-- **Skill sync:** copies `SKILL.md` and all Python scripts from repo to `~/.local/share/` and `~/.config/` at start of each run (launchd can't read `~/Documents` directly)
-- **Logs:** `~/logs/reading-list/YYYY-MM-DD.log`
+- **Skill sync:** [`scripts/sync-to-local.sh`](scripts/sync-to-local.sh) copies `SKILL.md` and all `scripts/*.py` from the repo to `~/.local/share/dhk-daily-brief/` at the start of each run (and can be run manually or from git hooks)
+- **Headless MCP config:** [`automation/mcp-headless.json`](automation/mcp-headless.json) (passed to `claude -p --strict-mcp-config`)
+- **Repo resolution for `~/bin` copies:** `DHK_DAILY_BRIEF_REPO` or `repo_root` in `~/.config/dhk-daily-brief/config.json` (see [`config/config.example.json`](config/config.example.json))
+- **Optional git hooks:** repo [`.githooks/`](../.githooks/) — set `git config core.hooksPath .githooks` to run sync after pull/checkout
+- **Logs:** `~/logs/reading-list/YYYY-MM-DD.log` (and `launchd.log` for launchd stdout/stderr)
 
 ---
 
@@ -129,10 +132,15 @@ Runs as a Python script after Phase 1 completes.
 
 | File | Path |
 |---|---|
-| Repo (source of truth) | `~/Documents/dev/adventures-in-ai/dhk-daily-brief/` |
+| Repo (source of truth) | `…/adventures-in-ai/dhk-daily-brief/` |
+| Bin entrypoints (source of truth) | `…/adventures-in-ai/bin/run-reading-list.sh`, `…/adventures-in-ai/bin/daily-brief`, `…/adventures-in-ai/bin/dhk-common.sh` |
+| Sync script | `dhk-daily-brief/scripts/sync-to-local.sh` |
+| launchd plist template | `dhk-daily-brief/com.dhk.reading-list.plist` (`__HOME__` → install with `sed`) |
 | Live skill (deployed by sync) | `~/.local/share/dhk-daily-brief/skills/user/reading-list-builder/SKILL.md` |
+| Live Python (deployed by sync) | `~/.local/share/dhk-daily-brief/scripts/*.py` |
+| Installed bin (optional copy) | `~/bin/run-reading-list.sh`, `~/bin/daily-brief`, `~/bin/dhk-common.sh` |
 | Config | `~/.config/dhk-daily-brief/config.json` |
 | Manifest | `~/.local/state/dhk-daily-brief/manifest-YYYY-MM-DD.json` |
 | Logs | `~/logs/reading-list/YYYY-MM-DD.log` |
 | Audio output | `~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/` |
-| Sender registry | `~/Documents/dev/adventures-in-ai/dhk-daily-brief/data/newsletter_sender_registry.json` |
+| Sender registry | `dhk-daily-brief/data/newsletter_sender_registry.json` (in repo) |

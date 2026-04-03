@@ -1,0 +1,7 @@
+#!/bin/sh
+# After git pull (merge): refresh ~/.local/share copies of DHK Daily Brief artifacts.
+ROOT="$(git rev-parse --show-toplevel)"
+SYNC="${ROOT}/dhk-daily-brief/scripts/sync-to-local.sh"
+if [ -x "${SYNC}" ]; then
+  "${SYNC}" || true
+fi
