@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Wrapper for Phase 2 script (prefers synced copy under ~/.local/share).
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${HERE}/rwe-common.sh"
+
+REPO_ROOT="$(rwe_repo_root "${HERE}")"
+RWE_ROOT="${REPO_ROOT}/reading-with-ears"
+SYNCED="${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py"
+
+if [[ -f "${SYNCED}" ]]; then
+  exec python3 "${SYNCED}" "$@"
+fi
+
+exec python3 "${RWE_ROOT}/scripts/publish_episodes.py" "$@"

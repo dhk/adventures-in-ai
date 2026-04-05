@@ -1,0 +1,6 @@
+{
+  "audio_dir": "~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast",
+  "audio_format": "mp3",
+  "repo_root": "~/Documents/dev/reading-with-ears",
+  "sync_mode": "symlink"
+}

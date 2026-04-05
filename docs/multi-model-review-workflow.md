@@ -196,8 +196,8 @@ Keep Codex CLI updated — a vulnerability (CVE-2025-61260) was patched in v0.23
 ## Related files
 
 ```
-adventures-in-ai/
-├── dhk-daily-brief/
+reading-with-ears/
+├── reading-with-ears/
 │   └── skills/user/
 │       └── multi-model-review/
 │           ├── SKILL.md       — Claude's runtime instructions
