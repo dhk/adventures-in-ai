@@ -1,41 +1,45 @@
 #!/usr/bin/env bash
-# Phase 1 (Claude + reading-list-builder) then Phase 2 (daily_brief.py → Element.fm).
+# Phase 1 (Claude + reading-with-ears skill) then Phase 2 (publish_episodes.py → Element.fm).
 # Intended for launchd and manual runs. Syncs repo → ~/.local/share before each run.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
-source "${HERE}/dhk-common.sh"
+source "${HERE}/rwe-common.sh"
 
-REPO_ROOT="$(dhk_daily_brief_repo_root "${HERE}")"
-BRIEF_ROOT="${REPO_ROOT}/dhk-daily-brief"
+REPO_ROOT="$(rwe_repo_root "${HERE}")"
+RWE_ROOT="${REPO_ROOT}/reading-with-ears"
 
 if [[ -f "${HOME}/.zshrc" ]]; then
   # shellcheck source=/dev/null
   source "${HOME}/.zshrc" || true
 fi
 
-LOG_DIR="${HOME}/logs/reading-list"
+LOG_DIR="${HOME}/logs/reading-with-ears"
 mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/$(date +%F).log"
 exec > >(tee -a "${LOG_FILE}") 2>&1
 
-echo "=== $(date "+%Y-%m-%dT%H:%M:%S%z") run-reading-list ==="
+echo "=== $(date "+%Y-%m-%dT%H:%M:%S%z") rwe-run ==="
 
-"${BRIEF_ROOT}/scripts/sync-to-local.sh"
+"${RWE_ROOT}/scripts/install-local.sh"
 
-PY_SCRIPT="${HOME}/.local/share/dhk-daily-brief/scripts/daily_brief.py"
+PY_SCRIPT="${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py"
 
-# Skip entire run if today's manifest shows all three slugs published.
-if python3 -c "
+# Skip entire run if today's manifest shows all *enabled* feed slugs published (from feeds.json).
+if PYTHONPATH="${HOME}/.local/share/reading-with-ears/scripts" python3 -c "
 import json, sys
 from datetime import date
 from pathlib import Path
 
-state = Path.home() / '.local/state/dhk-daily-brief'
+from podcast_config import enabled_slugs_ordered
+
+state = Path.home() / '.local/state/reading-with-ears'
 d = date.today().strftime('%Y-%m-%d')
 p = state / f'manifest-{d}.json'
-slugs = ['news', 'think', 'professional']
+slugs = enabled_slugs_ordered()
+if not slugs:
+    slugs = ['news', 'think', 'professional']
 if not p.is_file():
     sys.exit(1)
 try:
@@ -47,19 +51,19 @@ if all((eps.get(s) or {}).get('published') for s in slugs):
     sys.exit(0)
 sys.exit(1)
 "; then
-  echo "All three episodes already published for today — skipping Phase 1 and Phase 2."
+  echo "All enabled feeds already published for today — skipping Phase 1 and Phase 2."
   exit 0
 fi
 
-cd "${BRIEF_ROOT}"
+cd "${RWE_ROOT}"
 
-CLAUDE_PROMPT=$'Read and follow skills/user/reading-list-builder/SKILL.md and run the full workflow for today\'s date (use America/Los_Angeles for "today").\n\nAUTOMATED_MODE: This is a scheduled non-interactive run. After you have classified emails and built the triage table internally, proceed immediately without waiting for user confirmation. Complete through Step 8, including audio downloads to the configured Personal Podcast folder.'
+CLAUDE_PROMPT=$'Read and follow skills/user/reading-with-ears/SKILL.md and run the full workflow for today\'s date (use America/Los_Angeles for "today").\n\nAUTOMATED_MODE: This is a scheduled non-interactive run. After you have classified emails and built the triage table internally, proceed immediately without waiting for user confirmation. Complete through Step 7, including audio downloads to the configured Personal Podcast folder.'
 
 claude -p \
   --permission-mode bypassPermissions \
   --strict-mcp-config \
-  --mcp-config "${BRIEF_ROOT}/automation/mcp-headless.json" \
-  --add-dir "${BRIEF_ROOT}" \
+  --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
+  --add-dir "${RWE_ROOT}" \
   "${CLAUDE_PROMPT}"
 
 python3 "${PY_SCRIPT}" "$@"

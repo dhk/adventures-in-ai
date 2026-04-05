@@ -4,14 +4,14 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
-source "${HERE}/dhk-common.sh"
+source "${HERE}/rwe-common.sh"
 
-REPO_ROOT="$(dhk_daily_brief_repo_root "${HERE}")"
-BRIEF_ROOT="${REPO_ROOT}/dhk-daily-brief"
-SYNCED="${HOME}/.local/share/dhk-daily-brief/scripts/daily_brief.py"
+REPO_ROOT="$(rwe_repo_root "${HERE}")"
+RWE_ROOT="${REPO_ROOT}/reading-with-ears"
+SYNCED="${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py"
 
 if [[ -f "${SYNCED}" ]]; then
   exec python3 "${SYNCED}" "$@"
 fi
 
-exec python3 "${BRIEF_ROOT}/scripts/daily_brief.py" "$@"
+exec python3 "${RWE_ROOT}/scripts/publish_episodes.py" "$@"
