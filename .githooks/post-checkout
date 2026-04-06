@@ -2,7 +2,7 @@
 # After branch checkout: refresh ~/.local/share copies. $3=1 only when switching branches.
 [ "${3:-0}" = "1" ] || exit 0
 ROOT="$(git rev-parse --show-toplevel)"
-SYNC="${ROOT}/dhk-daily-brief/scripts/sync-to-local.sh"
+SYNC="${ROOT}/reading-with-ears/scripts/install-local.sh"
 if [ -x "${SYNC}" ]; then
   "${SYNC}" || true
 fi

@@ -10,10 +10,11 @@ source "${HERE}/rwe-common.sh"
 REPO_ROOT="$(rwe_repo_root "${HERE}")"
 RWE_ROOT="${REPO_ROOT}/reading-with-ears"
 
-if [[ -f "${HOME}/.zshrc" ]]; then
-  # shellcheck source=/dev/null
-  source "${HOME}/.zshrc" || true
-fi
+# Do not source ~/.zshrc: this script is bash with `set -u`. Zsh startup (oh-my-zsh,
+# $ZSH_VERSION, zsh-only syntax) is not valid here. For `claude` / `python3` / `nlm` on
+# PATH in launchd or cron, use ~/.profile, ~/.bash_profile, launchd EnvironmentVariables,
+# or conda `conda init bash` — not only ~/.zshrc.
+export PATH="/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
 
 LOG_DIR="${HOME}/logs/reading-with-ears"
 mkdir -p "${LOG_DIR}"

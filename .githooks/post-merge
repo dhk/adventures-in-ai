@@ -1,7 +1,8 @@
 #!/bin/sh
-# After git pull (merge): refresh ~/.local/share copies of DHK Daily Brief artifacts.
+# After git pull/merge: refresh ~/.local/share/reading-with-ears/ (symlink default — rewires links; optional if only editing existing files).
+# Mode: ~/.config/reading-with-ears/config.json sync_mode, env, or install-local.sh flags.
 ROOT="$(git rev-parse --show-toplevel)"
-SYNC="${ROOT}/dhk-daily-brief/scripts/sync-to-local.sh"
+SYNC="${ROOT}/reading-with-ears/scripts/install-local.sh"
 if [ -x "${SYNC}" ]; then
   "${SYNC}" || true
 fi
