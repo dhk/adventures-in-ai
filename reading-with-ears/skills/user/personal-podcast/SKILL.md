@@ -59,6 +59,7 @@ Downloaded audio files follow this naming pattern:
 | `YYYY-MM-DD-news.m4a` | 📰 News & Current Affairs | "📰 News & Current Affairs — Mon DD, YYYY" |
 | `YYYY-MM-DD-think.m4a` | 🧠 Things to Think About | "🧠 Things to Think About — Mon DD, YYYY" |
 | `YYYY-MM-DD-professional.m4a` | 💼 Professional Reading | "💼 Professional Reading — Mon DD, YYYY" |
+| `YYYY-MM-DD-vital-signs.m4a` | 🏥 Healthcare Reading | "🏥 Healthcare Reading — Mon DD, YYYY" |
 
 ---
 
@@ -116,13 +117,13 @@ requirements. Use the `nlm` CLI directly from Terminal instead.
 
 ---
 
-## Full Day Upload (all three categories)
+## Full Day Upload (all enabled category slugs)
 
 ```bash
 DATE="2026-03-21"
 BASE="/Users/dhk/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast"
 
-for cat in news think professional; do
+for cat in news think professional vital-signs; do
   python3 ~/scripts/upload_to_elementfm.py "$BASE/${DATE}-${cat}.m4a"
 done
 ```

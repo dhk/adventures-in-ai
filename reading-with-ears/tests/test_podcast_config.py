@@ -26,6 +26,10 @@ class TestPodcastConfig(unittest.TestCase):
             slug_map.get("professional"),
             "01a6981c-6888-4d51-9471-f3258a98b13e",
         )
+        self.assertEqual(
+            slug_map.get("vital-signs"),
+            "7d9202b5-58fe-4761-8fc6-2003abc00728",
+        )
         self.assertNotIn("ai-everybody", slug_map)
 
     def test_parse_episode_title_from_filename_known_slug(self):
@@ -93,6 +97,10 @@ class TestPodcastConfig(unittest.TestCase):
         self.assertEqual(
             podcast_config.category_title_to_slug("💼 Tech & Career"),
             "professional",
+        )
+        self.assertEqual(
+            podcast_config.category_title_to_slug("🏥 Healthcare Reading"),
+            "vital-signs",
         )
 
 

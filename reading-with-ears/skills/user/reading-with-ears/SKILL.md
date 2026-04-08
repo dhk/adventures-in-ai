@@ -41,9 +41,9 @@ an empty `gmail_labels` list for the OR query only — they still get notebooks 
 classified into them another way, e.g. manual triage):
 
 - Build `label:foo OR label:bar OR …` for every distinct label across enabled feeds.
-- Example when news / think / pro / ai-everybody are all enabled:
+- Example when news / think / pro / healthcare / ai-everybody are all enabled:
 ```
-gmail_search_messages(q="(label:newsletter/news OR label:newsletter/think OR label:newsletter/pro OR label:newsletter/ai-everybody) after:YYYY/MM/DD")
+gmail_search_messages(q="(label:newsletter/news OR label:newsletter/think OR label:newsletter/pro OR label:newsletter/healthcare OR label:newsletter/ai-everybody) after:YYYY/MM/DD")
 ```
 
 **Classification hint:** If an email carries a label that appears in feed `gmail_labels`,
@@ -274,7 +274,7 @@ download_artifact(
 ### Slug mapping (from `feeds.json`)
 
 Use each feed’s **`slug`** field for the filename: `YYYY-MM-DD-<slug>.mp3`
-(e.g. `news`, `think`, `professional`, `ai-everybody`). Phase 2 (`publish_episodes.py`) uses the
+(e.g. `news`, `think`, `professional`, `vital-signs`, `ai-everybody`). Phase 2 (`publish_episodes.py`) uses the
 same slugs for enabled feeds.
 
 - Skip download if the file already exists at that path (idempotency)

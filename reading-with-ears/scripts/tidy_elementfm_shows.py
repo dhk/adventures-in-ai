@@ -2,7 +2,7 @@
 """
 Tidy Element.fm shows: normalize episode titles (drop legacy "reading list - " and
 NotebookLM-style labels) and move episodes to the show that matches their category
-(news / think / professional).
+(all enabled slugs in feeds.json, e.g. news / think / professional / vital-signs).
 
 Uses the same API + feeds.json mapping as publish_episodes.py.
 
@@ -24,7 +24,12 @@ from datetime import datetime
 from typing import Any, Optional
 
 from elementfm_client import ElementFmClient, ElementFmConfig
-from podcast_config import elementfm_base_url, elementfm_episode_description, load_feeds_publish_config
+from podcast_config import (
+    elementfm_base_url,
+    elementfm_episode_description,
+    enabled_slugs_ordered,
+    load_feeds_publish_config,
+)
 
 
 TITLE_RE = re.compile(
@@ -70,6 +75,8 @@ def slug_date_from_title(title: str) -> Optional[tuple[str, str]]:
             return None
         if "Professional Reading" in raw:
             return "professional", date_iso
+        if "Healthcare Reading" in raw:
+            return "vital-signs", date_iso
         if "Things to Think About" in raw:
             return "think", date_iso
         if "News & Current Affairs" in raw:
@@ -150,9 +157,9 @@ def main() -> int:
         return 1
 
     workspace_id, slug_to_show = load_feeds_publish_config()
-    feed_slugs = [s for s in ("news", "think", "professional") if s in slug_to_show]
+    feed_slugs = [s for s in enabled_slugs_ordered() if s in slug_to_show]
     if not feed_slugs:
-        print("No news/think/professional slugs with elementfm_show_id in feeds config.", file=sys.stderr)
+        print("No enabled feed slugs with elementfm_show_id in feeds config.", file=sys.stderr)
         return 1
 
     moves_ok = 0
