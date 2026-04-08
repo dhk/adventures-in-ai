@@ -50,6 +50,18 @@
       "notebook_emoji": "🎙️",
       "notebook_order": 4,
       "audio_focus_prompt": "This episode should run approximately 12 minutes. Explain the week's AI ideas for a smart non-specialist. Open with why this matters in plain language, then unpack the core concepts without jargon walls, then close with what listeners should watch for next. Be accurate, calm, and concrete."
+    },
+    {
+      "slug": "vital-signs",
+      "enabled": true,
+      "show_name": "Vital Signs",
+      "show_description": "Healthcare, medicine, and science that affects bodies and systems — curated for listening.",
+      "elementfm_show_id": "7d9202b5-58fe-4761-8fc6-2003abc00728",
+      "gmail_labels": ["newsletter/healthcare"],
+      "notebook_category": "🏥 Healthcare Reading",
+      "notebook_emoji": "🏥",
+      "notebook_order": 5,
+      "audio_focus_prompt": "This episode should run approximately 12 minutes. Your job is to make healthcare and biomedical developments intelligible and consequential. Open with the 2-3 most important developments: what changed, for whom, and why it matters clinically, scientifically, or for public health. Then walk through each source: claims, evidence, limits, and what is still uncertain. Close with a sober through-line: what a thoughtful listener should watch or ask their clinician about — without giving personal medical advice. Be precise; distinguish consensus from speculation."
     }
   ]
 }

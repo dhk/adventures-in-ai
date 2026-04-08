@@ -73,7 +73,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--preferred-category",
-        choices=["news", "think", "professional"],
+        choices=["news", "think", "professional", "vital-signs"],
         default=None,
         help="Optional category preference to boost ranking",
     )

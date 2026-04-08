@@ -56,7 +56,7 @@ def main():
     parser.add_argument(
         "--slug",
         default=None,
-        help="Feed slug (news, think, professional, …) — selects Element.fm show from feeds.json; "
+        help="Feed slug (news, think, professional, vital-signs, …) — selects Element.fm show from feeds.json; "
         "default: infer from filename YYYY-MM-DD-<slug>.<ext>",
     )
     parser.add_argument("--title", help="Episode title (auto-generated from filename if not set)")

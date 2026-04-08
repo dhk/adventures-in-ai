@@ -31,6 +31,7 @@ CATEGORY_SLUGS: dict[str, str] = {
     "📰 News & Current Affairs": "news",
     "🧠 Things to Think About": "think",
     "💼 Professional Reading": "professional",
+    "🏥 Healthcare Reading": "vital-signs",
 }
 
 CATEGORY_TITLES: dict[str, str] = {v: k for k, v in CATEGORY_SLUGS.items()}
@@ -239,9 +240,13 @@ def category_title_to_slug(category_title: str) -> Optional[str]:
         return "think"
     if "💼" in ct:
         return "professional"
+    if "🏥" in ct:
+        return "vital-signs"
     if "🎙️" in ct:
         return "ai-everybody"
     # Keyword fallbacks
+    if "healthcare" in norm and "reading" in norm:
+        return "vital-signs"
     if "professional" in norm and "reading" in norm:
         return "professional"
     if "things to think" in norm:
