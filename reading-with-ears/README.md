@@ -3,6 +3,8 @@
 A personal AI pipeline that converts my morning newsletter reading list into published podcast episodes — automatically, every day.
 
 **Newsletters in. Podcast out. No manual steps.**
+<img width="1456" height="971" alt="image" src="https://github.com/user-attachments/assets/c9f0e309-1097-4f8f-8569-9a7536bf5188" />
+
 
 ---
 
