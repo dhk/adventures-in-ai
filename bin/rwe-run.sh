@@ -25,32 +25,12 @@ echo "=== $(date "+%Y-%m-%dT%H:%M:%S%z") rwe-run ==="
 
 "${RWE_ROOT}/scripts/install-local.sh"
 
-# Skip entire run if today's manifest shows all *enabled* feed slugs published (from feeds.json).
-if PYTHONPATH="${HOME}/.local/share/reading-with-ears/scripts" python3 -c "
-import json, sys
-from datetime import date
-from pathlib import Path
+STATE_DIR="${HOME}/.local/state/reading-with-ears"
+mkdir -p "${STATE_DIR}"
+SENTINEL="${STATE_DIR}/done-$(date +%F)"
 
-from podcast_config import enabled_slugs_ordered
-
-state = Path.home() / '.local/state/reading-with-ears'
-d = date.today().strftime('%Y-%m-%d')
-p = state / f'manifest-{d}.json'
-slugs = enabled_slugs_ordered()
-if not slugs:
-    slugs = ['news', 'think', 'professional']
-if not p.is_file():
-    sys.exit(1)
-try:
-    m = json.loads(p.read_text(encoding='utf-8'))
-except Exception:
-    sys.exit(1)
-eps = m.get('episodes') or {}
-if all((eps.get(s) or {}).get('published') for s in slugs):
-    sys.exit(0)
-sys.exit(1)
-"; then
-  echo "All enabled feeds already published for today — skipping Phase 1 and Phase 2."
+if [[ -f "${SENTINEL}" ]]; then
+  echo "Pipeline already completed for today (${SENTINEL}) — skipping."
   exit 0
 fi
 
@@ -64,3 +44,5 @@ claude -p \
   --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
   --add-dir "${RWE_ROOT}" \
   "${CLAUDE_PROMPT}"
+
+touch "${SENTINEL}"
