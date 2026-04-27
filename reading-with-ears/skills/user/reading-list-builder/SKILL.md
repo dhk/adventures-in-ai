@@ -52,6 +52,13 @@ a union query, so each result stays associated with its feed):
 gmail_search_messages(q="label:<gmail_label> after:YYYY/MM/DD")
 ```
 
+**Single past date (catch-up mode):** when an explicit date is given that is not today,
+add a `before:` bound so the search is scoped to exactly that day:
+
+```
+gmail_search_messages(q="label:<gmail_label> after:YYYY/MM/DD before:YYYY/MM/DD+1")
+```
+
 Fetch every label across every enabled feed **before** doing anything else.
 
 For each message ID returned, fetch the full message:
