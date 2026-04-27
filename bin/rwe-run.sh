@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 1 (Claude + reading-with-ears skill) then Phase 2 (publish_episodes.py → Element.fm).
+# Full pipeline via reading-list-builder skill (fetch → notebooks → audio → Element.fm).
 # Intended for launchd and manual runs. Syncs repo → ~/.local/share before each run.
 set -euo pipefail
 
@@ -24,8 +24,6 @@ exec > >(tee -a "${LOG_FILE}") 2>&1
 echo "=== $(date "+%Y-%m-%dT%H:%M:%S%z") rwe-run ==="
 
 "${RWE_ROOT}/scripts/install-local.sh"
-
-PY_SCRIPT="${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py"
 
 # Skip entire run if today's manifest shows all *enabled* feed slugs published (from feeds.json).
 if PYTHONPATH="${HOME}/.local/share/reading-with-ears/scripts" python3 -c "
@@ -58,7 +56,7 @@ fi
 
 cd "${RWE_ROOT}"
 
-CLAUDE_PROMPT=$'Read and follow skills/user/reading-with-ears/SKILL.md and run the full workflow for today\'s date (use America/Los_Angeles for "today").\n\nAUTOMATED_MODE: This is a scheduled non-interactive run. After you have classified emails and built the triage table internally, proceed immediately without waiting for user confirmation. Complete through Step 7, including audio downloads to the configured Personal Podcast folder.'
+CLAUDE_PROMPT=$'Read and follow skills/user/reading-list-builder/SKILL.md and run the full pipeline for today\'s date (use America/Los_Angeles for "today"). Complete all four phases through Element.fm publish.'
 
 claude -p \
   --permission-mode bypassPermissions \
@@ -66,5 +64,3 @@ claude -p \
   --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
   --add-dir "${RWE_ROOT}" \
   "${CLAUDE_PROMPT}"
-
-python3 "${PY_SCRIPT}" "$@"
