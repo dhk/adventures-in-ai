@@ -16,6 +16,14 @@ RWE_ROOT="${REPO_ROOT}/reading-with-ears"
 # or conda `conda init bash` — not only ~/.zshrc.
 export PATH="/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
 
+SKILL_VERSION_REQUIRED="1.0"
+SKILL_FILE="${RWE_ROOT}/skills/user/reading-list-builder/SKILL.md"
+SKILL_VERSION=$(grep -m1 '^version:' "${SKILL_FILE}" | sed 's/version:[[:space:]]*"\([^"]*\)"/\1/')
+if [[ "${SKILL_VERSION}" != "${SKILL_VERSION_REQUIRED}" ]]; then
+  echo "ERROR: rwe-run.sh expects skill version ${SKILL_VERSION_REQUIRED} but ${SKILL_FILE} reports '${SKILL_VERSION}'. Pull latest changes or update SKILL_VERSION_REQUIRED."
+  exit 1
+fi
+
 LOG_DIR="${HOME}/logs/reading-with-ears"
 mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/$(date +%F).log"

@@ -1,5 +1,6 @@
 ---
 name: reading-list-builder
+version: "1.0"
 description: >
   Deterministic newsletter pipeline. Gmail labels are the routing truth — no LLM
   classification, no approval gate. Fetches labeled emails, creates NotebookLM notebooks
