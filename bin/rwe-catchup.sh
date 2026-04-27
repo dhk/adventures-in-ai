@@ -16,7 +16,7 @@ RWE_ROOT="${REPO_ROOT}/reading-with-ears"
 # Do not source ~/.zshrc — see note in rwe-run.sh.
 export PATH="/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
 
-SKILL_VERSION_REQUIRED="1.0"
+SKILL_VERSION_REQUIRED="1.1"
 SKILL_FILE="${RWE_ROOT}/skills/user/reading-list-builder/SKILL.md"
 SKILL_VERSION=$(grep -m1 '^version:' "${SKILL_FILE}" | sed 's/version:[[:space:]]*"\([^"]*\)"/\1/')
 if [[ "${SKILL_VERSION}" != "${SKILL_VERSION_REQUIRED}" ]]; then
@@ -73,11 +73,12 @@ while [[ "$current" <= "$TO_DATE" ]]; do
 
     # Use 'if' so a single day's failure doesn't abort the whole catch-up run.
     if claude -p \
-      --permission-mode bypassPermissions \
-      --strict-mcp-config \
-      --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
-      --add-dir "${RWE_ROOT}" \
-      "${CLAUDE_PROMPT}"; then
+        --permission-mode bypassPermissions \
+        --strict-mcp-config \
+        --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
+        --add-dir "${RWE_ROOT}" \
+        "${CLAUDE_PROMPT}" \
+      && python3 "${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py" --date "${current}"; then
       touch "${SENTINEL}"
       echo "[${current}] Done."
       processed=$((processed + 1))
