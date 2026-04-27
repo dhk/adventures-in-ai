@@ -34,6 +34,9 @@ emoji), `notebook_emoji`, `notebook_order`, `elementfm_show_id`, `audio_focus_pr
 Assign `nn` (zero-padded two digits) by position in the sorted enabled list: lowest
 `notebook_order` → `01`, next → `02`, etc. This determines the notebook title suffix.
 
+Note the **state directory**: `~/.local/state/reading-with-ears/` — used for per-feed
+sentinel files that guard against duplicates on retry (see Phase 2 and Phase 4).
+
 If no feeds are enabled, report and stop.
 
 ---
@@ -68,8 +71,18 @@ If zero emails total: report and stop.
 
 ## Phase 2 — Notebooks + Sources
 
-Group emails by `(received_date × feed_slug)`. For each non-empty group, create one
-notebook using the `nn` assigned in Step 0 for that feed.
+Group emails by `(received_date × feed_slug)`. For each non-empty group, before doing
+anything else, **check the per-feed sentinel**:
+
+```bash
+~/.local/state/reading-with-ears/done-YYYY-MM-DD-<slug>
+```
+
+If that file exists, this feed was already fully published in a previous run — skip it
+entirely (no notebook, no sources, no audio, no upload). Log it as "already done" in
+the final report.
+
+For feeds without a sentinel, create one notebook using the `nn` assigned in Step 0:
 
 **Create notebook:**
 ```
@@ -194,6 +207,15 @@ curl -s -X POST \
 
 Capture the episode URL from the publish response for the final report.
 
+**After a successful publish for this feed**, write the per-feed sentinel:
+```bash
+mkdir -p ~/.local/state/reading-with-ears
+touch ~/.local/state/reading-with-ears/done-YYYY-MM-DD-<slug>
+```
+
+This ensures a retry after a partial failure skips already-published feeds rather than
+creating duplicates.
+
 ---
 
 ## Final Report
@@ -211,11 +233,14 @@ Episodes:
 • reading-list-2026-04-27-02 🧠 Things to Think About → [element.fm episode url]
 …
 
+Already published (skipped):
+• news, think
+
 ⚠️ Skipped (HTML-only, no body):
 • "<subject>" — <sender>
 ```
 
-Omit the Skipped section if there are no HTML-only emails.
+Omit "Already published" if no feeds were skipped. Omit "Skipped" if no HTML-only emails.
 
 ---
 
@@ -229,4 +254,5 @@ Omit the Skipped section if there are no HTML-only emails.
 - **ffmpeg unavailable**: Skip m4a→mp3 conversion; attempt direct m4a upload; flag if Element.fm rejects
 - **Element.fm 4xx on upload**: Log error + filename, continue with remaining files
 - **`CLAUDE_ELEMENT_FM_KEY` not set**: Report and skip Phase 4 entirely; audio files are still downloaded
+- **Partial previous run (some feeds done, some not)**: Per-feed sentinels skip completed feeds; only remaining feeds are processed — no duplicates
 - **Tool call budget hit mid-run**: Report last completed phase and what remains; user continues with "proceed"
