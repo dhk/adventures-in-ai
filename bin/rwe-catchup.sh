@@ -72,12 +72,11 @@ while [[ "$current" <= "$TO_DATE" ]]; do
     cd "${RWE_ROOT}"
 
     # Use 'if' so a single day's failure doesn't abort the whole catch-up run.
-    if claude -p \
+    if echo "${CLAUDE_PROMPT}" | claude -p \
         --permission-mode bypassPermissions \
         --strict-mcp-config \
         --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
         --add-dir "${RWE_ROOT}" \
-        "${CLAUDE_PROMPT}" \
       && python3 "${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py" --date "${current}"; then
       touch "${SENTINEL}"
       echo "[${current}] Done."

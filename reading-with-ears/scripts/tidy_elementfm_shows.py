@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Tidy Element.fm shows: normalize episode titles (drop legacy "reading list - " and
-NotebookLM-style labels) and move episodes to the show that matches their category
-(all enabled slugs in feeds.json, e.g. news / think / professional / vital-signs).
+Tidy Element.fm shows: normalize episode titles to show_name - YYYY-MM-DD (from feeds.json),
+including legacy "reading list - <slug> - <date>" and NotebookLM-style labels; move episodes
+to the show that matches their category (all enabled slugs in feeds.json).
 
 Uses the same API + feeds.json mapping as publish_episodes.py.
 
@@ -29,12 +29,8 @@ from podcast_config import (
     elementfm_episode_description,
     enabled_slugs_ordered,
     load_feeds_publish_config,
-)
-
-
-TITLE_RE = re.compile(
-    r"^reading\s+list\s*-\s*(?P<slug>[a-z0-9_-]+)\s*-\s*(?P<date>\d{4}-\d{2}-\d{2})\s*$",
-    re.IGNORECASE,
+    parse_slug_date_from_episode_title,
+    slug_to_show_name,
 )
 
 DAILY_NEWS_RE = re.compile(r"^Daily\s+News\s+(?P<date>\d{4}-\d{2}-\d{2})\s*$", re.IGNORECASE)
@@ -45,7 +41,10 @@ NOTEBOOK_DATE_RE = re.compile(
 
 
 def clean_title(slug: str, date: str) -> str:
-    return f"{slug} - {date}"
+    sn = slug_to_show_name(slug)
+    if sn:
+        return f"{sn} - {date}"
+    return f"{slug.replace('-', ' ').title()} - {date}"
 
 
 def _parse_us_short_date(mon: str, day: str, year: str) -> Optional[str]:
@@ -60,9 +59,9 @@ def _parse_us_short_date(mon: str, day: str, year: str) -> Optional[str]:
 
 def slug_date_from_title(title: str) -> Optional[tuple[str, str]]:
     raw = (title or "").strip()
-    m = TITLE_RE.match(raw)
-    if m:
-        return m.group("slug").lower(), m.group("date")
+    parsed = parse_slug_date_from_episode_title(raw)
+    if parsed:
+        return parsed
 
     m2 = DAILY_NEWS_RE.match(raw)
     if m2:

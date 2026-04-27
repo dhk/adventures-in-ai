@@ -39,6 +39,7 @@ from podcast_config import (
     manifest_path_for_date,
     migrate_manifest_episodes_for_per_show_uploads,
     parse_audio_filename,
+    parse_date_and_slug_from_stem,
     parse_episode_title_from_filename,
     parse_reading_list_notebook_title,
     slug_for_category_title,
@@ -551,7 +552,8 @@ def upload_to_elementfm(client: ElementFmClient, audio_path: Path, *, dry_run: b
     title = parse_episode_title_from_filename(audio_path.name)
 
     # Idempotency: if we already recorded an episode_id, reuse it; otherwise look up by title.
-    slug = audio_path.stem.split("-")[3] if len(audio_path.stem.split("-")) >= 4 else audio_path.stem
+    stem_parsed = parse_date_and_slug_from_stem(audio_path.stem)
+    slug = stem_parsed[1] if stem_parsed else audio_path.stem
     entry = manifest.setdefault("episodes", {}).setdefault(slug, {})
     episode_id = entry.get("episode_id")
     existing = None
