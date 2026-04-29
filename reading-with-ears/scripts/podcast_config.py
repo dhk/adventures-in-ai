@@ -112,22 +112,21 @@ def manifest_path_for_date(target_date: str) -> Path:
     return STATE_DIR / f"manifest-{target_date}.json"
 
 
-def parse_episode_title_from_filename(filename: str) -> str:
+def parse_date_and_slug_from_stem(stem: str) -> Optional[tuple[str, str]]:
     """
-    Turn '2026-03-21-news.mp3' into 'reading list - news - 2026-03-21'.
-    Falls back to a humanized stem.
+    Parse 'YYYY-MM-DD-slug' filename stem; slug may contain hyphens (e.g. vital-signs).
+    Returns (date_iso, slug) or None.
     """
-    stem = Path(filename).stem
     parts = stem.split("-")
-    if len(parts) >= 4:
-        try:
-            datetime.strptime(f"{parts[0]}-{parts[1]}-{parts[2]}", "%Y-%m-%d")
-            date_str = f"{parts[0]}-{parts[1]}-{parts[2]}"
-            slug = parts[3].lower()
-            return f"reading list - {slug} - {date_str}"
-        except ValueError:
-            pass
-    return stem.replace("-", " ").replace("_", " ").title()
+    if len(parts) < 4:
+        return None
+    date_str = f"{parts[0]}-{parts[1]}-{parts[2]}"
+    try:
+        datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        return None
+    slug = "-".join(parts[3:]).lower()
+    return (date_str, slug) if slug else None
 
 
 @dataclass(frozen=True)
@@ -282,6 +281,72 @@ def load_feeds_json() -> dict[str, Any]:
         if data.get("feeds"):
             return data
     return {}
+
+
+def slug_to_show_name(slug: str) -> Optional[str]:
+    """Return feeds.json `show_name` for this slug (any feed, enabled or not)."""
+    key = (slug or "").strip().lower()
+    if not key:
+        return None
+    for f in load_feeds_json().get("feeds") or []:
+        if not isinstance(f, dict):
+            continue
+        s = str(f.get("slug") or "").strip().lower()
+        if s != key:
+            continue
+        name = str(f.get("show_name") or "").strip()
+        return name if name else None
+    return None
+
+
+LEGACY_EPISODE_TITLE_RE = re.compile(
+    r"^reading\s+list\s*-\s*(?P<slug>[a-z0-9_-]+)\s*-\s*(?P<date>\d{4}-\d{2}-\d{2})\s*$",
+    re.IGNORECASE,
+)
+
+
+def parse_slug_date_from_episode_title(title: str) -> Optional[tuple[str, str]]:
+    """
+    Map an Element.fm episode title to (slug, date).
+    Supports legacy 'reading list - <slug> - <date>' and '<show_name> - <date>' from feeds.json.
+    """
+    raw = (title or "").strip()
+    if not raw:
+        return None
+    m = LEGACY_EPISODE_TITLE_RE.match(raw)
+    if m:
+        return m.group("slug").lower(), m.group("date")
+    feeds = [f for f in load_feeds_json().get("feeds") or [] if isinstance(f, dict)]
+    feeds.sort(key=lambda f: len(str(f.get("show_name") or "")), reverse=True)
+    for f in feeds:
+        sn = str(f.get("show_name") or "").strip()
+        slug = str(f.get("slug") or "").strip()
+        if not sn or not slug:
+            continue
+        try:
+            pat = re.escape(sn) + r"\s*-\s*(\d{4}-\d{2}-\d{2})\s*$"
+        except re.error:
+            continue
+        m2 = re.match(pat, raw, re.IGNORECASE)
+        if m2:
+            return slug.lower(), m2.group(1)
+    return None
+
+
+def parse_episode_title_from_filename(filename: str) -> str:
+    """
+    Turn '2026-03-21-news.mp3' into '<show_name from feeds.json> - 2026-03-21'.
+    Falls back to title-cased slug stem if the slug is unknown in config.
+    """
+    stem = Path(filename).stem
+    parsed = parse_date_and_slug_from_stem(stem)
+    if parsed:
+        date_str, slug = parsed
+        show_name = slug_to_show_name(slug)
+        if show_name:
+            return f"{show_name} - {date_str}"
+        return f"{slug.replace('-', ' ').title()} - {date_str}"
+    return stem.replace("-", " ").replace("_", " ").title()
 
 
 def _feed_sort_key(feed: dict[str, Any]) -> int:

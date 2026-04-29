@@ -51,12 +51,11 @@ cd "${RWE_ROOT}"
 
 CLAUDE_PROMPT=$'Read and follow skills/user/reading-list-builder/SKILL.md and run the full pipeline for today\'s date (use America/Los_Angeles for "today").'
 
-claude -p \
+echo "${CLAUDE_PROMPT}" | claude -p \
   --permission-mode bypassPermissions \
   --strict-mcp-config \
   --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
-  --add-dir "${RWE_ROOT}" \
-  "${CLAUDE_PROMPT}"
+  --add-dir "${RWE_ROOT}"
 
 python3 "${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py"
 

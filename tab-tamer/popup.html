@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tab Tamer</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Tab Tamer</h1>
+      <span id="tab-count" class="tab-count"></span>
+    </header>
+
+    <div class="search-bar">
+      <input type="text" id="search" placeholder="Search tabs…" autocomplete="off" />
+      <button id="search-clear" class="icon-btn" title="Clear search" hidden>✕</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="sort-controls">
+        <button id="sort-title" class="sort-btn" data-dir="none" title="Sort by title">
+          Title <span class="sort-arrow">↕</span>
+        </button>
+        <button id="sort-visited" class="sort-btn" data-dir="none" title="Sort by last visited">
+          Last Visited <span class="sort-arrow">↕</span>
+        </button>
+      </div>
+      <div class="group-controls">
+        <button id="btn-group" title="Group tabs by website">Group by Site</button>
+        <button id="btn-ungroup" title="Ungroup all tab groups" hidden>Ungroup All</button>
+      </div>
+    </div>
+
+    <div class="bulk-bar">
+      <label class="select-all-label">
+        <input type="checkbox" id="select-all" />
+        <span>Select All</span>
+      </label>
+      <button id="btn-close-selected" class="close-selected-btn" hidden>Close (<span id="selected-count">0</span>)</button>
+    </div>
+
+    <div id="loading" class="loading-state">
+      <span class="spinner"></span>
+      <span>Loading tabs…</span>
+    </div>
+    <div id="tab-list"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
