@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@300;400;600&family=DM+Mono:wght@400&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -46,6 +45,8 @@ body {
   overflow: hidden;
 }
 
+body.loading { cursor: wait; }
+
 #app {
   display: flex;
   flex-direction: column;
@@ -63,6 +64,12 @@ header {
   flex-shrink: 0;
 }
 
+.header-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
 header h1 {
   font-family: var(--font-cond);
   font-size: 18px;
@@ -71,6 +78,28 @@ header h1 {
   color: var(--text-head);
   line-height: 1.1;
 }
+
+.header-by {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--accent-blue);
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+}
+.header-by:hover { color: var(--text); }
+
+.bmc-link {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--accent-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  letter-spacing: 0.04em;
+  transition: color 0.15s;
+}
+.bmc-link:hover { color: var(--text); }
 
 .tab-count {
   font-family: var(--font-mono);
@@ -148,10 +177,10 @@ header h1 {
   border-radius: var(--radius);
   padding: 4px 10px;
   cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
 }

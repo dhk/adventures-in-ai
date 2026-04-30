@@ -18,7 +18,9 @@ let colorIndex = 0;
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  document.body.classList.add('loading');
   await loadTabs();
+  document.body.classList.remove('loading');
   document.getElementById('loading').classList.add('hidden');
   render();
   bindControls();
