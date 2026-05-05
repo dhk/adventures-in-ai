@@ -15,7 +15,7 @@ REPO_ROOT="$(cd "${BRIEF_ROOT}/.." && pwd)"
 
 DEST_SKILL_ROOT="${HOME}/.local/share/reading-with-ears/skills/user/reading-with-ears"
 DEST_SCRIPTS="${HOME}/.local/share/reading-with-ears/scripts"
-SKILL_SRC="${BRIEF_ROOT}/skills/user/reading-with-ears/SKILL.md"
+SKILL_SRC="${BRIEF_ROOT}/skills/user/reading-list-builder/SKILL.md"
 
 INSTALL_BIN=0
 CLI_MODE=""

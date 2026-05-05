@@ -164,3 +164,10 @@ cython_debug/
 
 # DHK random adds
 node_modules/
+
+# Cursor — ignore local workspace state; allowlist committed MCP config
+.cursor/*
+!.cursor/mcp.json
+
+# Claude Code — local worktrees / machine-specific (do not commit)
+.claude/
