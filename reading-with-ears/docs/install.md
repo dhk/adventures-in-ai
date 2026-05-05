@@ -155,6 +155,18 @@ rwe-run.sh
 
 ## 8. Verify
 
+**Configuration (Python, ffmpeg, uv, nlm, Claude CLI, `~/.config`, MCP, optional `.cursor/mcp.json`):** from the directory that contains `reading-with-ears/` (repo root), run:
+
+```bash
+REPO_ROOT="$HOME/Documents/dev/adventures-in-ai"   # your clone
+"$REPO_ROOT/reading-with-ears/scripts/verify-reading-with-ears-setup.sh"
+```
+
+- **`--apply`** — install missing tools where possible, `chmod` `bin/rwe-*.sh`, and run `install-local.sh --install-bin`.
+- **`--features=a,b,c`** or env **`RWE_VERIFY_FEATURES`** — run only selected groups: `toolchain`, `notebooklm`, `claude`, `repo`, `user_config`, `elementfm`, `permissions`, `sync`, `mcp`, `cursor`, or `all` (default).
+
+**Pipeline (today’s audio / upload):**
+
 ```bash
 # Check pipeline status for today
 rwe-publish --show-status
