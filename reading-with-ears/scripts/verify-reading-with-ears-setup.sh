@@ -56,6 +56,26 @@ note() { echo "    $*"; }
 ok() { echo "✓  $*"; }
 bad() { echo "✗  $*" >&2; issues=$((issues + 1)); }
 
+# Reject unknown --features tokens (avoids a silent no-op "pass").
+_validate_feature_list() {
+  [[ "${FEATURES_RAW}" == "all" ]] && return 0
+  local raw="${FEATURES_RAW//[[:space:]]/}"
+  [[ -z "${raw}" ]] && return 0
+  local known=" toolchain notebooklm claude repo user_config elementfm permissions sync mcp cursor "
+  local IFS=,
+  local x unk=0
+  for x in ${raw}; do
+    [[ -z "${x}" ]] && continue
+    if [[ "${known}" != *" ${x} "* ]]; then
+      warn "Unknown feature \"${x}\" (typo?). Known: toolchain notebooklm claude repo user_config elementfm permissions sync mcp cursor"
+      unk=$((unk + 1))
+    fi
+  done
+  [[ "${unk}" -gt 0 ]] && issues=$((issues + unk))
+}
+
+_validate_feature_list
+
 echo "Reading with Ears — configuration verification"
 echo "Repo root: ${REPO_ROOT}"
 echo "Mode: $([[ "${APPLY}" -eq 1 ]] && echo apply || echo check-only)"
@@ -80,7 +100,7 @@ else
   bad "ffmpeg not found"
   if [[ "${APPLY}" -eq 1 ]] && have brew; then
     echo "    Installing ffmpeg via Homebrew…"
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install ffmpeg
+    HOMEBREW_NO_AUTO_UPDATE=1 brew install ffmpeg || warn "brew install ffmpeg failed — fix brew/network and retry."
   elif [[ "${APPLY}" -eq 1 ]]; then
     warn "Install Homebrew or ffmpeg manually: https://ffmpeg.org"
   fi
@@ -93,10 +113,10 @@ else
   if [[ "${APPLY}" -eq 1 ]]; then
     if have brew; then
       echo "    Installing uv via Homebrew…"
-      HOMEBREW_NO_AUTO_UPDATE=1 brew install uv
+      HOMEBREW_NO_AUTO_UPDATE=1 brew install uv || warn "brew install uv failed — fix brew/network and retry."
     else
       echo "    Installing uv via official installer…"
-      curl -LsSf https://astral.sh/uv/install.sh | sh
+      ( curl -LsSf https://astral.sh/uv/install.sh | sh ) || warn "uv installer failed — install uv manually (https://docs.astral.sh/uv/)."
       note 'Add ~/.local/bin to PATH (or restart the shell), then re-run with --apply.'
     fi
   fi
@@ -110,7 +130,7 @@ else
   bad "nlm CLI not found (comes with notebooklm-mcp-cli)"
   if [[ "${APPLY}" -eq 1 ]] && have uv; then
     echo "    uv tool install notebooklm-mcp-cli…"
-    uv tool install notebooklm-mcp-cli
+    uv tool install notebooklm-mcp-cli || warn "uv tool install notebooklm-mcp-cli failed."
   fi
 fi
 
@@ -133,7 +153,7 @@ else
   bad "claude CLI not found (required for rwe-run.sh)"
   if [[ "${APPLY}" -eq 1 ]] && have npm; then
     echo "    npm install -g @anthropic-ai/claude-code…"
-    npm install -g @anthropic-ai/claude-code
+    npm install -g @anthropic-ai/claude-code || warn "npm install @anthropic-ai/claude-code failed."
   elif [[ "${APPLY}" -eq 1 ]]; then
     warn "Install Node/npm, then: npm install -g @anthropic-ai/claude-code"
   fi
@@ -219,7 +239,9 @@ fi
 
 # --- MCP registration (Claude Code user scope) ---
 if feature_enabled mcp; then
-if have claude; then
+if ! have claude; then
+  warn "Claude CLI not on PATH — cannot check or register Gmail MCP (enable claude feature or install)."
+else
   if claude mcp list 2>/dev/null | grep -qi 'gmail'; then
     ok "Gmail MCP registered (claude mcp list)"
   else

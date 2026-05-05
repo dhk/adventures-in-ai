@@ -30,7 +30,7 @@ The result: three episodes a day, insight-first, ready to listen during a commut
 | [Process Overview](process-overview.md) | End-to-end operations: inputs, phases, parameters, file locations |
 | [Key Ideas](docs/key-ideas.md) | Redirect to Current Design; archived principles in [`docs/archive/`](docs/archive/) |
 | [Context](docs/context.md) | Where this project stands and how it got here |
-| [Installation](docs/install.md) | Prerequisites, environment setup, launchd configuration |
+| [Installation](docs/install.md) | Prerequisites, environment, **§8 machine verification** (`scripts/verify-reading-with-ears-setup.sh`), launchd |
 
 ---
 
@@ -48,6 +48,14 @@ rwe-publish --upload-only
 
 # Dry run — preview without doing anything
 rwe-publish --dry-run
+```
+
+From the **parent of `reading-with-ears/`** (repo root), check toolchain, MCP, and config (see [Installation — §8](docs/install.md#8-verify)):
+
+```bash
+./reading-with-ears/scripts/verify-reading-with-ears-setup.sh
+# Optional: install/fix what we can, then install-local + ~/bin
+./reading-with-ears/scripts/verify-reading-with-ears-setup.sh --apply
 ```
 
 ---
