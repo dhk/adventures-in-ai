@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tab Tamer by DHK — Support</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #0d0f12;
+      --bg2: #13161b;
+      --bg3: #1a1e25;
+      --border: #252a33;
+      --text: #e2e8f0;
+      --text-head: #9aabb8;
+      --text-muted: #7a8899;
+      --text-dim: #4a5568;
+      --accent: #16a34a;
+      --accent-blue: #4090f0;
+      --accent-orange: #f06040;
+      --font-cond: 'Barlow Condensed', system-ui, sans-serif;
+      --font-sans: 'Barlow', system-ui, sans-serif;
+      --font-mono: 'DM Mono', monospace;
+      --radius: 4px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.7;
+      padding: 60px 24px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .site-nav {
+      margin-bottom: 48px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .site-nav a {
+      color: var(--accent-blue);
+      text-decoration: none;
+    }
+    .site-nav a:hover { text-decoration: underline; }
+    .site-nav span { margin: 0 8px; }
+
+    .hero {
+      margin-bottom: 56px;
+    }
+
+    h1 {
+      font-family: var(--font-cond);
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--text-head);
+      line-height: 1.05;
+      margin-bottom: 16px;
+    }
+
+    .tagline {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 540px;
+      line-height: 1.6;
+    }
+
+    h2 {
+      font-family: var(--font-cond);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--text-head);
+      text-transform: uppercase;
+      margin-top: 48px;
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      font-family: var(--font-cond);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-top: 24px;
+      margin-bottom: 8px;
+    }
+
+    p { margin-bottom: 16px; }
+
+    ul, ol {
+      margin: 0 0 16px 22px;
+    }
+
+    li { margin-bottom: 8px; }
+
+    a {
+      color: var(--accent-blue);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    a:hover { color: var(--text); }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1px 6px;
+      color: var(--text);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .feature-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .feature-card h3 {
+      margin-top: 0;
+    }
+
+    .feature-card p {
+      margin-bottom: 0;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .install-steps {
+      counter-reset: steps;
+      list-style: none;
+      margin-left: 0;
+    }
+
+    .install-steps li {
+      counter-increment: steps;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .install-steps li::before {
+      content: counter(steps);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--accent);
+      background: rgba(22, 163, 74, 0.1);
+      border: 1px solid rgba(22, 163, 74, 0.3);
+      border-radius: var(--radius);
+      min-width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 48px 0;
+    }
+
+    .contact-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-top: 24px;
+    }
+
+    .contact-box h2 { margin-top: 0; }
+
+    .contact-email {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      color: var(--accent-blue);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 16px;
+      margin-top: 8px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .contact-email:hover {
+      border-color: var(--accent-blue);
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    footer {
+      margin-top: 60px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+    }
+    footer a { color: var(--accent-blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    footer .sep { margin: 0 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="site-nav">
+      <a href="https://www.dhkconsulting.com">DHK</a>
+      <span>/</span>
+      Tab Tamer
+    </nav>
+
+    <div class="hero">
+      <h1>Tab Tamer<br>by DHK</h1>
+      <p class="tagline">A Chrome extension for managing large numbers of open tabs. Sort, search, group, and close — right from your toolbar.</p>
+    </div>
+
+    <h2>Features</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>Search</h3>
+        <p>Filter your tabs in real time by title or URL. Results update as you type, with a one-click clear button.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Sort</h3>
+        <p>Sort tabs by title (A→Z or Z→A) or by last visited (newest or oldest first). Sorting physically reorders tabs in Chrome's tab bar.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Group by Site</h3>
+        <p>Instantly group all tabs by domain using Chrome's native tab groups — color-coded in the tab bar and collapsible in the popup.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Ungroup</h3>
+        <p>Disband all tab groups with one click, returning tabs to a flat ungrouped list in the tab bar.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Multi-select &amp; Close</h3>
+        <p>Check any number of tabs and close them all at once with the "Close (N)" button. Select All / Deselect All included.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Switch Tabs</h3>
+        <p>Click any tab row (not the checkbox) to jump straight to that tab. The popup closes automatically.</p>
+      </div>
+    </div>
+
+    <h2>How to Install</h2>
+    <p>Tab Tamer is loaded directly from a local folder — no Chrome Web Store required.</p>
+
+    <h3>Step 1 — Get the files</h3>
+    <p>Download the <code>tab-tamer.zip</code> from the <a href="https://github.com/dhk/adventures-in-ai" target="_blank" rel="noopener">adventures-in-ai repository</a> and unzip it, or clone the repo:</p>
+    <pre style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:14px 18px;font-family:var(--font-mono);font-size:13px;color:var(--text);overflow-x:auto;margin-bottom:16px;">git clone https://github.com/dhk/adventures-in-ai.git</pre>
+
+    <h3>Step 2 — Load in Chrome</h3>
+    <ol class="install-steps">
+      <li><span>Open Chrome and go to <code>chrome://extensions</code></span></li>
+      <li><span>Toggle <strong>Developer mode</strong> on (top-right corner)</span></li>
+      <li><span>Click <strong>Load unpacked</strong></span></li>
+      <li><span>Select the <code>tab-tamer/</code> folder</span></li>
+      <li><span>The Tab Tamer icon appears in your toolbar — click to open</span></li>
+    </ol>
+    <p style="color:var(--text-muted);font-size:14px;">Don't see the icon? Click the puzzle-piece icon in the Chrome toolbar and pin Tab Tamer.</p>
+
+    <h3>Updating</h3>
+    <p>After pulling new changes, go to <code>chrome://extensions</code>, find Tab Tamer, and click the <strong>↺ refresh</strong> icon.</p>
+
+    <hr class="divider" />
+
+    <h2>How to Use</h2>
+
+    <h3>Search</h3>
+    <p>Type in the search bar at the top to filter tabs by title or URL. The list updates instantly. Hit the <strong>✕</strong> button or clear the text to show all tabs again.</p>
+
+    <h3>Sort</h3>
+    <p>Click <strong>Title</strong> to sort alphabetically. Click again to reverse. Click <strong>Last Visited</strong> to put the most recently accessed tab first. Click again for oldest-first. Sorting reorders your actual Chrome tabs, not just the popup view.</p>
+
+    <h3>Group by Site</h3>
+    <p>Click <strong>Group by Site</strong> to create a native Chrome tab group for each domain. Groups are color-coded and visible in the tab bar. In the popup, each group is a collapsible section — click the group header to collapse or expand it.</p>
+
+    <h3>Ungroup All</h3>
+    <p>Click <strong>Ungroup All</strong> to disband every group and return to a flat tab list.</p>
+
+    <h3>Close Tabs</h3>
+    <p>Check the box next to any tabs you want to close. The <strong>Close (N)</strong> button appears — click it to close all selected tabs at once. Use <strong>Select All</strong> to check every visible tab.</p>
+
+    <hr class="divider" />
+
+    <div class="contact-box">
+      <h2>Support</h2>
+      <p>Have a question, found a bug, or want to request a feature? Email us:</p>
+      <a href="mailto:tabtamer@dhk.io" class="contact-email">tabtamer@dhk.io</a>
+    </div>
+
+    <footer style="margin-top:48px;">
+      &copy; DHK
+      <span class="sep">&mdash;</span>
+      <a href="https://www.dhkconsulting.com">dhkconsulting.com</a>
+      <span class="sep">&mdash;</span>
+      <a href="https://www.dhkconsulting.com/work/tab-tamer/privacy-policy">Privacy Policy</a>
+    </footer>
+  </div>
+</body>
+</html>

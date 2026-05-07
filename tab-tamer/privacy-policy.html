@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Tab Tamer by DHK</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #0d0f12;
+      --bg2: #13161b;
+      --border: #252a33;
+      --text: #e2e8f0;
+      --text-head: #9aabb8;
+      --text-muted: #7a8899;
+      --accent: #16a34a;
+      --accent-blue: #4090f0;
+      --font-cond: 'Barlow Condensed', system-ui, sans-serif;
+      --font-sans: 'Barlow', system-ui, sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.7;
+      padding: 60px 24px;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .site-nav {
+      margin-bottom: 48px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .site-nav a {
+      color: var(--accent-blue);
+      text-decoration: none;
+    }
+    .site-nav a:hover { text-decoration: underline; }
+    .site-nav span { margin: 0 8px; }
+
+    h1 {
+      font-family: var(--font-cond);
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--text-head);
+      margin-bottom: 6px;
+      line-height: 1.1;
+    }
+
+    .meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+    }
+
+    h2 {
+      font-family: var(--font-cond);
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--text-head);
+      text-transform: uppercase;
+      margin-top: 40px;
+      margin-bottom: 12px;
+    }
+
+    p { margin-bottom: 16px; }
+
+    ul {
+      margin: 0 0 16px 20px;
+      color: var(--text);
+    }
+
+    li { margin-bottom: 6px; }
+
+    a {
+      color: var(--accent-blue);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    a:hover { color: var(--text); }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 40px 0;
+    }
+
+    footer {
+      margin-top: 60px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+    footer a { color: var(--accent-blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="site-nav">
+      <a href="https://www.dhkconsulting.com">DHK</a>
+      <span>/</span>
+      <a href="https://www.dhkconsulting.com/work/tab-tamer/support">Tab Tamer</a>
+      <span>/</span>
+      Privacy Policy
+    </nav>
+
+    <h1>Privacy Policy</h1>
+    <p class="meta">Tab Tamer by DHK &mdash; Last updated: May 2026</p>
+
+    <p>Tab Tamer is a Chrome extension that helps you manage open browser tabs. This policy explains what data the extension accesses and how it is used.</p>
+
+    <h2>1. What We Access</h2>
+    <p>Tab Tamer reads the following information from your browser using the Chrome Extensions API:</p>
+    <ul>
+      <li>Tab titles and URLs (to display in the popup, enable search and sorting)</li>
+      <li>Favicon URLs (to show site icons in the tab list)</li>
+      <li>Last-accessed timestamps (to support "Sort by Last Visited")</li>
+      <li>Tab group membership and group metadata (color, title) for the "Group by Site" feature</li>
+    </ul>
+
+    <h2>2. What We Do Not Do</h2>
+    <ul>
+      <li>We do <strong>not</strong> read or access the content of any web page you visit</li>
+      <li>We do <strong>not</strong> collect, store, or transmit any data to a server</li>
+      <li>We do <strong>not</strong> share any information with third parties</li>
+      <li>We do <strong>not</strong> use analytics, tracking, or advertising</li>
+    </ul>
+
+    <h2>3. Local-Only Processing</h2>
+    <p>All processing happens entirely within your browser. Tab data is read at the moment you open the popup and is used only to render the Tab Tamer interface. No data persists between popup sessions beyond what Chrome itself stores (e.g. your open tabs and their groups).</p>
+
+    <h2>4. Permissions</h2>
+    <p>Tab Tamer requests two Chrome permissions:</p>
+    <ul>
+      <li><strong>tabs</strong> — required to read tab titles, URLs, last-accessed times, and to move or close tabs</li>
+      <li><strong>tabGroups</strong> — required to create, update, and disband Chrome native tab groups</li>
+    </ul>
+    <p>No host permissions are requested. Tab Tamer never injects scripts into or reads the content of any web page.</p>
+
+    <h2>5. Children's Privacy</h2>
+    <p>Tab Tamer is not directed at children under 13 and does not knowingly process data from children.</p>
+
+    <h2>6. Changes to This Policy</h2>
+    <p>If this policy changes, the updated version will be posted at this URL with a revised "Last updated" date.</p>
+
+    <hr class="divider" />
+
+    <h2>7. Contact</h2>
+    <p>Questions about this privacy policy? Email <a href="mailto:tabtamer@dhk.io">tabtamer@dhk.io</a>.</p>
+
+    <footer>
+      &copy; DHK &mdash; <a href="https://www.dhkconsulting.com">dhkconsulting.com</a>
+    </footer>
+  </div>
+</body>
+</html>
