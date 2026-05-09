@@ -1,41 +1,67 @@
 ---
 name: reading-list-builder
-version: "1.1"
+version: "2.1"
 description: >
-  Deterministic newsletter pipeline. Gmail labels are the routing truth — no LLM
-  classification, no approval gate. Fetches labeled emails, creates NotebookLM notebooks
-  (one per day per label), generates audio overviews, titles each episode, and downloads
-  the audio. Publishing to Element.fm is handled separately by rwe-publish. Use when user
-  says "process my newsletters", "run the pipeline", "build my reading list", "triage my
-  inbox", or similar. Handles today or a date range.
-compatibility: "Requires: Gmail MCP (gmail_search_messages, gmail_read_message), NotebookLM MCP (notebook_create, source_add, studio_create, studio_status, notebook_describe), nlm CLI, ffmpeg"
+  Fetches newsletter emails by label, routes to NotebookLM notebooks with per-feed audio
+  overviews, downloads audio, and (in deep mode) logs a full per-article record — URL
+  extraction, full article fetch, Claude synthesis, infographic generation — to the
+  reading-db YAML store. Runs unattended. Default mode is DEEP.
+  Deep triggers (default): "process my newsletters", "triage my inbox", "build my reading
+  list", "add newsletters to NotebookLM", "run my email triage", "run the pipeline",
+  "/reading-list-builder", "deep reading list", "reading list with analysis", "full pipeline".
+  Light triggers (explicit opt-in only): "/reading-list-builder light", "light reading
+  list", "quick pipeline", "just notebooks".
+  Handles today or a multi-day range in both modes.
+compatibility: "Both modes: Gmail MCP, NotebookLM MCP, nlm CLI, ffmpeg. Deep: adds web_fetch, filesystem write to adventures-in-ai/dhkondata/reading-db/runs/"
 ---
 
 # Reading List Builder
 
-Labels ARE the routing. No classification step. No approval gate.
-Stops at audio download — use rwe-publish to push to Element.fm.
+Two modes. Default is always Deep. Read the trigger to determine which to run.
+
+Version is defined in this skill's frontmatter (version: "2.1"). At the start of every
+deep run, read this value and write it as skill_version in the YAML run file header.
 
 ---
 
-## Step 0 — Load Feeds Config
+## MODE DETECTION
 
-**Before any Gmail or NotebookLM step**, read `config/feeds.json` (at
-`reading-with-ears/config/feeds.json` relative to the repo root; prefer
-`~/.config/reading-with-ears/feeds.json` if readable — it takes precedence).
+**Deep mode** (default): `/reading-list-builder`, "process my newsletters",
+"run the pipeline", "triage my inbox", "build my reading list", "deep reading list",
+"reading list with analysis", "full pipeline" -> run Steps 0-10 below.
 
-For each feed where **`"enabled": true`**, sorted by **`notebook_order`** ascending,
-record: `slug`, `gmail_labels` (array), `notebook_category` (full title suffix with
-emoji), `notebook_order`, `audio_dir` (top-level), `audio_focus_prompt`.
+**Light mode** (explicit opt-in only): `/reading-list-builder light`, "light reading
+list", "quick pipeline", "just notebooks" -> run Steps 0-6 only. No article fetch,
+no synthesis, no YAML write.
 
-Assign `nn` (zero-padded two digits) by position in the sorted enabled list: lowest
-`notebook_order` → `01`, next → `02`, etc.
+State the mode at the start of the run:
+- Deep: "Running in deep mode v2.1 -- [date range]"
+- Light: "Running in light mode v2.1 -- [date range]"
+
+---
+
+## STEP 0: Load Feeds Config
+
+**Before any Gmail or NotebookLM step**, read `config/feeds.json` at
+`reading-with-ears/config/feeds.json` relative to the repo root.
+Prefer `~/.config/reading-with-ears/feeds.json` if readable — it takes precedence.
+
+For each feed where `"enabled": true`, sorted by `notebook_order` ascending, record:
+- `slug` — used in audio filename
+- `gmail_labels` (array) — labels to search
+- `notebook_category` — full title suffix with emoji
+- `notebook_order` — determines nn suffix
+- `audio_focus_prompt` — passed to studio_create for this feed
+- `audio_dir` (top-level) — where to save downloaded audio files
+
+Assign `nn` (zero-padded two digits) by position in the sorted enabled list:
+lowest `notebook_order` → `01`, next → `02`, etc.
 
 If no feeds are enabled, report and stop.
 
 ---
 
-## Step 1 — Fetch
+## STEP 1: Determine Date Range & Fetch by Label
 
 If no date is given, use today. For a range, use the earliest day as the start.
 
@@ -45,51 +71,67 @@ Search each enabled feed's labels individually (one call per label):
 gmail_search_messages(q="label:<gmail_label> after:YYYY/MM/DD")
 ```
 
-**Single past date (catch-up):** add a `before:` bound to scope to exactly that day:
+Single past date (catch-up): add a `before:` bound to scope exactly that day:
 
 ```
 gmail_search_messages(q="label:<gmail_label> after:YYYY/MM/DD before:YYYY/MM/DD+1")
 ```
 
-Fetch every label across every enabled feed before doing anything else. For each
-message ID, fetch the full message:
+Fetch every label across every enabled feed before doing anything else.
+If zero emails found across all labels, tell user and stop.
+
+---
+
+## STEP 2: Fetch Full Email Content
+
+For each email returned, fetch the full message:
 
 ```
 gmail_read_message(messageId=<id>)
 ```
 
-**HTML-only emails** (empty plain-text body): skip entirely. Log subject + sender
-for the Skipped section of the report.
+Fetch ALL emails before doing anything else. Keep tool calls front-loaded.
+Record the received date for each email (from message headers).
 
-If zero emails total: report and stop.
+**HTML-only emails** (empty plain-text body): use subject + snippet to create a
+minimal source entry. Title format: "<subject> -- <sender> [body unavailable]".
+Note in the report.
 
 ---
 
-## Step 2 — Notebooks + Sources
+## STEP 3: Route to NotebookLM
 
-Group emails by `(received_date × feed_slug)`. For each non-empty group, create one
-notebook:
+Labels are the routing. No triage table. No confirmation. Proceed immediately.
 
+One notebook per day per non-empty feed. Group emails by received date.
+Create notebooks for each (date × feed) pair that has at least one email.
+Process days chronologically (oldest first).
+
+Notebook naming convention:
+```
+reading-list-YYYY-MM-DD-nn <notebook_category>
+```
+
+Examples:
+- `reading-list-2026-05-09-01 📰 News & Current Affairs`
+- `reading-list-2026-05-09-02 🧠 Things to Think About`
+- `reading-list-2026-05-09-03 💼 Professional Reading`
+- `reading-list-2026-05-09-05 🏥 Healthcare Reading`
+
+Date in notebook name = received date of emails in that notebook.
+If a notebook with that title already exists, use it — do not create a duplicate.
+
+Create each notebook:
 ```
 notebook_create(title="reading-list-YYYY-MM-DD-nn <notebook_category>")
 ```
 
-Example:
-- `reading-list-2026-04-27-01 📰 News & Current Affairs`
-- `reading-list-2026-04-27-02 🧠 Things to Think About`
-- `reading-list-2026-04-27-03 💼 Professional Reading`
-- `reading-list-2026-04-27-04 🏥 Healthcare Reading`
-
-If a notebook with that title already exists, skip creating it and use the existing one.
-
-Add each email as a text source. Process all sources for one notebook before starting
-the next:
-
+Add each email as a text source (process all sources for one notebook before the next):
 ```
 source_add(
   notebook_id=<id>,
   source_type="text",
-  title="<subject> — <sender> (<date>)",
+  title="<subject> -- <sender> (<date>)",
   text="From: <sender>\nDate: <date>\n\n<body truncated to 8000 chars>",
   wait=True
 )
@@ -97,10 +139,13 @@ source_add(
 
 ---
 
-## Step 3 — Audio, Titles & Download
+## STEP 4: Generate Audio Overviews
 
-After all notebooks have all their sources loaded, trigger audio generation for all
-notebooks in parallel:
+After all notebooks have all sources loaded, trigger audio for all notebooks.
+Use the `audio_focus_prompt` from feeds.json for each feed — do not use a generic prompt.
+
+In **deep mode**: fire all audio generations then immediately continue to Step 5.
+In **light mode**: fire all audio generations then poll until complete before downloading.
 
 ```
 studio_create(
@@ -113,13 +158,23 @@ studio_create(
 )
 ```
 
-Poll each notebook with `studio_status` every 30 seconds until `status == "complete"`
-(timeout: 10 minutes). Log any that time out and continue with the rest.
+**Tool call ordering (both modes):**
+1. Fetch all emails (Steps 1-2) before creating any notebooks
+2. Create all notebooks before adding any sources
+3. Add sources notebook by notebook (one at a time)
+4. Fire all audio generations after all sources are loaded
+5. Deep: continue to Step 5 immediately. Light: poll then download.
+
+---
+
+## STEP 5 (Light mode): Poll, Title & Download Audio
+
+Poll each notebook with `studio_status` every 30 seconds until `status == "complete"`.
+Timeout: 10 minutes. Log any that time out and continue with the rest.
 
 ### Episode titling
 
-Once complete, call `notebook_describe` then rename the artifact with a title,
-3–5 insight-first bullets, and a sources line:
+Once complete, call `notebook_describe` then rename the artifact:
 
 ```
 notebook_describe(notebook_id=<id>)
@@ -132,20 +187,22 @@ studio_status(
 )
 ```
 
-**Titling rules:**
-- Keep NotebookLM's auto-generated title — don't replace it
+Titling rules:
+- Keep NotebookLM's auto-generated title — do not replace it
 - Bullets state what something *means*, not what it *covers* — insight-first
 - 3 bullets minimum, 5 maximum
-- Sources: `Newsletter Name (topic shorthand) · ...`
+- Sources line: `Newsletter Name (topic shorthand) · ...`
 
 ### Download
+
+Use `audio_dir` from feeds.json:
 
 ```bash
 nlm download audio <notebook_id> \
   --output "<audio_dir>/YYYY-MM-DD-<slug>.m4a"
 ```
 
-Convert to MP3 if needed:
+Convert to MP3:
 ```bash
 ffmpeg -i "<audio_dir>/YYYY-MM-DD-<slug>.m4a" \
   -codec:a libmp3lame -q:a 2 \
@@ -156,34 +213,331 @@ Skip download if `<audio_dir>/YYYY-MM-DD-<slug>.mp3` already exists.
 
 ---
 
-## Report
+## STEP 6 (Light mode): Report
 
 ```
-✅ Done — [date or date range]
+Done -- [date range] -- Light mode v2.1
 
-Fetched: [N] emails across [N] feeds
-Notebooks: [N] created, [N] sources loaded
-Audio: [N] files downloaded to <audio_dir>
+NotebookLM -- [N] notebooks created:
 
-• reading-list-2026-04-27-01 📰 News & Current Affairs → YYYY-MM-DD-news.mp3
-• reading-list-2026-04-27-02 🧠 Things to Think About → YYYY-MM-DD-think.mp3
-…
+  2026-05-09:
+  - "reading-list-2026-05-09-01 📰 News & Current Affairs" -> 3 sources
+    → YYYY-MM-DD-news.mp3
+  - "reading-list-2026-05-09-03 💼 Professional Reading" -> 2 sources
+    → YYYY-MM-DD-professional.mp3
 
-⚠️ Skipped (HTML-only, no body):
-• "<subject>" — <sender>
+HTML-only (body unavailable): [list if any, else omit]
+Nothing was deleted or archived in Gmail.
 ```
-
-Omit the Skipped section if there are no HTML-only emails.
 
 ---
 
-## Edge Cases
+# DEEP MODE — STEPS 5-10
 
-- **Zero emails in range**: Report and stop
-- **Feed has no emails on a given day**: Skip that notebook silently
-- **HTML-only email**: Skip, surface in report
-- **Notebook already exists**: Use it, don't create a duplicate
-- **`studio_status` timeout (10 min)**: Log it, continue with other notebooks
-- **Audio file already exists at download path**: Skip download, note it in report
-- **ffmpeg unavailable**: Skip conversion, attempt direct m4a upload via rwe-publish; flag if rejected
-- **Tool call budget hit mid-run**: Report what's done and what remains; continue next turn with "proceed"
+Steps 5-8 run after Step 4 (audio triggered). Do not wait for audio to complete.
+Audio is polled, titled, and downloaded in Step 9 after all article work is done.
+
+---
+
+## STEP 5 (Deep): Extract & Fetch Articles
+
+For each email processed in Step 3, extract article links from the email HTML body.
+
+**Include links that:**
+- Have meaningful anchor text (headline-like, >15 chars)
+- Point to editorial content (news articles, essays, reports, blog posts)
+
+**Exclude using the versioned block list:**
+```
+adventures-in-ai/dhkondata/reading-db/blocked-domains.yaml
+```
+
+Load this file at the start of Step 5 and apply:
+- All domains under `blocked.esp`, `blocked.tracker`, `blocked.social`
+- All anchor text patterns under `suspicious_anchor_patterns`
+- Domains under `watch` are NOT blocked — fetch and record `fetch_status` for monitoring
+
+Do not hardcode domain lists in this skill. The config file is the single source of truth.
+
+Also exclude:
+- Image sources (src= attributes)
+- Anchor-only links (#section)
+- Anchor text shorter than 15 chars
+
+For digest newsletters (1440, Morning Dispatch, The 7, TLDR): extract one record per article link.
+For single-article newsletters: extract one record.
+
+For each extracted link:
+
+1. Assign `article_id`: `<messageId>-<sequence>` (e.g. `19d77ecea1ccb554-01`)
+2. Store `url_raw` (as found in email HTML)
+3. Resolve redirect → `url_canonical` via `web_fetch` (follow redirects, store final URL)
+4. Extract `domain` from `url_canonical`
+5. Store `anchor_text` and `excerpt` (surrounding sentence(s) from email body)
+6. Set `resolve_status`: `resolved | failed | redirect_loop | timeout`
+7. Set `parse_confidence`: 0.0–1.0
+   - 0.9–1.0: clean canonical URL, clear headline anchor text
+   - 0.7–0.89: resolved but anchor text vague or URL looks like a section page
+   - 0.5–0.69: resolved but uncertain if this is the primary article
+   - <0.5: could not resolve or anchor text is unclear
+
+Fetch full article body for each article where `resolve_status = "resolved"`:
+```
+web_fetch(url=url_canonical)
+```
+
+Extract main article body (strip nav, ads, footers, sidebars — main content only).
+Truncate to 12,000 chars if needed.
+
+Set `fetch_status`: `success | paywalled | not_found | bot_blocked | timeout | error`
+Set `full_body_available`: `true | false`
+Set `full_body_chars`: character count of what was retrieved
+
+---
+
+## STEP 6 (Deep): Synthesize Articles
+
+For each article, generate synthesis bullets using only the fetched content.
+
+Input priority:
+1. Full article body (`fetch_status = success`) → use this
+2. Email excerpt (fetch failed or paywalled) → use as fallback, flag it
+3. Anchor text only → skip synthesis entirely, set `status: skipped`
+
+Synthesis prompt (use exactly):
+```
+Extract 3-5 key claims from this article.
+Only include claims that are directly and explicitly stated in the text.
+Do not infer, extrapolate, summarize themes, or editorialize.
+Do not combine claims from different parts of the article into a single bullet.
+Each bullet should be independently verifiable against the source text.
+If you are uncertain whether a claim is directly stated, omit it.
+If fewer than 3 clear claims are present, return only those that are certain.
+```
+
+Set `synthesis.source`: `article | email_body | skipped`
+Set `synthesis.status`: `complete | skipped`
+Set `synthesis.confidence_note`: null, or a brief note if fallback was used
+
+---
+
+## STEP 7 (Deep): Generate Article Brief Infographics
+
+For each article where `synthesis.status = "complete"`, generate an HTML infographic
+using the template at:
+```
+adventures-in-ai/dhkondata/reading-db/templates/article-brief-template.html
+```
+
+The template uses mustache-style placeholders. Replace each with article data:
+
+| Placeholder        | Value                                                                  |
+|--------------------|------------------------------------------------------------------------|
+| {{ARTICLE_TITLE}}  | article.source.anchor_text (headline)                                  |
+| {{SENDER_NAME}}    | email.sender_name                                                      |
+| {{RECEIVED_DATE}}  | email.received_at (formatted: MMM D, YYYY)                             |
+| {{CATEGORY_LABEL}} | routing.category mapped to full label (e.g. "💼 Professional Reading") |
+| {{CANONICAL_URL}}  | article.source.url_canonical                                           |
+| {{RUN_DATE}}       | run_date                                                               |
+| {{SKILL_VERSION}}  | skill_version from frontmatter                                         |
+
+For the summary/takeaway split:
+- LEFT panel (Summary Points): bullets 1–3 (or up to 5 if available)
+- RIGHT panel (Takeaways): final 2–3 bullets
+- If only 3 bullets total: show all 3 left, repeat strongest 1–2 on right reframed as takeaways
+- If `synthesis.source = "email_body"`: add footnote marker (*) to title and footer note
+
+Output each infographic to:
+```
+adventures-in-ai/dhkondata/reading-db/briefs/YYYY-MM-DD/<article_id>.html
+```
+
+Create the directory if it does not exist.
+Skip if `synthesis.status != "complete"`. Record path as `infographic.path`.
+
+---
+
+## STEP 8 (Deep): Write YAML to reading-db
+
+Write one YAML file per run date to:
+```
+adventures-in-ai/dhkondata/reading-db/runs/YYYY-MM-DD.yaml
+```
+
+If processing a multi-day range, write one file per day.
+If a file for that date already exists, append new emails — do not overwrite.
+If the directory does not exist, create it before writing.
+
+Read the version from this skill's frontmatter and write it as `skill_version`.
+
+File structure:
+
+```yaml
+run_date: YYYY-MM-DD
+skill_version: "2.1"
+pipeline_mode: deep
+notebooks:
+  - label: "newsletter/pro"
+    notebook_id: "ghi789-..."
+    notebook_title: "reading-list-YYYY-MM-DD-03 💼 Professional Reading"
+
+emails:
+  - email_id: "19d77ecea1ccb554"
+    thread_id: "19d77ecea1ccb554"
+    received_at: "2026-05-09T07:14:00Z"
+    label: "newsletter/pro"
+    sender: "dan@tldrnewsletter.com"
+    sender_name: "TLDR"
+    subject: "TLDR: OpenAI's new model, DuckDB 2.0"
+    article_count: 3
+    parse_notes: null
+
+    articles:
+      - article_id: "19d77ecea1ccb554-01"
+        position: 1
+
+        source:
+          url_raw: "https://links.tldrnewsletter.com/abc123"
+          url_canonical: "https://openai.com/blog/gpt-5"
+          domain: "openai.com"
+          anchor_text: "OpenAI announces GPT-5"
+          resolve_status: "resolved"
+          parse_confidence: 0.95
+
+        content:
+          full_body_available: true
+          full_body_chars: 4821
+          fetch_status: "success"
+          fetch_notes: null
+
+        routing:
+          category: "pro"
+          notebook_id: "ghi789-..."
+          notebook_title: "reading-list-2026-05-09-03 💼 Professional Reading"
+
+        synthesis:
+          status: "complete"
+          source: "article"
+          bullets:
+            - "GPT-5 scores 87% on MMLU benchmark, up from 72% on GPT-4"
+            - "API access launches May 15 at $15 per million tokens"
+            - "Context window extended to 256k tokens"
+          generated_at: "2026-05-09T09:32:00Z"
+          confidence_note: null
+
+        infographic:
+          status: "generated"
+          path: "reading-db/briefs/2026-05-09/19d77ecea1ccb554-01.html"
+          generated_at: "2026-05-09T09:45:00Z"
+
+        tags: []
+        status: "synthesized"
+```
+
+After writing, confirm file path and record count.
+
+---
+
+## STEP 9 (Deep): Poll, Title & Download Audio
+
+Now that article work is complete, poll audio status for all notebooks.
+
+Poll each notebook with `studio_status` every 30 seconds until `status == "complete"`.
+Timeout: 10 minutes. Log any that time out and continue with the rest.
+
+### Episode titling
+
+```
+notebook_describe(notebook_id=<id>)
+
+studio_status(
+  notebook_id=<id>,
+  action="rename",
+  artifact_id=<artifact_id>,
+  new_title="<NotebookLM-generated title>\n\n• <key idea 1>\n• <key idea 2>\n• <key idea 3>\n\nSources: <Newsletter (topic)> · <Newsletter (topic)> · ..."
+)
+```
+
+Titling rules:
+- Keep NotebookLM's auto-generated title — do not replace it
+- Bullets state what something *means*, not what it *covers* — insight-first
+- 3 bullets minimum, 5 maximum
+- Sources line: `Newsletter Name (topic shorthand) · ...`
+
+### Download
+
+Use `audio_dir` from feeds.json for this feed:
+
+```bash
+nlm download audio <notebook_id> \
+  --output "<audio_dir>/YYYY-MM-DD-<slug>.m4a"
+```
+
+Convert to MP3:
+```bash
+ffmpeg -i "<audio_dir>/YYYY-MM-DD-<slug>.m4a" \
+  -codec:a libmp3lame -q:a 2 \
+  "<audio_dir>/YYYY-MM-DD-<slug>.mp3"
+```
+
+Skip download if `<audio_dir>/YYYY-MM-DD-<slug>.mp3` already exists.
+
+---
+
+## STEP 10 (Deep): Report
+
+```
+Done -- [date range] -- Deep mode v2.1
+
+NotebookLM -- [N] notebooks created:
+
+  2026-05-09:
+  - "reading-list-2026-05-09-01 📰 News & Current Affairs" -> 3 sources
+    → YYYY-MM-DD-news.mp3
+  - "reading-list-2026-05-09-03 💼 Professional Reading" -> 2 sources
+    → YYYY-MM-DD-professional.mp3
+
+Reading DB -- adventures-in-ai/dhkondata/reading-db/runs/YYYY-MM-DD.yaml
+  skill_version: 2.1
+  [N] emails processed
+  [N] articles extracted
+  [N] fully fetched (synthesis from article)
+  [N] fallback (synthesis from email excerpt)
+  [N] skipped (paywalled / no body)
+
+Briefs -- adventures-in-ai/dhkondata/reading-db/briefs/YYYY-MM-DD/
+  [N] infographics generated
+  [N] skipped (synthesis incomplete)
+
+Fetch issues (if any):
+  - paywalled: [N] -- [sender names]
+  - failed/timeout: [N] -- [sender names]
+
+HTML-only emails (if any): [list]
+Nothing was deleted or archived in Gmail.
+```
+
+---
+
+## Edge Cases (both modes)
+
+- No emails in range: tell user, offer to widen date range
+- HTML-only email body: use subject + snippet, note body unavailable in report
+- Gmail MCP unavailable: tell user to check Settings → Connectors
+- Notebook already exists (same title): reuse it, do not create a duplicate
+- Tool call limit hit mid-run: report what is done, what is pending; continue next turn with "proceed"
+- No emails on a given day in range: skip that day silently, no empty notebooks
+- `studio_status` timeout (10 min): log it, continue with other notebooks
+- Audio file already exists at download path: skip download, note in report
+- ffmpeg unavailable: skip MP3 conversion, save m4a only, flag in report
+
+Deep only:
+- URL resolve fails: store `url_raw` only, set `resolve_status: failed`, continue
+- Article fetch paywalled: fall back to email excerpt for synthesis, flag in report
+- Article fetch any other failure: set `synthesis.status: skipped`, flag in report
+- YAML write path missing: create directory structure before writing
+- Multi-day range: one YAML file per day, process and write sequentially
+- Infographic synthesis incomplete: set `infographic.status: skipped`, continue
+- Infographic template missing: log warning, skip generation, continue
+- `blocked-domains.yaml` missing: log warning, fall back to hardcoded minimal list,
+  flag prominently in report so user knows config was not loaded
