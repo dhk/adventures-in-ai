@@ -1,0 +1,205 @@
+run_date: "2026-05-06"
+skill_version: "2.1"
+pipeline_mode: email-only-backfill
+backfill: true
+notebooks:
+  - label: newsletter/news
+    notebook_id: null
+    notebook_title: reading-list-2026-05-06-01 📰 News & Current Affairs
+  - label: newsletter/think
+    notebook_id: null
+    notebook_title: reading-list-2026-05-06-02 🧠 Things to Think About
+  - label: newsletter/pro
+    notebook_id: null
+    notebook_title: reading-list-2026-05-06-03 💼 Professional Reading
+  - label: newsletter/healthcare
+    notebook_id: null
+    notebook_title: reading-list-2026-05-06-04 🏥 Healthcare Reading
+
+emails:
+  - email_id: 19dff5a2fd6ce657
+    thread_id: 19dff5a2fd6ce657
+    received_at: "2026-05-06T22:10:09Z"
+    label: newsletter/news
+    sender: hello@newsletter.thedispatch.com
+    sender_name: The Dispatch
+    subject: Vanity Projects All the Way Down
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dff1a3cb07b9e5
+    thread_id: 19dff1a3cb07b9e5
+    received_at: "2026-05-06T21:03:21Z"
+    label: newsletter/news
+    sender: newsletters@theatlantic.com
+    sender_name: The Atlantic
+    subject: A dangerous attack on press freedom
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfd7c5c9b94283
+    thread_id: 19dfd7c5c9b94283
+    received_at: "2026-05-06T13:31:08Z"
+    label: newsletter/news
+    sender: sanfrancisco@axios.com
+    sender_name: Axios San Francisco
+    subject: "\U0001F4F3 Primary elections guide"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfcf7634e9a1c0
+    thread_id: 19dfcf7634e9a1c0
+    received_at: "2026-05-06T11:06:04Z"
+    label: newsletter/news
+    sender: email@washingtonpost.com
+    sender_name: The 7 (Washington Post)
+    subject: "The 7: Iran's strikes on U.S. military assets; Indiana primary results; how to find paths to joy; and more"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfcebee365efa8
+    thread_id: 19dfcebee365efa8
+    received_at: "2026-05-06T10:52:14Z"
+    label: newsletter/news
+    sender: hello@newsletter.thedispatch.com
+    sender_name: The Dispatch
+    subject: "Ukraine's Quiet Comeback Against Russia"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfc6917639868e
+    thread_id: 19dfc6917639868e
+    received_at: "2026-05-06T08:30:33Z"
+    label: newsletter/news
+    sender: dailydigest@email.join1440.com
+    sender_name: "1440"
+    subject: "Hantavirus, Nazi-Looted Masterpieces, and a 4-Year-Old Pianist"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfbe84a8d7eced
+    thread_id: 19dfbe84a8d7eced
+    received_at: "2026-05-06T06:08:15Z"
+    label: newsletter/think
+    sender: noahpinion@substack.com
+    sender_name: Noah Smith
+    subject: Could development economics be more useful?
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfdd0ca7936569
+    thread_id: 19dfdd0ca7936569
+    received_at: "2026-05-06T15:03:28Z"
+    label: newsletter/pro
+    sender: hello@mindstream.news
+    sender_name: Mindstream
+    subject: AI chip company is getting an IPO
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfd988906a9058
+    thread_id: 19dfd988906a9058
+    received_at: "2026-05-06T14:02:04Z"
+    label: newsletter/pro
+    sender: thecode@mail.joinsuperhuman.ai
+    sender_name: The Code (Superhuman)
+    subject: "\U0001F440 ChatGPT's new default model is here"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfd7aa5f13be5e
+    thread_id: 19dfd7aa5f13be5e
+    received_at: "2026-05-06T13:29:19Z"
+    label: newsletter/pro
+    sender: ai.plus@axios.com
+    sender_name: Axios AI+
+    subject: "\U0001FA93 Layoff blame game"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfcced69841371
+    thread_id: 19dfcced69841371
+    received_at: "2026-05-06T10:21:46Z"
+    label: newsletter/pro
+    sender: dan@tldrnewsletter.com
+    sender_name: TLDR
+    subject: "iOS 3rd party AI \U0001F916, OpenAI phone 2027 \U0001F4F1, compounding AI work \U0001F4C8"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfa996e5b3b3a7
+    thread_id: 19dfa996e5b3b3a7
+    received_at: "2026-05-06T00:04:12Z"
+    label: newsletter/pro
+    sender: info@theinformation.com
+    sender_name: The Information
+    subject: "The Briefing: Coinbase's Missed Learning"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfec16f09db578
+    thread_id: 19dfec16f09db578
+    received_at: "2026-05-06T19:25:58Z"
+    label: newsletter/healthcare
+    sender: pharma@endpointsnews.com
+    sender_name: Endpoints News
+    subject: Q1 sales show first signs of impact from IRA negotiations
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfe20e31ac00ec
+    thread_id: 19dfe20e31ac00ec
+    received_at: "2026-05-06T16:30:48Z"
+    label: newsletter/healthcare
+    sender: editors@go.fiercepharma.com
+    sender_name: Fierce Pharma
+    subject: "| 05.06.26 | Novo's Wegovy pill charts $355M in Q1 debut; Lilly infuses $4.5B more into massive US manufacturing outlay"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfdf140807e1bc
+    thread_id: 19dfdf140807e1bc
+    received_at: "2026-05-06T15:38:36Z"
+    label: newsletter/healthcare
+    sender: news@endpointsnews.com
+    sender_name: Endpoints News
+    subject: "GSK invests up to $1B in cardiometabolic space"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfda53f939d750
+    thread_id: 19dfda53f939d750
+    received_at: "2026-05-06T14:14:24Z"
+    label: newsletter/healthcare
+    sender: editors@go.fiercepharma.com
+    sender_name: Fierce Pharma
+    subject: "| 05.06.26 | Kyverna taps pharma vet as it preps for a commercial first; BMS kicks off World Cup campaign"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dfd0e0c5fef55b
+    thread_id: 19dfd0e0c5fef55b
+    received_at: "2026-05-06T11:30:26Z"
+    label: newsletter/healthcare
+    sender: early@endpointsnews.com
+    sender_name: Endpoints News
+    subject: "Bayer's first pharma M&A in years; Wegovy pill's Q1 sales"
+    article_count: 0
+    parse_notes: null
+    articles: []

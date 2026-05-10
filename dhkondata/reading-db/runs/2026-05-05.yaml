@@ -1,0 +1,249 @@
+run_date: "2026-05-05"
+skill_version: "2.1"
+pipeline_mode: email-only-backfill
+backfill: true
+notebooks:
+  - label: newsletter/news
+    notebook_id: null
+    notebook_title: reading-list-2026-05-05-01 📰 News & Current Affairs
+  - label: newsletter/think
+    notebook_id: null
+    notebook_title: reading-list-2026-05-05-02 🧠 Things to Think About
+  - label: newsletter/pro
+    notebook_id: null
+    notebook_title: reading-list-2026-05-05-03 💼 Professional Reading
+  - label: newsletter/healthcare
+    notebook_id: null
+    notebook_title: reading-list-2026-05-05-04 🏥 Healthcare Reading
+
+emails:
+  - email_id: 19dfa0c83cdf7cc1
+    thread_id: 19dfa0c83cdf7cc1
+    received_at: "2026-05-05T21:30:16Z"
+    label: newsletter/news
+    sender: newsletters@theatlantic.com
+    sender_name: The Atlantic
+    subject: "Iran's unexpected resilience"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df859375b009bd
+    thread_id: 19df859375b009bd
+    received_at: "2026-05-05T13:31:41Z"
+    label: newsletter/news
+    sender: sanfrancisco@axios.com
+    sender_name: Axios San Francisco
+    subject: "\U0001F686 Mascot on rails"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df7ce383b97f7d
+    thread_id: 19df7ce383b97f7d
+    received_at: "2026-05-05T10:58:13Z"
+    label: newsletter/news
+    sender: hello@newsletter.thedispatch.com
+    sender_name: The Dispatch
+    subject: Musk vs. OpenAI Goes to Trial
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df7c67f38010a7
+    thread_id: 19df7c67f38010a7
+    received_at: "2026-05-05T10:54:33Z"
+    label: newsletter/news
+    sender: email@washingtonpost.com
+    sender_name: The 7 (Washington Post)
+    subject: "The 7: Best-dressed celebs at the Met Gala; White House lockdown; lurking microplastics; and more"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df743e36d39366
+    thread_id: 19df743e36d39366
+    received_at: "2026-05-05T08:30:54Z"
+    label: newsletter/news
+    sender: dailydigest@email.join1440.com
+    sender_name: "1440"
+    subject: "GameStop's Gambit, the Pulitzer Prize, and a Cuddly Robot"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df7d496815442e
+    thread_id: 19df7d496815442e
+    received_at: "2026-05-05T10:03:18Z"
+    label: newsletter/think
+    sender: yaschamounk@substack.com
+    sender_name: Yascha Mounk
+    subject: Laurenz Guenther on the Representation Gap in Politics
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df6c0eb1aabb4b
+    thread_id: 19df6c0eb1aabb4b
+    received_at: "2026-05-05T06:06:01Z"
+    label: newsletter/think
+    sender: noahpinion@substack.com
+    sender_name: Noah Smith
+    subject: "AI's big messaging pivot"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df90c8f5a4d2d8
+    thread_id: 19df90c8f5a4d2d8
+    received_at: "2026-05-05T16:46:00Z"
+    label: newsletter/pro
+    sender: pragmaticengineer+deepdives@substack.com
+    sender_name: The Pragmatic Engineer
+    subject: "Designing Data-Intensive Applications: The Cloud & Doing the Right Thing"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df8ae6a65427d1
+    thread_id: 19df8ae6a65427d1
+    received_at: "2026-05-05T15:07:51Z"
+    label: newsletter/pro
+    sender: hello@mindstream.news
+    sender_name: Mindstream
+    subject: Anthropic and OpenAI are just kinda copying each other now
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df87253d312ec6
+    thread_id: 19df87253d312ec6
+    received_at: "2026-05-05T14:02:14Z"
+    label: newsletter/pro
+    sender: thecode@mail.joinsuperhuman.ai
+    sender_name: The Code (Superhuman)
+    subject: "\U0001F440 Bold claim by Anthropic's Co-founder"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df85476dfabe8b
+    thread_id: 19df85476dfabe8b
+    received_at: "2026-05-05T13:29:28Z"
+    label: newsletter/pro
+    sender: ai.plus@axios.com
+    sender_name: Axios AI+
+    subject: "\U0001F916 Software for agents"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df844d707c1dd2
+    thread_id: 19df844d707c1dd2
+    received_at: "2026-05-05T13:03:32Z"
+    label: newsletter/pro
+    sender: lenny@substack.com
+    sender_name: Lenny's Newsletter
+    subject: Why SaaS freemium playbooks don't work in AI, and what to do instead
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df7aa152e1b2c4
+    thread_id: 19df7aa152e1b2c4
+    received_at: "2026-05-05T10:23:31Z"
+    label: newsletter/pro
+    sender: dan@tldrnewsletter.com
+    sender_name: TLDR
+    subject: "OpenAI exec finances \U0001F4B0, Amazon supply chain services \U0001F69A, Redis arrays \U0001F9D1‍\U0001F4BB"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df5756cb246308
+    thread_id: 19df5756cb246308
+    received_at: "2026-05-05T00:06:46Z"
+    label: newsletter/pro
+    sender: info@theinformation.com
+    sender_name: The Information
+    subject: "The Briefing: Ryan Cohen's Chutzpah"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df9a330b231799
+    thread_id: 19df9a330b231799
+    received_at: "2026-05-05T19:34:54Z"
+    label: newsletter/healthcare
+    sender: pharma@endpointsnews.com
+    sender_name: Endpoints News
+    subject: "On mega-mergers, Bourla says 'no'"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df9059eca0e271
+    thread_id: 19df9059eca0e271
+    received_at: "2026-05-05T16:42:31Z"
+    label: newsletter/healthcare
+    sender: editors@go.fiercepharma.com
+    sender_name: Fierce Pharma
+    subject: "| 05.05.26 | BioNTech, Novartis chart major manufacturing pullbacks; Pfizer keeps forecast steady after rosy Q1"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df8da15f8fce2c
+    thread_id: 19df8da15f8fce2c
+    received_at: "2026-05-05T15:55:07Z"
+    label: newsletter/healthcare
+    sender: news@endpointsnews.com
+    sender_name: Endpoints News
+    subject: Pfizer cuts remainder of its Trillium pipeline
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df873ca1727178
+    thread_id: 19df873ca1727178
+    received_at: "2026-05-05T14:03:32Z"
+    label: newsletter/healthcare
+    sender: studio@endpointsnews.com
+    sender_name: Endpoints News
+    subject: CUT&RUN Accelerates PROTAC Drug Development - New Case Study by EpiCypher
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df86926b1a7ba4
+    thread_id: 19df86926b1a7ba4
+    received_at: "2026-05-05T13:51:54Z"
+    label: newsletter/healthcare
+    sender: healthtech@endpointsnews.com
+    sender_name: Endpoints News
+    subject: When it comes to AI in healthcare, should you buy or build?
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df85d6d342c38a
+    thread_id: 19df85d6d342c38a
+    received_at: "2026-05-05T13:39:05Z"
+    label: newsletter/healthcare
+    sender: events@endpointsnews.com
+    sender_name: Endpoints News
+    subject: "NEW: Meet the LGBTQ+ leaders driving change in biopharma"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19df7f4b7de649c5
+    thread_id: 19df7f4b7de649c5
+    received_at: "2026-05-05T11:44:44Z"
+    label: newsletter/healthcare
+    sender: early@endpointsnews.com
+    sender_name: Endpoints News
+    subject: Cytokinetics claims another win for heart muscle disease pill
+    article_count: 0
+    parse_notes: null
+    articles: []

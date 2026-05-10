@@ -1,0 +1,78 @@
+run_date: "2026-05-03"
+skill_version: "2.1"
+pipeline_mode: email-only-backfill
+backfill: true
+notebooks:
+  - label: newsletter/news
+    notebook_id: null
+    notebook_title: reading-list-2026-05-03-01 📰 News & Current Affairs
+  - label: newsletter/pro
+    notebook_id: null
+    notebook_title: reading-list-2026-05-03-03 💼 Professional Reading
+
+emails:
+  - email_id: 19defdb23609fb0f
+    thread_id: 19defdb23609fb0f
+    received_at: "2026-05-03T22:00:08Z"
+    label: newsletter/news
+    sender: newsletters@theatlantic.com
+    sender_name: The Atlantic
+    subject: Deepfakes are coming for your bank account
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dee8f8250450c6
+    thread_id: 19dee8f8250450c6
+    received_at: "2026-05-03T15:56:54Z"
+    label: newsletter/news
+    sender: hello@newsletter.thedispatch.com
+    sender_name: The Dispatch
+    subject: The Monthly Mailbag With Kelsey Dallas
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dedb5cfdf33d24
+    thread_id: 19dedb5cfdf33d24
+    received_at: "2026-05-03T12:00:07Z"
+    label: newsletter/news
+    sender: newsletters@theatlantic.com
+    sender_name: The Atlantic
+    subject: A great actor who is also a perfect celebrity
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19defe064917c929
+    thread_id: 19defe064917c929
+    received_at: "2026-05-03T22:05:53Z"
+    label: newsletter/pro
+    sender: info@theinformation.com
+    sender_name: The Information
+    subject: "The Briefing: Palantir's AI Pricing Power"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dee5e001d10490
+    thread_id: 19dee5e001d10490
+    received_at: "2026-05-03T15:03:50Z"
+    label: newsletter/pro
+    sender: hello@mindstream.news
+    sender_name: Mindstream
+    subject: Station F is Europe's hottest AI startup campus
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dedd68e9b3d03a
+    thread_id: 19dedd68e9b3d03a
+    received_at: "2026-05-03T12:30:59Z"
+    label: newsletter/pro
+    sender: lenny@substack.com
+    sender_name: Lenny's Newsletter
+    subject: "Why cultivating agency matters more than cultivating skills in the AI era | Max Schoening (Head of Product, Notion)"
+    article_count: 0
+    parse_notes: null
+    articles: []

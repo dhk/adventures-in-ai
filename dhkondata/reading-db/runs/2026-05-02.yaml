@@ -1,0 +1,117 @@
+run_date: "2026-05-02"
+skill_version: "2.1"
+pipeline_mode: email-only-backfill
+backfill: true
+notebooks:
+  - label: newsletter/news
+    notebook_id: null
+    notebook_title: reading-list-2026-05-02-01 📰 News & Current Affairs
+  - label: newsletter/think
+    notebook_id: null
+    notebook_title: reading-list-2026-05-02-02 🧠 Things to Think About
+  - label: newsletter/pro
+    notebook_id: null
+    notebook_title: reading-list-2026-05-02-03 💼 Professional Reading
+  - label: newsletter/healthcare
+    notebook_id: null
+    notebook_title: reading-list-2026-05-02-04 🏥 Healthcare Reading
+
+emails:
+  - email_id: 19de8994ec6d26e2
+    thread_id: 19de8994ec6d26e2
+    received_at: "2026-05-02T12:10:54Z"
+    label: newsletter/news
+    sender: hello@newsletter.thedispatch.com
+    sender_name: The Dispatch
+    subject: Our Best Stuff From the Primary Campaign Trail
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19de866837378e3e
+    thread_id: 19de866837378e3e
+    received_at: "2026-05-02T11:10:42Z"
+    label: newsletter/news
+    sender: hello@newsletter.thedispatch.com
+    sender_name: The Dispatch
+    subject: Consider the Rebel Yell
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19de85385d9cd2e3
+    thread_id: 19de85385d9cd2e3
+    received_at: "2026-05-02T10:54:40Z"
+    label: newsletter/news
+    sender: email@washingtonpost.com
+    sender_name: The 7 (Washington Post)
+    subject: "The 7: How are royal titles decided? Your questions, answered."
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19de7d08bd248b2a
+    thread_id: 19de7d08bd248b2a
+    received_at: "2026-05-02T08:30:23Z"
+    label: newsletter/news
+    sender: dailydigest@email.join1440.com
+    sender_name: "1440"
+    subject: "Iran War Deadline, a Sinking City, and the Priciest Buffet"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19dead877e51b426
+    thread_id: 19dead877e51b426
+    received_at: "2026-05-02T22:36:38Z"
+    label: newsletter/think
+    sender: noahpinion@substack.com
+    sender_name: Noah Smith
+    subject: "California's \"billionaire tax\" is the wrong approach"
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19de8e790cab4386
+    thread_id: 19de8e790cab4386
+    received_at: "2026-05-02T13:03:15Z"
+    label: newsletter/think
+    sender: post+the-weekender@substack.com
+    sender_name: The Weekender
+    subject: '"How glorious it would be to be freed of the messiness of wanting"'
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19de827ca685b25d
+    thread_id: 19de827ca685b25d
+    received_at: "2026-05-02T10:01:59Z"
+    label: newsletter/think
+    sender: yaschamounk@substack.com
+    sender_name: Yascha Mounk
+    subject: Lant Pritchett on Why Foreign Aid Misses the Point
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19de93833bcc5162
+    thread_id: 19de93833bcc5162
+    received_at: "2026-05-02T15:04:06Z"
+    label: newsletter/pro
+    sender: hello@mindstream.news
+    sender_name: Mindstream
+    subject: AI for total beginners
+    article_count: 0
+    parse_notes: null
+    articles: []
+
+  - email_id: 19de8239d3be0477
+    thread_id: 19de8239d3be0477
+    received_at: "2026-05-02T10:01:54Z"
+    label: newsletter/healthcare
+    sender: weekly@endpointsnews.com
+    sender_name: Endpoints News
+    subject: "Bristol Myers' pivotal year; Should AI be swinging bigger?; and more"
+    article_count: 0
+    parse_notes: null
+    articles: []
