@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tab Tamer — Before</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@300;400;600&family=DM+Mono:wght@400&display=swap" media="print" onload="this.media='all'">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #0d0f12;
+      --bg2: #13161b;
+      --bg3: #1a1e25;
+      --border:       #252a33;
+      --border-light: #2e3540;
+      --text:      #e2e8f0;
+      --text-head: #9aabb8;
+      --text-muted:#7a8899;
+      --text-dim:  #4a5568;
+      --accent:        #16a34a;
+      --accent-blue:   #4090f0;
+      --accent-purple: #a082f0;
+      --accent-orange: #f06040;
+      --font-cond: 'Barlow Condensed', system-ui, sans-serif;
+      --font-sans: 'Barlow', system-ui, sans-serif;
+      --font-mono: 'DM Mono', monospace;
+      --radius: 4px;
+    }
+
+    body {
+      width: 420px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 400;
+      margin: 32px auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-title { display: flex; align-items: baseline; gap: 12px; }
+
+    header h1 {
+      font-family: var(--font-cond);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--text-head);
+      line-height: 1.1;
+    }
+
+    .header-by {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--accent-blue);
+      letter-spacing: 0.04em;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .bmc-link {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      color: var(--accent-blue);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      letter-spacing: 0.04em;
+    }
+
+    .tab-count {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      background: var(--bg2);
+      padding: 3px 8px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Search ── */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #search {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 6px 10px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      outline: none;
+    }
+    #search::placeholder { color: var(--text-dim); }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px 6px;
+      border-radius: var(--radius);
+      font-family: var(--font-mono);
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      background: var(--bg2);
+    }
+
+    .sort-controls, .group-controls { display: flex; gap: 6px; }
+
+    .sort-btn, .group-controls button {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .sort-btn.active { border-color: var(--accent); color: var(--accent); }
+    .sort-arrow { margin-left: 3px; }
+
+    /* ── Bulk bar ── */
+    .bulk-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .select-all-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+
+    .select-all-label input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 13px; height: 13px;
+    }
+
+    .close-selected-btn {
+      background: rgba(240,96,64,0.12);
+      border: 1px solid rgba(240,96,64,0.3);
+      color: var(--accent-orange);
+      border-radius: var(--radius);
+      padding: 4px 12px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Group header ── */
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px 7px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      background: var(--bg3);
+      border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .group-toggle { margin-left: auto; font-size: 9px; }
+
+    /* ── Tab row ── */
+    .tab-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+    }
+
+    .tab-row.active-tab {
+      background: var(--bg2);
+      border-left-color: var(--accent);
+    }
+
+    .tab-row.selected { background: var(--bg2); }
+
+    .tab-row input[type="checkbox"] {
+      flex-shrink: 0;
+      accent-color: var(--accent);
+      width: 13px; height: 13px;
+    }
+
+    .tab-favicon {
+      width: 16px; height: 16px;
+      flex-shrink: 0;
+      object-fit: contain;
+      border-radius: 2px;
+    }
+
+    .tab-favicon-placeholder {
+      width: 16px; height: 16px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .tab-info { flex: 1; overflow: hidden; }
+
+    .tab-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.3;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-title">
+      <h1>Tab Tamer <a class="header-by" href="#">by DHK</a></h1>
+      <a class="bmc-link" href="#">☕ Buy me a coffee</a>
+    </div>
+    <span class="tab-count">8 tabs</span>
+  </header>
+
+  <div class="search-bar">
+    <input type="text" id="search" placeholder="Search tabs…" autocomplete="off" />
+    <button class="icon-btn">✕</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="sort-controls">
+      <button class="sort-btn active">Title <span class="sort-arrow">↑</span></button>
+      <button class="sort-btn">Last Visited <span class="sort-arrow">↕</span></button>
+    </div>
+    <div class="group-controls">
+      <button>Ungroup All</button>
+    </div>
+  </div>
+
+  <div class="bulk-bar">
+    <label class="select-all-label">
+      <input type="checkbox" />
+      <span>Select All</span>
+    </label>
+    <button class="close-selected-btn">Close (<span>2</span>)</button>
+  </div>
+
+  <!-- Group: github.com -->
+  <div class="group-header">
+    <span>github.com (3)</span>
+    <span class="group-toggle">▼</span>
+  </div>
+
+  <div class="tab-row active-tab">
+    <input type="checkbox" />
+    <img class="tab-favicon" src="https://github.com/favicon.ico" alt="" onerror="this.style.display='none'" />
+    <div class="tab-info"><div class="tab-title">Pull Request #42 — adventures-in-ai</div></div>
+  </div>
+  <div class="tab-row selected">
+    <input type="checkbox" checked />
+    <img class="tab-favicon" src="https://github.com/favicon.ico" alt="" onerror="this.style.display='none'" />
+    <div class="tab-info"><div class="tab-title">Issues · dhk/adventures-in-ai</div></div>
+  </div>
+  <div class="tab-row">
+    <input type="checkbox" />
+    <img class="tab-favicon" src="https://github.com/favicon.ico" alt="" onerror="this.style.display='none'" />
+    <div class="tab-info"><div class="tab-title">Actions · CI run · adventures-in-ai</div></div>
+  </div>
+
+  <!-- Group: notion.so -->
+  <div class="group-header">
+    <span>notion.so (2)</span>
+    <span class="group-toggle">▼</span>
+  </div>
+
+  <div class="tab-row">
+    <input type="checkbox" />
+    <span class="tab-favicon-placeholder">🌐</span>
+    <div class="tab-info"><div class="tab-title">Q2 Planning — Notion</div></div>
+  </div>
+  <div class="tab-row selected">
+    <input type="checkbox" checked />
+    <span class="tab-favicon-placeholder">🌐</span>
+    <div class="tab-info"><div class="tab-title">Team Docs — Notion</div></div>
+  </div>
+
+  <!-- Ungrouped -->
+  <div class="group-header">
+    <span>Ungrouped (2)</span>
+    <span class="group-toggle">▼</span>
+  </div>
+
+  <div class="tab-row">
+    <input type="checkbox" />
+    <img class="tab-favicon" src="https://www.google.com/favicon.ico" alt="" onerror="this.style.display='none'" />
+    <div class="tab-info"><div class="tab-title">Google</div></div>
+  </div>
+  <div class="tab-row">
+    <input type="checkbox" />
+    <img class="tab-favicon" src="https://dhk.io/favicon.ico" alt="" onerror="this.style.display='none'" />
+    <div class="tab-info"><div class="tab-title">Tab Tamer by DHK — dhk.io</div></div>
+  </div>
+</body>
+</html>
