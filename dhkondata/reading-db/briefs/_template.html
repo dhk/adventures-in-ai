@@ -4,6 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Article Brief — DHK Reading DB</title>
+<!--
+  DHK Reading DB — Article Brief Template
+  Design tokens aligned with DHK design system (dhk.io/design-system.md)
+  Last updated: 2026-05-10
+
+  TOKEN RULES (from design system):
+  - font-weight minimum: 400 (no 300 weights)
+  - font-size minimum: 11px for all UI text (WCAG 1.4.4)
+  - font-sans: system-ui stack (no custom body fonts)
+  - font-mono: DM Mono — tags, metadata, labels ONLY
+  - No dark mode, no Tailwind, no serif fonts
+
+  CARD-SPECIFIC TOKENS (editorial design, not website palette):
+  - --accent: #1a1a18   — dark panel background (intentional editorial choice)
+  - --accent-warm: #c8b89a — warm tan for decorative elements
+  - --bg: #f7f5f0        — warm off-white body (card background, mostly hidden)
+
+  PLACEHOLDERS (replace when generating):
+  - {{PANEL_LABEL}}       — e.g. "DHK Reading DB · Article Brief"
+  - {{ARTICLE_TITLE}}     — article headline
+  - {{ARTICLE_META}}      — "Author · Publication · Date"
+  - {{POINT_01}} … {{POINT_05}} — summary point text (01–05)
+  - {{RIGHT_PANEL_LABEL}} — e.g. "newsletter / tech · The Information"
+  - {{TAKEAWAY_1}} … {{TAKEAWAY_5}} — takeaway text
+  - {{FOOTER_SOURCE}}     — e.g. "theinformation.com (The Briefing — May 10, 2026)"
+  - {{FOOTER_DATE}}       — ISO date, e.g. "2026-05-10"
+-->
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
   :root{--bg:#f7f5f0;--surface:#ffffff;--ink:#111110;--ink-mid:#555550;--ink-light:#999990;--accent:#1a1a18;--accent-warm:#c8b89a;--rule:#e2dfd8;--tag-bg:#eeece6;--font-sans:system-ui,-apple-system,'Segoe UI',sans-serif;--font-mono:'DM Mono','Menlo',monospace;--radius:4px;}
@@ -41,37 +68,37 @@
 <body>
 <div class="card">
   <div class="panel panel-left">
-    <div class="panel-label">DHK Reading DB &nbsp;·&nbsp; Article Brief</div>
-    <div class="article-title">Ohio in a Handbasket: The Rise and Fall of Longaberger</div>
-    <div class="article-meta">Jonny Gartner · The Dispatch Culture &nbsp;·&nbsp; May 9, 2026</div>
+    <div class="panel-label">{{PANEL_LABEL}}</div>
+    <div class="article-title">{{ARTICLE_TITLE}}</div>
+    <div class="article-meta">{{ARTICLE_META}}</div>
     <div class="section-label">Key Summary Points</div>
     <div class="summary-points">
-      <div class="summary-point"><span class="point-num">01</span><span class="point-text">Longaberger Basket Company was founded in 1972 in Dresden, Ohio with just five weavers; by 2000 it had more than $1 billion in annual sales, 8,000 direct employees, and 70,000 sales associates nationwide.</span></div>
-      <div class="summary-point"><span class="point-num">02</span><span class="point-text">The company's basket-shaped headquarters — a 180,000 sq ft replica of a Longaberger basket — now sits vacant outside Newark, Ohio, nearly 10 years after the company's 2016 closure and 2018 bankruptcy filing.</span></div>
-      <div class="summary-point"><span class="point-num">03</span><span class="point-text">Longaberger grew through multilevel marketing alongside Tupperware and similar companies — the family's nearly 100-year-old basket-making craft was the foundation of a direct-sales empire.</span></div>
-      <div class="summary-point"><span class="point-num">04</span><span class="point-text">The vacant building is one of many abandoned manufacturing plants scattered across Ohio — the author describes the state as "littered" with such sites, testament to a rapidly changing economic landscape.</span></div>
-      <div class="summary-point"><span class="point-num">05</span><span class="point-text">The building persists due to nostalgia and hopes for future development — it remains "an artifact of a bygone era," a symbol of agricultural and manufacturing Ohio becoming something new.</span></div>
+      <div class="summary-point"><span class="point-num">01</span><span class="point-text">{{POINT_01}}</span></div>
+      <div class="summary-point"><span class="point-num">02</span><span class="point-text">{{POINT_02}}</span></div>
+      <div class="summary-point"><span class="point-num">03</span><span class="point-text">{{POINT_03}}</span></div>
+      <div class="summary-point"><span class="point-num">04</span><span class="point-text">{{POINT_04}}</span></div>
+      <div class="summary-point"><span class="point-num">05</span><span class="point-text">{{POINT_05}}</span></div>
     </div>
   </div>
   <div class="divider"></div>
   <div class="panel panel-right">
-    <div class="panel-label">newsletter / news &nbsp;·&nbsp; The Dispatch Culture</div>
+    <div class="panel-label">{{RIGHT_PANEL_LABEL}}</div>
     <div class="title-spacer"></div>
     <div class="section-label">Key Takeaways</div>
     <div class="takeaways">
-      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">Longaberger's arc — from five weavers to $1B in sales to abandoned building — is a compressed version of American Midwestern manufacturing's broader story.</span></div>
-      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The MLM model's alignment with handcraft nostalgia was a powerful combination that collapsed when the cultural moment passed — "authenticity" was always the brand's core asset, and authenticity ages.</span></div>
-      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The basket-shaped HQ building as monument and ruin is a uniquely American artifact: companies build monuments to success, then leave them when they fail, letting nostalgia do the preservation work.</span></div>
-      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">Ohio's deindustrialization is still ongoing — the basket company is one data point in a state that has been "becoming something new" for several decades without fully articulating what that new thing is.</span></div>
-      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The personal inheritance frame (the grandmother's mail basket on the author's desk) is what elevates this from economic history to cultural memory — these objects carry meaning long after the company is gone.</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">{{TAKEAWAY_1}}</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">{{TAKEAWAY_2}}</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">{{TAKEAWAY_3}}</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">{{TAKEAWAY_4}}</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">{{TAKEAWAY_5}}</span></div>
     </div>
   </div>
   <div class="footer">
     <div class="footer-left"><span class="footer-brand">dhk.io &nbsp;·&nbsp; reading-db v2.1</span></div>
     <div class="footer-divider"></div>
     <div class="footer-right">
-      <span class="footer-source">thedispatch.com (dispatch-culture — May 9, 2026)</span>
-      <span class="footer-date">2026-05-09</span>
+      <span class="footer-source">{{FOOTER_SOURCE}}</span>
+      <span class="footer-date">{{FOOTER_DATE}}</span>
     </div>
   </div>
 </div>
