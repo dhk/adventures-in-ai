@@ -1,0 +1,53 @@
+run_date: "2026-05-09"
+skill_version: "2.1"
+pipeline_mode: audio-only
+backfill: true
+
+# Notes: Retroactive audio-only run. Notebooks created and audio generated 2026-05-11.
+# 8 emails fetched across 4 labels; 1440 daily digest was HTML-only (skipped).
+# Deep pipeline (email body fetch → article synthesis → HTML briefs) is pending.
+# Audio downloaded to iCloud Personal Podcast folder.
+# Sources per notebook from notebook_describe summaries:
+#   01 news: Trump evangelical coalition/primary purge, Longaberger Co./Ohio economics,
+#            Democratic primaries in Iowa, redistricting rulings in the South (3 sources)
+#   02 think: Travel ethics decline, predictability in art, billionaire legitimacy,
+#             European political fragmentation (3 sources)
+#   03 pro: Perplexity AI as research tool, Iliad (AI game dev), global language extinction (1 source)
+#   04 vital-signs: Biotech licensing model, UCB/Candid Therapeutics $2B, GSK obesity deal,
+#                   Kanvas Biosciences (gut bacteria/cancer), Cytokinetics, FDA leadership (1 source)
+
+notebooks:
+  - label: newsletter/news
+    notebook_id: e83190bf-96e9-482d-b08c-5c0fb26c6ce6
+    notebook_title: "reading-list-2026-05-09-01 \U0001F4F0 News & Current Affairs"
+    audio_title: "Trump's loyalty purge and record national debt"
+    audio_artifact_id: cd3091cb-cfdb-4464-b3be-60ba5224fae7
+    audio_path: "Personal Podcast/2026-05-09-news.mp3"
+    source_count: 3
+
+  - label: newsletter/think
+    notebook_id: 13021730-2082-47f4-a1c5-a728951547e9
+    notebook_title: "reading-list-2026-05-09-02 \U0001F9E0 Things to Think About"
+    audio_title: "Why Everything Feels Like Predictive Text"
+    audio_artifact_id: 516ec2a3-ecb6-4cbd-8ff9-48284a40e84e
+    audio_path: "Personal Podcast/2026-05-09-think.mp3"
+    source_count: 3
+
+  - label: newsletter/pro
+    notebook_id: ef2e9265-d358-4d96-a11f-d3c0e8b9539a
+    notebook_title: "reading-list-2026-05-09-03 \U0001F4BC Professional Reading"
+    audio_title: "The collision of AI and language extinction"
+    audio_artifact_id: 6445d349-6592-4d1f-bcd1-d01c024e4fdd
+    audio_path: "Personal Podcast/2026-05-09-professional.mp3"
+    source_count: 1
+
+  - label: newsletter/vital-signs
+    notebook_id: 56d21e51-985e-4b6a-bcaf-eeab4b7e254d
+    notebook_title: "reading-list-2026-05-09-04 \U0001F3E5 Healthcare Reading"
+    audio_title: "Super poop and the billion dollar pivot"
+    audio_artifact_id: 02080bb2-ac5e-4525-add4-f37f0e3de98d
+    audio_path: "Personal Podcast/2026-05-09-vital-signs.mp3"
+    source_count: 1
+
+emails: []
+# Deep pipeline pending — email bodies not yet fetched, articles not synthesized, no briefs generated.
