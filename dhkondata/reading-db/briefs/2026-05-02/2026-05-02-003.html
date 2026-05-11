@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Article Brief — DHK Reading DB</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@400;500&display=swap');
+  :root{--bg:#f7f5f0;--surface:#ffffff;--ink:#111110;--ink-mid:#555550;--ink-light:#999990;--accent:#1a1a18;--accent-warm:#c8b89a;--rule:#e2dfd8;--tag-bg:#eeece6;--font-sans:'DM Sans',system-ui,sans-serif;--font-mono:'DM Mono','Menlo',monospace;--radius:4px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .card{width:1200px;height:675px;background:var(--surface);display:grid;grid-template-columns:1fr 1px 1fr;grid-template-rows:1fr;overflow:hidden;position:relative;}
+  .divider{background:var(--rule);grid-row:1;}
+  .panel{display:flex;flex-direction:column;padding:48px 44px;gap:0;height:100%;overflow:hidden;}
+  .panel-left{background:var(--accent);color:var(--bg);}
+  .panel-left .panel-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-warm);margin-bottom:20px;}
+  .panel-left .article-title{font-size:18px;font-weight:500;line-height:1.35;color:#fff;margin-bottom:8px;letter-spacing:-.01em;}
+  .panel-left .article-meta{font-family:var(--font-mono);font-size:11px;color:var(--accent-warm);opacity:.8;margin-bottom:32px;}
+  .panel-left .section-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-warm);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(200,184,154,.25);}
+  .summary-points{display:flex;flex-direction:column;gap:14px;flex:1;overflow:hidden;}
+  .summary-point{display:grid;grid-template-columns:20px 1fr;gap:10px;align-items:start;}
+  .point-num{font-family:var(--font-mono);font-size:11px;color:var(--accent-warm);padding-top:2px;opacity:.7;}
+  .point-text{font-size:13.5px;font-weight:300;line-height:1.55;color:rgba(247,245,240,.88);letter-spacing:.005em;}
+  .panel-right{background:var(--surface);}
+  .panel-right .panel-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-light);margin-bottom:20px;}
+  .panel-right .section-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-light);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--rule);}
+  .takeaways{display:flex;flex-direction:column;gap:14px;flex:1;overflow:hidden;}
+  .takeaway{display:grid;grid-template-columns:6px 1fr;gap:14px;align-items:start;}
+  .takeaway-marker{width:6px;height:6px;background:var(--accent-warm);border-radius:50%;margin-top:6px;}
+  .takeaway-text{font-size:13.5px;font-weight:400;line-height:1.55;color:var(--ink);letter-spacing:.005em;}
+  .footer{position:absolute;bottom:0;left:0;right:0;height:36px;display:grid;grid-template-columns:1fr 1px 1fr;border-top:1px solid var(--rule);}
+  .footer-left{background:var(--accent);display:flex;align-items:center;padding:0 44px;}
+  .footer-right{background:var(--surface);display:flex;align-items:center;justify-content:space-between;padding:0 44px;}
+  .footer-divider{background:var(--rule);}
+  .footer-brand{font-family:var(--font-mono);font-size:10px;color:var(--accent-warm);opacity:.7;letter-spacing:.08em;}
+  .footer-source{font-family:var(--font-mono);font-size:10px;color:var(--ink-light);letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:380px;}
+  .footer-date{font-family:var(--font-mono);font-size:10px;color:var(--ink-light);flex-shrink:0;margin-left:16px;}
+  .panel-right .title-spacer{height:46px;margin-bottom:32px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="panel panel-left">
+    <div class="panel-label">DHK Reading DB &nbsp;·&nbsp; Article Brief</div>
+    <div class="article-title">How Are Royal Titles Decided? King, Queen, Prince Consort Explained</div>
+    <div class="article-meta">John Taylor · The Washington Post (The 7) &nbsp;·&nbsp; May 2, 2026</div>
+    <div class="section-label">Key Summary Points</div>
+    <div class="summary-points">
+      <div class="summary-point"><span class="point-num">01</span><span class="point-text">King Charles III and Queen Camilla's U.S. visit for the America 250 celebration prompted a reader question: why was Philip called "Prince" while Elizabeth was "Queen," but Camilla is "Queen" while Charles is "King"?</span></div>
+      <div class="summary-point"><span class="point-num">02</span><span class="point-text">"King" in British convention is reserved for active monarchs — giving Philip the title "King Consort" would imply he outranked Queen Elizabeth, so he was styled "Prince Philip, Duke of Edinburgh."</span></div>
+      <div class="summary-point"><span class="point-num">03</span><span class="point-text">When Charles and Camilla married in 2005, it was declared she would be "Princess Consort"; after Elizabeth's death in 2022, Camilla became "Queen Consort" per the late Queen's own wishes.</span></div>
+      <div class="summary-point"><span class="point-num">04</span><span class="point-text">At Charles's coronation, Camilla was crowned alongside him and given the fuller title "Queen Camilla" — a step beyond the earlier "Queen Consort" designation, again per Elizabeth's wishes.</span></div>
+      <div class="summary-point"><span class="point-num">05</span><span class="point-text">The British monarch can alter these conventions with a simple declaration — tradition is strong but not legally fixed, meaning these titles are powerful social constructs, not constitutional mandates.</span></div>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="panel panel-right">
+    <div class="panel-label">newsletter / news &nbsp;·&nbsp; The Washington Post (The 7)</div>
+    <div class="title-spacer"></div>
+    <div class="section-label">Key Takeaways</div>
+    <div class="takeaways">
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The Philip/Camilla contrast reveals a deep asymmetry: the "consort" system was designed specifically to protect a female monarch's authority in a patriarchal context — giving a husband the "King" title would undermine her sovereignty.</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">Camilla's title evolution (Princess Consort → Queen Consort → Queen Camilla) shows that royal conventions adapt to specific political moments — Elizabeth's deathbed wishes had real constitutional weight.</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">These titles function as power-signaling systems: they communicate who holds sovereign authority, not just courtesy designations or ceremonial labels.</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The flexibility at the edges (monarchs can declare new conventions) means these are social constructs that look like immutable traditions — durable until a declaration makes them otherwise.</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The America 250 context adds diplomatic weight: Charles's visit was partly a signal about U.S.-UK alliance durability during a period of uncertainty — the title question is trivial; the relationship question is not.</span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="footer-left"><span class="footer-brand">dhk.io &nbsp;·&nbsp; reading-db v2.1</span></div>
+    <div class="footer-divider"></div>
+    <div class="footer-right">
+      <span class="footer-source">washingtonpost.com (The 7 — May 2, 2026)</span>
+      <span class="footer-date">2026-05-02</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
