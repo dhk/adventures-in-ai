@@ -3,4 +3,5 @@ h3
 httpx
 numpy
 pandas
+pydeck
 streamlit
