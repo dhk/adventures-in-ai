@@ -29,6 +29,11 @@ SIMILARITY_PALETTE = [
 DEFAULT_FILL = [148, 163, 184, 90]
 MATCH_FILL = [255, 145, 77, 220]
 QUERY_FILL = [34, 197, 94, 240]
+FEATURE_CONTROLS = [
+    ("crime_rate", "Crime"),
+    ("permit_rate", "Permits"),
+    ("transit_norm", "Transit"),
+]
 
 
 def _hex_polygon(h3_index: str) -> list[list[float]]:
@@ -126,6 +131,10 @@ def _render_hex_map(title: str, map_df: pd.DataFrame, key: str) -> str | None:
     return _find_h3(event)
 
 
+def _default_weights() -> dict[str, float]:
+    return {feature: 1.0 for feature, _label in FEATURE_CONTROLS}
+
+
 st.title("Familiar Places")
 st.caption("Compare neighborhoods by the shape of nearby civic signals.")
 
@@ -167,6 +176,8 @@ if (
     st.session_state.get("query_h3") not in set(city_df["h3_index"])
     or st.session_state.get("query_city") != city
 ):
+    if st.session_state.get("query_city") != city and st.session_state.get("query_city"):
+        st.session_state["has_selected_hex"] = True
     st.session_state["query_h3"] = city_df["h3_index"].iloc[0]
     st.session_state["query_city"] = city
 
@@ -185,6 +196,42 @@ with control_cols[4]:
 
 if query_h3 != st.session_state["query_h3"]:
     st.session_state["query_h3"] = query_h3
+    st.session_state["has_selected_hex"] = True
+
+if "applied_weights" not in st.session_state:
+    st.session_state["applied_weights"] = _default_weights()
+
+st.write("Dimension weights")
+weight_cols = st.columns(len(FEATURE_CONTROLS), gap="medium")
+pending_weights = {}
+for idx, (feature, label) in enumerate(FEATURE_CONTROLS):
+    with weight_cols[idx]:
+        pending_weights[feature] = (
+            st.slider(
+                label,
+                min_value=0,
+                max_value=100,
+                value=int(st.session_state["applied_weights"].get(feature, 1.0) * 100),
+                step=5,
+                format="%d%%",
+                key=f"weight_{feature}",
+            )
+            / 100
+        )
+
+weights_changed = pending_weights != st.session_state["applied_weights"]
+if not st.session_state.get("has_selected_hex"):
+    st.session_state["applied_weights"] = pending_weights
+elif weights_changed:
+    apply_cols = st.columns([0.2, 0.8])
+    with apply_cols[0]:
+        if st.button("Apply weights", type="primary", use_container_width=True):
+            st.session_state["applied_weights"] = pending_weights
+            st.rerun()
+    with apply_cols[1]:
+        st.caption("Pending weights will redraw the maps around the current selected hex.")
+
+active_weights = st.session_state["applied_weights"]
 
 query_lat, query_lon = hex_to_latlon(st.session_state["query_h3"])
 summary_cols = st.columns(3)
@@ -197,8 +244,14 @@ matches = find_similar(
     df=df,
     top_n=top_n,
     cross_city=cross_city,
+    feature_weights=active_weights,
 )
-scores = score_similarities(st.session_state["query_h3"], df=df, cross_city=cross_city)
+scores = score_similarities(
+    st.session_state["query_h3"],
+    df=df,
+    cross_city=cross_city,
+    feature_weights=active_weights,
+)
 scores[["lat", "lon"]] = scores["h3_index"].apply(lambda h: pd.Series(hex_to_latlon(h)))
 styled_scores = _style_hexes(scores, st.session_state["query_h3"], matches, color_mode)
 
@@ -226,6 +279,7 @@ if new_query_h3 and new_query_h3 != st.session_state["query_h3"]:
     selected_city = df.loc[df["h3_index"] == new_query_h3, "city"].iloc[0]
     st.session_state["query_h3"] = new_query_h3
     st.session_state["query_city"] = selected_city
+    st.session_state["has_selected_hex"] = True
     st.rerun()
 
 st.subheader("Most Familiar Matches")
