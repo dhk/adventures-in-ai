@@ -1,0 +1,6 @@
+duckdb
+h3
+httpx
+numpy
+pandas
+streamlit
