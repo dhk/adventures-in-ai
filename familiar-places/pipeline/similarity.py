@@ -9,6 +9,7 @@ import pandas as pd
 
 DB_PATH = Path(__file__).parent.parent / "data" / "familiar_places.duckdb"
 ALL_FEATURES = ["crime_rate", "permit_rate", "transit_norm"]
+DEFAULT_FEATURE_WEIGHTS = {feature: 1.0 for feature in ALL_FEATURES}
 
 
 def load_features() -> pd.DataFrame:
@@ -53,17 +54,38 @@ def _active_features(df: pd.DataFrame, cross_city: bool) -> list[str]:
     return ALL_FEATURES
 
 
-def _feature_matrix(df: pd.DataFrame, features: list[str]) -> np.ndarray:
-    return df[features].to_numpy(dtype=np.float32)
+def _feature_weights(
+    features: list[str],
+    feature_weights: dict[str, float] | None = None,
+) -> np.ndarray:
+    weights = feature_weights or DEFAULT_FEATURE_WEIGHTS
+    values = np.array(
+        [max(float(weights.get(feature, 1.0)), 0.0) for feature in features],
+        dtype=np.float32,
+    )
+    if not values.any():
+        values = np.ones(len(features), dtype=np.float32)
+    return values
 
 
-def find_similar(
+def _feature_matrix(
+    df: pd.DataFrame,
+    features: list[str],
+    feature_weights: dict[str, float] | None = None,
+) -> np.ndarray:
+    return df[features].to_numpy(dtype=np.float32) * _feature_weights(
+        features, feature_weights
+    )
+
+
+def score_similarities(
     query_h3: str,
     df: pd.DataFrame | None = None,
-    top_n: int = 10,
     cross_city: bool = True,
+    feature_weights: dict[str, float] | None = None,
+    include_query: bool = True,
 ) -> pd.DataFrame:
-    """Find the most similar H3 cells to a query cell."""
+    """Score all candidate H3 cells against a query cell."""
     if df is None:
         df = load_features()
     if query_h3 not in df["h3_index"].values:
@@ -73,8 +95,8 @@ def find_similar(
     candidates = df if cross_city else df[df["city"] == query_city]
     features = _active_features(df, cross_city)
 
-    mat = _feature_matrix(candidates, features)
-    q_vec = _feature_matrix(df[df["h3_index"] == query_h3], features)
+    mat = _feature_matrix(candidates, features, feature_weights)
+    q_vec = _feature_matrix(df[df["h3_index"] == query_h3], features, feature_weights)
     q_norm = q_vec / (np.linalg.norm(q_vec) + 1e-9)
     mat_norms = mat / (np.linalg.norm(mat, axis=1, keepdims=True) + 1e-9)
     sims = (mat_norms @ q_norm.T).ravel()
@@ -83,9 +105,27 @@ def find_similar(
         ["h3_index", "city", "crime_rate", "permit_rate", "transit_cnt"]
     ].copy()
     result["similarity"] = sims
+    if not include_query:
+        result = result[result["h3_index"] != query_h3]
+    return result.sort_values("similarity", ascending=False).reset_index(drop=True)
+
+
+def find_similar(
+    query_h3: str,
+    df: pd.DataFrame | None = None,
+    top_n: int = 10,
+    cross_city: bool = True,
+    feature_weights: dict[str, float] | None = None,
+) -> pd.DataFrame:
+    """Find the most similar H3 cells to a query cell."""
     return (
-        result[result["h3_index"] != query_h3]
-        .sort_values("similarity", ascending=False)
+        score_similarities(
+            query_h3,
+            df=df,
+            cross_city=cross_city,
+            feature_weights=feature_weights,
+            include_query=False,
+        )
         .head(top_n)
         .reset_index(drop=True)
     )
