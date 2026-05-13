@@ -17,6 +17,13 @@ compatibility: "Both modes: Gmail MCP, NotebookLM MCP, nlm CLI, ffmpeg. Deep: ad
 
 # Reading List Builder
 
+## Model
+
+- **Light mode**: Use **Haiku-class** (`claude-haiku-4-5`). Steps 0–6 are a deterministic pipeline (config read, Gmail fetch, notebook creation, source loading, audio polling, episode titling, download) — no deep reasoning required.
+- **Deep mode**: Use **Sonnet-class** (`claude-sonnet-4-6`). Steps 7–10 add URL extraction, full article fetch, Claude synthesis, and infographic generation — genuine reasoning required.
+
+---
+
 Two modes. Default is always Deep. Read the trigger to determine which to run.
 
 Version is defined in this skill's frontmatter (version: "2.1"). At the start of every
