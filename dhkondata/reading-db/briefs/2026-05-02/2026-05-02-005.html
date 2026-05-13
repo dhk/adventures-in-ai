@@ -42,36 +42,36 @@
 <div class="card">
   <div class="panel panel-left">
     <div class="panel-label">DHK Reading DB &nbsp;·&nbsp; Article Brief</div>
-    <div class="article-title">Ohio in a Handbasket: The Rise and Fall of Longaberger</div>
-    <div class="article-meta">Jonny Gartner · The Dispatch Culture &nbsp;·&nbsp; May 9, 2026</div>
+    <div class="article-title">Why ChatGPT Is Obsessed With Goblins: The Weirdest Possible Explanation</div>
+    <div class="article-meta">Katherine Dee · The Weekender (Pirate Wires) &nbsp;·&nbsp; May 2, 2026</div>
     <div class="section-label">Key Summary Points</div>
     <div class="summary-points">
-      <div class="summary-point"><span class="point-num">01</span><span class="point-text">Longaberger Basket Company was founded in 1972 in Dresden, Ohio with just five weavers; by 2000 it had more than $1 billion in annual sales, 8,000 direct employees, and 70,000 sales associates nationwide.</span></div>
-      <div class="summary-point"><span class="point-num">02</span><span class="point-text">The company's basket-shaped headquarters — a 180,000 sq ft replica of a Longaberger basket — now sits vacant outside Newark, Ohio, nearly 10 years after the company's 2016 closure and 2018 bankruptcy filing.</span></div>
-      <div class="summary-point"><span class="point-num">03</span><span class="point-text">Longaberger grew through multilevel marketing alongside Tupperware and similar companies — the family's nearly 100-year-old basket-making craft was the foundation of a direct-sales empire.</span></div>
-      <div class="summary-point"><span class="point-num">04</span><span class="point-text">The vacant building is one of many abandoned manufacturing plants scattered across Ohio — the author describes the state as "littered" with such sites, testament to a rapidly changing economic landscape.</span></div>
-      <div class="summary-point"><span class="point-num">05</span><span class="point-text">The building persists due to nostalgia and hopes for future development — it remains "an artifact of a bygone era," a symbol of agricultural and manufacturing Ohio becoming something new.</span></div>
+      <div class="summary-point"><span class="point-num">01</span><span class="point-text">OpenAI's Codex system prompt had to explicitly prohibit ChatGPT from mentioning "goblins, gremlins, trolls, ogres, pigeons, and raccoons unless absolutely and unambiguously relevant" — because the model was genuinely fixated on them. Goblin usage was up 175% since GPT-5.1 launched.</span></div>
+      <div class="summary-point"><span class="point-num">02</span><span class="point-text">Root cause: the "Nerdy" persona preset (just 2.5% of ChatGPT traffic) had a reinforcement learning reward signal that was inadvertently scoring goblin-containing outputs higher — the model was being rewarded every time it called something a goblin.</span></div>
+      <div class="summary-point"><span class="point-num">03</span><span class="point-text">Rewarded "Nerdy" outputs were recycled into supervised fine-tuning data for the base model, causing the goblin tic to escape the persona entirely — dragging an "enchanted forest" of adjacent creatures (raccoons, ogres, pigeons) with it.</span></div>
+      <div class="summary-point"><span class="point-num">04</span><span class="point-text">OpenAI killed the offending reward gradient in March and purged affected vocabulary from training data, but GPT-5.5 (Codex) was already in training — requiring the explicit system prompt prohibition as a workaround.</span></div>
+      <div class="summary-point"><span class="point-num">05</span><span class="point-text">The post-mortem doesn't explain the most interesting question: why goblins specifically? When rewarded for "playful/Nerdy" outputs, the model didn't drift toward random mythological vocabulary — it gravitated toward "the small mischievous category of thing that lives in your walls and steals small objects."</span></div>
     </div>
   </div>
   <div class="divider"></div>
   <div class="panel panel-right">
-    <div class="panel-label">newsletter / news &nbsp;·&nbsp; The Dispatch Culture</div>
+    <div class="panel-label">newsletter / think &nbsp;·&nbsp; The Weekender</div>
     <div class="title-spacer"></div>
     <div class="section-label">Key Takeaways</div>
     <div class="takeaways">
-      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">Longaberger's arc — from five weavers to $1B in sales to abandoned building — is a compressed version of American Midwestern manufacturing's broader story.</span></div>
-      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The MLM model's alignment with handcraft nostalgia was a powerful combination that collapsed when the cultural moment passed — "authenticity" was always the brand's core asset, and authenticity ages.</span></div>
-      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The basket-shaped HQ building as monument and ruin is a uniquely American artifact: companies build monuments to success, then leave them when they fail, letting nostalgia do the preservation work.</span></div>
-      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">Ohio's deindustrialization is still ongoing — the basket company is one data point in a state that has been "becoming something new" for several decades without fully articulating what that new thing is.</span></div>
-      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The personal inheritance frame (the grandmother's mail basket on the author's desk) is what elevates this from economic history to cultural memory — these objects carry meaning long after the company is gone.</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">This is a clean empirical case study in how stylistic tics propagate through training pipelines — a persona-level reward signal contaminated the base model through SFT data recycling, a risk with implications beyond goblins.</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The "enchanted forest" problem illustrates how reward signals generalize unpredictably: a reward for one vocabulary cluster hitched adjacent thematic vocabulary along for the ride.</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The gap between "kill the bad gradient" and the deployed model is a systemic risk: training pipelines have long lag times, meaning errors discovered late are already baked into models in production.</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The unexplained specificity — goblins, not unicorns — is the most scientifically interesting residual question. It suggests RLHF optimization for "Nerdy/playful" activates a latent thematic cluster in the training corpus, not random mythological vocabulary.</span></div>
+      <div class="takeaway"><div class="takeaway-marker"></div><span class="takeaway-text">The public sharing of the "goblin unlock" bash command is a characteristically internet-era moment: a training artifact becomes a feature, then a meme, then documentation — within a single news cycle.</span></div>
     </div>
   </div>
   <div class="footer">
     <div class="footer-left"><span class="footer-brand">dhk.io &nbsp;·&nbsp; reading-db v2.1</span></div>
     <div class="footer-divider"></div>
     <div class="footer-right">
-      <span class="footer-source">thedispatch.com (dispatch-culture — May 9, 2026)</span>
-      <span class="footer-date">2026-05-09</span>
+      <span class="footer-source">post.substack.com (The Weekender — May 2, 2026)</span>
+      <span class="footer-date">2026-05-02</span>
     </div>
   </div>
 </div>
