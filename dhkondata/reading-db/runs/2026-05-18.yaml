@@ -1,0 +1,776 @@
+run_date: 2026-05-18
+skill_version: "2.1"
+pipeline_mode: deep
+notebooks:
+  - slug: news
+    notebook_id: 3dcc7656-315a-4326-a70e-9fd4eb7f1f93
+    notebook_title: "reading-list-2026-05-18-01 📰 News & Current Affairs"
+  - slug: professional
+    notebook_id: 6e9419ee-bf57-4c41-8cd1-e69e349e01ba
+    notebook_title: "reading-list-2026-05-18-03 💼 Professional Reading"
+  - slug: vital-signs
+    notebook_id: 389894a2-195f-4b50-a49d-df62cea24eb5
+    notebook_title: "reading-list-2026-05-18-05 🏥 Healthcare Reading"
+
+emails:
+  # ── NEWS ──────────────────────────────────────────────────────────────────
+
+  - email_id: msg-19e3b470e4c5491b
+    thread_id: 19e3b470e4c5491b
+    received_at: "2026-05-18T13:29:09Z"
+    label: news
+    sender: ai.plus@axios.com
+    sender_name: Axios AI+
+    subject: "😠 Chorus of boos"
+    article_count: 2
+    articles:
+
+      - article_id: 19e3b470e4c5491b-01
+        position: 1
+        source:
+          url_raw: "https://www.axios.com/2026/05/18/trump-ai-steve-bannon-humans-first-letter"
+          url_canonical: "https://www.axios.com/2026/05/18/trump-ai-steve-bannon-humans-first-letter"
+          domain: axios.com
+          anchor_text: "Ashley Gold reports"
+          resolve_status: success
+          parse_confidence: high
+        content:
+          full_body_available: true
+          full_body_chars: 812
+          fetch_status: success
+        routing:
+          category: news
+          notebook_id: 3dcc7656-315a-4326-a70e-9fd4eb7f1f93
+          notebook_title: "reading-list-2026-05-18-01 📰 News & Current Affairs"
+        synthesis:
+          status: complete
+          source: full_body
+          bullets:
+            - "Over 60 Trump loyalists, including Steve Bannon, Amy Kremer, and Brendan Steinhauser through the group 'Humans First,' are urging President Trump to mandate testing and government approval of advanced AI systems before deployment."
+            - "The letter argues that advanced AI systems capable of bioweapon design, infrastructure attacks, or financial manipulation 'should be treated with the same seriousness and care' as nuclear and aviation systems, requiring mandatory evaluation and government approval."
+            - "The signatories characterize AI company leaders as 'unelected elites' experimenting on the public without adequate safeguards."
+            - "The White House favors minimal regulation to maintain America's competitive edge in AI development, creating direct tension with the letter's demands."
+            - "Even supportive White House officials have backed away from endorsing government approval requirements for frontier AI systems."
+          generated_at: "2026-05-18"
+          confidence_note: full article retrieved
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3b470e4c5491b-01.html"
+          generated_at: "2026-05-18"
+        tags: [AI-policy, regulation, Trump, MAGA, frontier-AI]
+        status: synthesized
+
+      - article_id: 19e3b470e4c5491b-02
+        position: 2
+        source:
+          url_raw: "https://graphite.io/five-percent/ai-now-writes-as-many-online-articles-as-humans-do"
+          url_canonical: "https://graphite.io/five-percent/ai-now-writes-as-many-online-articles-as-humans-do"
+          domain: graphite.io
+          anchor_text: "Graphite.io — AI now writes as many online articles as humans do"
+          resolve_status: success
+          parse_confidence: high
+        content:
+          full_body_available: true
+          full_body_chars: 1082
+          fetch_status: success
+        routing:
+          category: news
+          notebook_id: 3dcc7656-315a-4326-a70e-9fd4eb7f1f93
+          notebook_title: "reading-list-2026-05-18-01 📰 News & Current Affairs"
+        synthesis:
+          status: complete
+          source: full_body
+          bullets:
+            - "Approximately 50% of articles published online are now primarily AI-generated, matching the proportion written by humans — a milestone reached roughly three years after ChatGPT's November 2022 launch."
+            - "Growth in AI-generated content has plateaued since Q1 2025, remaining near 50%, with separate research indicating AI-generated articles perform poorly in search engine results."
+            - "Researchers used three independent AI detection tools — Pangram, GPTZero, and Copyleaks — to classify 55,400 randomly selected articles from Common Crawl, each with false positive and false negative rates below 2%."
+            - "Despite widespread AI article publication, these pieces largely fail to appear prominently in Google search results or ChatGPT outputs, suggesting limited competitive advantage for AI content strategies."
+          generated_at: "2026-05-18"
+          confidence_note: full article retrieved
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3b470e4c5491b-02.html"
+          generated_at: "2026-05-18"
+        tags: [AI-content, media, research, detection]
+        status: synthesized
+
+  - email_id: msg-19e3a2e85a4e0331
+    thread_id: 19e3a2e85a4e0331
+    received_at: "2026-05-18T08:20:51Z"
+    label: news
+    sender: dailydigest@email.join1440.com
+    sender_name: "1440 Daily Digest"
+    subject: "Hantavirus Ship Docks, Eurovision Winner, and the 4.7% Rule"
+    article_count: 2
+    articles:
+
+      - article_id: 19e3a2e85a4e0331-01
+        position: 1
+        source:
+          url_raw: "https://link.join1440.com/click/45754961.483993/hantavirus"
+          url_canonical: "https://www.nbcnews.com/health/health-news/mv-hondius-hantavirus"
+          domain: nbcnews.com
+          anchor_text: "in the Netherlands"
+          resolve_status: redirect_wrapper
+          parse_confidence: medium
+        content:
+          full_body_available: false
+          full_body_chars: 0
+          fetch_status: not_fetched
+        routing:
+          category: news
+          notebook_id: 3dcc7656-315a-4326-a70e-9fd4eb7f1f93
+          notebook_title: "reading-list-2026-05-18-01 📰 News & Current Affairs"
+        synthesis:
+          status: complete
+          source: email_body
+          bullets:
+            - "The MV Hondius cruise ship, associated with a recent hantavirus outbreak, arrives in the Netherlands today for disembarkation, quarantine of remaining crew and medical staff, and disinfection."
+            - "The ship departed Argentina on April 1 carrying 147 people from 23 countries; Dutch bird-watcher Leo Schilperoord died of hantavirus on April 11, followed by his wife roughly two weeks later."
+            - "As of the email date, there are at least 10 cases associated with the outbreak — 8 confirmed and 2 suspected."
+            - "Hantavirus is not believed to pose a widespread public health threat, though cruise ships are considered especially conducive to illness spread due to close quarters and diverse traveler origins."
+          generated_at: "2026-05-18"
+          confidence_note: email excerpt only
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3a2e85a4e0331-01.html"
+          generated_at: "2026-05-18"
+        tags: [hantavirus, public-health, travel, cruise]
+        status: synthesized
+
+      - article_id: 19e3a2e85a4e0331-02
+        position: 2
+        source:
+          url_raw: "https://link.join1440.com/click/45754961.483993/eurovision"
+          url_canonical: "https://www.nytimes.com/2026/05/11/world/europe/eurovision"
+          domain: nytimes.com
+          anchor_text: "Israel's government"
+          resolve_status: redirect_wrapper
+          parse_confidence: medium
+          watch: true
+        content:
+          full_body_available: false
+          full_body_chars: 0
+          fetch_status: not_fetched
+        routing:
+          category: news
+          notebook_id: 3dcc7656-315a-4326-a70e-9fd4eb7f1f93
+          notebook_title: "reading-list-2026-05-18-01 📰 News & Current Affairs"
+        synthesis:
+          status: complete
+          source: email_body
+          bullets:
+            - "Bulgarian singer Dara won the 70th Eurovision Song Contest with pop banger 'Bangaranga,' marking Bulgaria's first-ever Eurovision victory since joining the contest in 2005."
+            - "Five broadcasters — from Iceland, Ireland, the Netherlands, Slovenia, and Spain — boycotted this year's contest over Israel's participation amid the war in Gaza."
+            - "A report found Israel's government has invested ad dollars in recent years to promote Israeli musical acts at Eurovision; Israel's participant came in second place this year."
+          generated_at: "2026-05-18"
+          confidence_note: email excerpt only; nytimes.com is a watch domain
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3a2e85a4e0331-02.html"
+          generated_at: "2026-05-18"
+        tags: [Eurovision, culture, Europe, politics]
+        status: synthesized
+
+  - email_id: msg-19e3acb2d749ad8a
+    thread_id: 19e3acb2d749ad8a
+    received_at: "2026-05-18T11:09:59Z"
+    label: news
+    sender: hello@newsletter.thedispatch.com
+    sender_name: The Dispatch
+    subject: "Can Cuba's Regime Hold On?"
+    article_count: 1
+    articles:
+
+      - article_id: 19e3acb2d749ad8a-01
+        position: 1
+        source:
+          url_raw: "https://l.thedispatch.com/z/c/27175/88d2d0f5a3dc410482a573b83e5fb113/0960cb143bf44e1c8103e448a99e8f99"
+          url_canonical: "https://thedispatch.com/newsletter/dispatch-faith/dallin-oaks-latter-day-saints-culture-war-christianity/"
+          domain: thedispatch.com
+          anchor_text: "A Theology Against Culture Warring"
+          resolve_status: redirect_resolved
+          parse_confidence: medium
+          watch: true
+        content:
+          full_body_available: false
+          full_body_chars: 0
+          fetch_status: paywalled
+        routing:
+          category: news
+          notebook_id: 3dcc7656-315a-4326-a70e-9fd4eb7f1f93
+          notebook_title: "reading-list-2026-05-18-01 📰 News & Current Affairs"
+        synthesis:
+          status: complete
+          source: email_body
+          bullets:
+            - "The article argues that pluralism — often treated as a 'dirty word' by culture warriors — offers a better framework for coexistence than intensifying cultural conflict."
+            - "The piece promotes 'principled accommodation' as an alternative to culture warring, framing the desire for different-minded people to get along as a positive rather than capitulation."
+          generated_at: "2026-05-18"
+          confidence_note: paywalled — only introduction visible; thedispatch.com is a watch domain
+        infographic:
+          status: skipped
+          path: null
+          generated_at: null
+        tags: [religion, culture-war, pluralism, Christianity]
+        status: paywalled
+
+  - email_id: msg-19e3b47fb52e7312
+    thread_id: 19e3b47fb52e7312
+    received_at: "2026-05-18T13:30:22Z"
+    label: news
+    sender: sanfrancisco@axios.com
+    sender_name: Axios San Francisco
+    subject: "🐕 Off-leash dog debate"
+    article_count: 1
+    articles:
+
+      - article_id: 19e3b47fb52e7312-01
+        position: 1
+        source:
+          url_raw: "https://www.axios.com/local/san-francisco/2026/05/18"
+          url_canonical: "https://www.axios.com/local/san-francisco/2026/05/18"
+          domain: axios.com
+          anchor_text: "California governor candidates on taxes and climate"
+          resolve_status: success
+          parse_confidence: medium
+        content:
+          full_body_available: false
+          full_body_chars: 0
+          fetch_status: not_fetched
+        routing:
+          category: news
+          notebook_id: 3dcc7656-315a-4326-a70e-9fd4eb7f1f93
+          notebook_title: "reading-list-2026-05-18-01 📰 News & Current Affairs"
+        synthesis:
+          status: complete
+          source: email_body
+          bullets:
+            - "Three California gubernatorial candidates — Democrat Tom Steyer, Democrat San Jose Mayor Matt Mahan, and Republican Steve Hilton — outlined differing approaches to retaining high-tax-paying residents."
+            - "Steyer proposes closing corporate loopholes to raise $20 billion annually; Mahan favors targeting specific loopholes rather than broad tax hikes; Hilton wants to eliminate state income tax on first $100,000 of income and implement a flat 7.5% rate above that."
+            - "On greenhouse gas emissions, Steyer would accelerate clean home energy access, Mahan would fast-track clean energy and transit-adjacent housing, and Hilton would focus on reducing oil imports and improving forest management."
+          generated_at: "2026-05-18"
+          confidence_note: email excerpt only
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3b47fb52e7312-01.html"
+          generated_at: "2026-05-18"
+        tags: [California, politics, taxes, climate, governor-race]
+        status: synthesized
+
+  # ── PROFESSIONAL ──────────────────────────────────────────────────────────
+
+  - email_id: msg-19e3ba13230eb089
+    thread_id: 19e3ba13230eb089
+    received_at: "2026-05-18T15:00:52Z"
+    label: professional
+    sender: lenny+how-i-ai@substack.com
+    sender_name: "Lenny's Newsletter — How I AI"
+    subject: "🎙️ How I AI: HTML is the new Markdown: How Anthropic engineers are building with Claude Code"
+    article_count: 1
+    articles:
+
+      - article_id: 19e3ba13230eb089-01
+        position: 1
+        source:
+          url_raw: "https://www.lennysnewsletter.com/p/how-i-ai-html-is-the-new-markdown"
+          url_canonical: "https://www.lennysnewsletter.com/p/how-i-ai-html-is-the-new-markdown"
+          domain: lennysnewsletter.com
+          anchor_text: "How I AI: HTML is the new Markdown"
+          resolve_status: success
+          parse_confidence: high
+        content:
+          full_body_available: true
+          full_body_chars: 913
+          fetch_status: success
+        routing:
+          category: professional
+          notebook_id: 6e9419ee-bf57-4c41-8cd1-e69e349e01ba
+          notebook_title: "reading-list-2026-05-18-03 💼 Professional Reading"
+        synthesis:
+          status: complete
+          source: full_body
+          bullets:
+            - "Anthropic engineer Thariq Shihipar argues that HTML has become the superior format for communicating with AI agents, replacing Markdown, due to richer expression capabilities and better information density for complex plans."
+            - "Engineers are shifting roles to become 'compute allocators' focused on strategic decision-making rather than code writing, with effective prompts designed to provide direction while permitting AI creativity."
+            - "Thariq demonstrates building custom, temporary user interfaces for editing specific plan sections — 'micro software on top of micro software' — that are discarded after use."
+            - "Only approximately 1% of generated tokens reach production code, with the majority supporting dashboards, interfaces, and documentation, reflecting the economics of affordable token generation."
+          generated_at: "2026-05-18"
+          confidence_note: full article retrieved
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3ba13230eb089-01.html"
+          generated_at: "2026-05-18"
+        tags: [Claude-Code, HTML, AI-engineering, Anthropic, developer-tools]
+        status: synthesized
+
+  - email_id: msg-19e3b9db9c5a49e8
+    thread_id: 19e3b9db9c5a49e8
+    received_at: "2026-05-18T15:03:51Z"
+    label: professional
+    sender: hello@mindstream.news
+    sender_name: Mindstream
+    subject: "Android just jumped ahead of iOS on AI"
+    article_count: 1
+    articles:
+
+      - article_id: 19e3b9db9c5a49e8-01
+        position: 1
+        source:
+          url_raw: "https://link.mail.beehiiv.com/ss/c/u001.NDEKvrcAp36_oNtoPadwAGxdLzj99hpCtko3CblHUKocKkbNhnIsA-Pdio7p"
+          url_canonical: "https://mindstream.news/android-ai-gemini-intelligence"
+          domain: mindstream.news
+          anchor_text: "The AI smartphone race has a new frontrunner"
+          resolve_status: redirect_wrapper
+          parse_confidence: medium
+        content:
+          full_body_available: false
+          full_body_chars: 0
+          fetch_status: not_fetched
+        routing:
+          category: professional
+          notebook_id: 6e9419ee-bf57-4c41-8cd1-e69e349e01ba
+          notebook_title: "reading-list-2026-05-18-03 💼 Professional Reading"
+        synthesis:
+          status: complete
+          source: email_body
+          bullets:
+            - "Google announced a new suite of features powered by 'Gemini Intelligence,' a proactive AI layer for Android OS, less than one month before Apple's Worldwide Developers Conference where Siri's AI overhaul is expected."
+            - "New Android AI features include Gemini Intelligence automation for multi-step tasks across apps, Rambler voice dictation supporting multiple languages, Meta integration for improved Instagram video quality, and anti-doomscrolling tools."
+            - "Android president Sameer Samat noted that while Google leads in AI features, some competitors 'are still working on their first iteration,' implicitly referencing Apple's delayed Siri improvements."
+          generated_at: "2026-05-18"
+          confidence_note: email excerpt only; Beehiiv wrapper not decoded
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3b9db9c5a49e8-01.html"
+          generated_at: "2026-05-18"
+        tags: [Android, iOS, Gemini, AI-smartphone, Google, Apple]
+        status: synthesized
+
+  - email_id: msg-19e3b2da06ff8f1c
+    thread_id: 19e3b2da06ff8f1c
+    received_at: "2026-05-18T13:01:45Z"
+    label: professional
+    sender: thecode@mail.joinsuperhuman.ai
+    sender_name: "The Code / Superhuman"
+    subject: "👀 Claude Mythos breaks into Apple's M5"
+    article_count: 1
+    articles:
+
+      - article_id: 19e3b2da06ff8f1c-01
+        position: 1
+        source:
+          url_raw: "https://link.mail.beehiiv.com/ss/c/u001.ZELe4XSJUXiTVID8fUzIAPXy_K22iqXkChyW0N9PJDM3WQWfTVRLGTCX2xLw"
+          url_canonical: "https://thecodenewsletter.com/claude-mythos-apple-m5-exploit"
+          domain: thecodenewsletter.com
+          anchor_text: "Mythos model"
+          resolve_status: redirect_wrapper
+          parse_confidence: medium
+        content:
+          full_body_available: false
+          full_body_chars: 0
+          fetch_status: not_fetched
+        routing:
+          category: professional
+          notebook_id: 6e9419ee-bf57-4c41-8cd1-e69e349e01ba
+          notebook_title: "reading-list-2026-05-18-03 💼 Professional Reading"
+        synthesis:
+          status: complete
+          source: email_body
+          bullets:
+            - "Anthropic's restricted-access 'Mythos' model helped a small security team in Vietnam develop a working macOS kernel exploit for Apple's new M5 silicon in less than five days."
+            - "The exploit bypassed Memory Integrity Enforcement — Apple's primary hardware defense built to make kernel exploits nearly impossible — even with humans in the loop."
+            - "For security and engineering teams, the implication is that the window for potential attacks has narrowed significantly with advanced AI-assisted exploit development."
+          generated_at: "2026-05-18"
+          confidence_note: email excerpt only; Beehiiv wrapper not decoded
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3b2da06ff8f1c-01.html"
+          generated_at: "2026-05-18"
+        tags: [AI-security, Apple, exploit, Claude, Anthropic, M5]
+        status: synthesized
+
+  - email_id: msg-19e3b164ec6bce03
+    thread_id: 19e3b164ec6bce03
+    received_at: "2026-05-18T12:32:35Z"
+    label: professional
+    sender: marcussawyerr@substack.com
+    sender_name: Marcus Sawyerr
+    subject: "$4bn consulting bet only 19% are ready."
+    article_count: 1
+    articles:
+
+      - article_id: 19e3b164ec6bce03-01
+        position: 1
+        source:
+          url_raw: "https://marcussawyerr.substack.com/p/4bn-consulting-bet-only-19-are-ready"
+          url_canonical: "https://marcussawyerr.substack.com/p/4bn-consulting-bet-only-19-are-ready"
+          domain: marcussawyerr.substack.com
+          anchor_text: "$4bn consulting bet only 19% are ready."
+          resolve_status: success
+          parse_confidence: high
+        content:
+          full_body_available: true
+          full_body_chars: 2891
+          fetch_status: success
+        routing:
+          category: professional
+          notebook_id: 6e9419ee-bf57-4c41-8cd1-e69e349e01ba
+          notebook_title: "reading-list-2026-05-18-03 💼 Professional Reading"
+        synthesis:
+          status: complete
+          source: full_body
+          bullets:
+            - "OpenAI has launched a Deployment Company backed by $4 billion+ in consulting investment specifically for AI deployments, coinciding with the staffing industry attempting to expand into the $3 trillion Statement of Work (SOW) market."
+            - "Microsoft's 2026 Work Trend Index reports that only 19% of AI users are in the 'Frontier' zone where organizational readiness meets individual capability, while 65% of workers fear falling behind."
+            - "Only 10% of staffing firms have implemented agentic AI across their full workflow, with primary blockers being data readiness, security, governance, workflow design, and ownership — not the technology itself."
+            - "Only 13% of workers say they are rewarded for reinventing their work, indicating companies have not caught up operationally despite widespread AI tool access."
+          generated_at: "2026-05-18"
+          confidence_note: full article retrieved
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3b164ec6bce03-01.html"
+          generated_at: "2026-05-18"
+        tags: [AI-adoption, future-of-work, consulting, staffing, organizational-readiness]
+        status: synthesized
+
+  - email_id: msg-19e3ac16c2b283cd
+    thread_id: 19e3ac16c2b283cd
+    received_at: "2026-05-18T11:03:34Z"
+    label: professional
+    sender: dan@tldrnewsletter.com
+    sender_name: "TLDR Newsletter"
+    subject: "Amazon's new playbook 📖, Starship v3 stakes 🚀, career side doors 💼"
+    article_count: 2
+    articles:
+
+      - article_id: 19e3ac16c2b283cd-01
+        position: 1
+        source:
+          url_raw: "https://www.seangoedecke.com/how-i-use-llms-in-2026/"
+          url_canonical: "https://www.seangoedecke.com/how-i-use-llms-in-2026/"
+          domain: seangoedecke.com
+          anchor_text: "How I use LLMs as a staff engineer in 2026 (11 minute read)"
+          resolve_status: success
+          parse_confidence: high
+        content:
+          full_body_available: true
+          full_body_chars: 5812
+          fetch_status: success
+        routing:
+          category: professional
+          notebook_id: 6e9419ee-bf57-4c41-8cd1-e69e349e01ba
+          notebook_title: "reading-list-2026-05-18-03 💼 Professional Reading"
+        synthesis:
+          status: complete
+          source: full_body
+          bullets:
+            - "The biggest change since early 2025 is that AI agents are now used to produce entire pull requests for familiar codebases, a shift from occasional single-file edits — the author starts every change by asking an agent to solve the problem."
+            - "LLMs now correctly diagnose approximately 80% of bugs on the first session, making them the default first stop for every bug investigation rather than an occasional last resort."
+            - "The author still writes PR descriptions, ADRs, and Slack messages by hand, believing human judgment produces better communication and signals to reviewers that a human reviewed the diff."
+            - "The current core AI skill is described as 'shifting as much work onto AI agents as possible, without going too far' — the balance has tilted further toward agents, but finding the balance remains as difficult as ever."
+          generated_at: "2026-05-18"
+          confidence_note: full article retrieved
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3ac16c2b283cd-01.html"
+          generated_at: "2026-05-18"
+        tags: [AI-engineering, LLMs, staff-engineer, developer-workflow, agents]
+        status: synthesized
+
+      - article_id: 19e3ac16c2b283cd-02
+        position: 2
+        source:
+          url_raw: "https://www.astralcodexten.com/p/the-sigmoids-wont-save-you"
+          url_canonical: "https://www.astralcodexten.com/p/the-sigmoids-wont-save-you"
+          domain: astralcodexten.com
+          anchor_text: "The Sigmoids Won't Save You (8 minute read)"
+          resolve_status: success
+          parse_confidence: high
+        content:
+          full_body_available: true
+          full_body_chars: 2634
+          fetch_status: success
+        routing:
+          category: professional
+          notebook_id: 6e9419ee-bf57-4c41-8cd1-e69e349e01ba
+          notebook_title: "reading-list-2026-05-18-03 💼 Professional Reading"
+        synthesis:
+          status: complete
+          source: full_body
+          bullets:
+            - "While the sigmoid argument (all exponentials eventually plateau) is technically sound, the critical flaw is that trends often remain exponential far longer than forecasters expect — a pattern demonstrated by repeated failures in UN birth-rate predictions and solar deployment forecasts."
+            - "A 2026 Wharton team modeled AI capability growth and predicted a sharp sigmoid plateau; within months, the next major AI model release substantially exceeded their projections."
+            - "Scott Alexander argues that in genuine uncertainty, Lindy's Law provides guidance: expect a process to continue roughly as long as it already has, suggesting at least another seven years of AI acceleration given the scaling era beginning in 2019."
+            - "Those claiming AI won't reach dangerous capability levels bear an evidentiary burden: they must demonstrate explicit dynamic models or explain why Lindy's Law reasoning should be rejected."
+          generated_at: "2026-05-18"
+          confidence_note: full article retrieved
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3ac16c2b283cd-02.html"
+          generated_at: "2026-05-18"
+        tags: [AI-risk, forecasting, sigmoid, scaling, Astral-Codex-Ten]
+        status: synthesized
+
+  - email_id: msg-19e3a93282ceb72b
+    thread_id: 19e3a93282ceb72b
+    received_at: "2026-05-18T10:13:02Z"
+    label: professional
+    sender: dan@tldrnewsletter.com
+    sender_name: "TLDR Data"
+    subject: "Query Planning Slowdown 🐢, Airbnb's Data Mesh 🧩, Ontology-Driven Policies 🧬"
+    article_count: 3
+    articles:
+
+      - article_id: 19e3a93282ceb72b-01
+        position: 1
+        source:
+          url_raw: "https://blog.cloudflare.com/clickhouse-query-plan-contention/"
+          url_canonical: "https://blog.cloudflare.com/clickhouse-query-plan-contention/"
+          domain: cloudflare.com
+          anchor_text: "Our billing pipeline was suddenly slow. The culprit was a hidden bottleneck in ClickHouse"
+          resolve_status: success
+          parse_confidence: high
+        content:
+          full_body_available: true
+          full_body_chars: 2203
+          fetch_status: success
+        routing:
+          category: professional
+          notebook_id: 6e9419ee-bf57-4c41-8cd1-e69e349e01ba
+          notebook_title: "reading-list-2026-05-18-03 💼 Professional Reading"
+        synthesis:
+          status: complete
+          source: full_body
+          bullets:
+            - "After migrating to a composite partition key (namespace, day) to support per-namespace data retention across 2 petabytes, Cloudflare's ClickHouse billing query durations degraded proportionally as total part counts climbed from 30,000 to 160,000 per replica."
+            - "The bottleneck was not I/O or memory, but lock contention in the query planner: before executing any query, the planner acquired an exclusive lock on the MergeTreeData mutex, copied tens of thousands of parts, then filtered them — while hundreds of concurrent queries queued for this single lock."
+            - "Three fixes resolved the issue: replacing the exclusive lock with a shared lock, implementing a cached shared copy of the parts list, and adding binary search filtering based on the namespace partition key — collectively reducing query durations by approximately 50%."
+            - "The patches were contributed upstream and appeared in ClickHouse version 25.11."
+          generated_at: "2026-05-18"
+          confidence_note: full article retrieved
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3a93282ceb72b-01.html"
+          generated_at: "2026-05-18"
+        tags: [ClickHouse, database, performance, Cloudflare, data-engineering]
+        status: synthesized
+
+      - article_id: 19e3a93282ceb72b-02
+        position: 2
+        source:
+          url_raw: "https://www.singlestore.com/blog/aws-outage-may-2026-cross-region-disaster-recovery/"
+          url_canonical: "https://www.singlestore.com/blog/aws-outage-may-2026-cross-region-disaster-recovery/"
+          domain: singlestore.com
+          anchor_text: "AWS Outage May 2026: Lessons for Database Disaster Recovery (10 minute read)"
+          resolve_status: success
+          parse_confidence: high
+        content:
+          full_body_available: true
+          full_body_chars: 2048
+          fetch_status: success
+        routing:
+          category: professional
+          notebook_id: 6e9419ee-bf57-4c41-8cd1-e69e349e01ba
+          notebook_title: "reading-list-2026-05-18-03 💼 Professional Reading"
+        synthesis:
+          status: complete
+          source: full_body
+          bullets:
+            - "A May 7, 2026 thermal event and cooling failure in AWS availability zone use1-az4 (Northern Virginia) caused approximately seven hours of Coinbase downtime, FanDuel offline during peak playoff betting, and login/latency issues at CME Group."
+            - "Coinbase CEO Brian Armstrong acknowledged that most Coinbase systems were designed for single-zone resilience but the exchange itself operated from a single zone for latency optimization — directly contributing to the extended outage."
+            - "A critical distinction is drawn between multi-AZ high availability (protects against zone failures) and multi-region disaster recovery (required for regional outages like this one), with AWS SLAs described as 'a small refund,' not a business continuity plan."
+            - "The article recommends mapping region affinities across application tiers, stress-testing recovery time objectives, and calculating the financial case for cross-region replication — noting that actual downtime can exceed $300,000 per hour for mid-size enterprises."
+          generated_at: "2026-05-18"
+          confidence_note: full article retrieved
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3a93282ceb72b-02.html"
+          generated_at: "2026-05-18"
+        tags: [AWS, outage, disaster-recovery, database, Coinbase, resilience]
+        status: synthesized
+
+      - article_id: 19e3a93282ceb72b-03
+        position: 3
+        source:
+          url_raw: "https://dlthub.com/blog/llm-ontology-schema-evolution"
+          url_canonical: "https://dlthub.com/blog/llm-ontology-schema-evolution"
+          domain: dlthub.com
+          anchor_text: "Exploring schema evolution with ontology-driven propagation (4 minute read)"
+          resolve_status: success
+          parse_confidence: high
+        content:
+          full_body_available: true
+          full_body_chars: 1634
+          fetch_status: success
+        routing:
+          category: professional
+          notebook_id: 6e9419ee-bf57-4c41-8cd1-e69e349e01ba
+          notebook_title: "reading-list-2026-05-18-03 💼 Professional Reading"
+        synthesis:
+          status: complete
+          source: full_body
+          bullets:
+            - "The proposed approach separates data access policy definition from implementation: teams describe rules in plain language, encode them as an LLM-readable ontology, then apply that ontology at runtime to evaluate columns individually for inclusion in analytics-safe views."
+            - "The system distinguishes between crisp cases handled deterministically (name patterns, data types, cardinality thresholds) and ambiguous cases requiring value inspection by the LLM."
+            - "When five new columns were added to a schema, the identical ontology policy correctly classified them without code modifications — demonstrating that ontology-based policies remain valid across schema changes where static allowlists grow stale."
+            - "Acknowledged limitations include vulnerability to numeric columns encoding sensitive inferences and inability to detect cross-column re-identification risks."
+          generated_at: "2026-05-18"
+          confidence_note: full article retrieved
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3a93282ceb72b-03.html"
+          generated_at: "2026-05-18"
+        tags: [data-engineering, schema-evolution, LLM, ontology, PII, dlt]
+        status: synthesized
+
+  # ── VITAL-SIGNS ───────────────────────────────────────────────────────────
+
+  - email_id: msg-19e3ada1f03d7292
+    thread_id: 19e3ada1f03d7292
+    received_at: "2026-05-18T11:29:55Z"
+    label: vital-signs
+    sender: early@endpointsnews.com
+    sender_name: "Endpoints Early"
+    subject: "Regeneron's Phase 3 miss for LAG-3 drug"
+    article_count: 2
+    articles:
+
+      - article_id: 19e3ada1f03d7292-01
+        position: 1
+        source:
+          url_raw: "https://e.endpointsnews.com/t/t-l-wdudhiy-tuyklrtyty-d/"
+          url_canonical: "https://endpointsnews.com/2026/05/18/regenerons-phase-3-skin-cancer-miss-lag-3/"
+          domain: endpointsnews.com
+          anchor_text: "Regeneron's Phase 3 skin cancer miss adds to mounting failures in LAG-3"
+          resolve_status: redirect_wrapper
+          parse_confidence: medium
+        content:
+          full_body_available: false
+          full_body_chars: 0
+          fetch_status: bot_blocked
+        routing:
+          category: vital-signs
+          notebook_id: 389894a2-195f-4b50-a49d-df62cea24eb5
+          notebook_title: "reading-list-2026-05-18-05 🏥 Healthcare Reading"
+        synthesis:
+          status: complete
+          source: email_body
+          bullets:
+            - "Regeneron reported a Phase 3 clinical trial miss for its LAG-3 targeting drug in skin cancer, adding to a growing number of failures for drugs targeting the LAG-3 checkpoint inhibitor pathway."
+            - "AstraZeneca's blood pressure pill received FDA approval, though competition is described as potentially arriving soon."
+            - "CDER chief Tracy Beth Høeg — known as a skeptic of vaccines and antidepressants — was fired in what Endpoints describes as a high-level FDA shakeup, coming shortly after outgoing FDA commissioner Marty Makary's resignation."
+          generated_at: "2026-05-18"
+          confidence_note: email excerpt only; endpointsnews.com bot-blocked
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3ada1f03d7292-01.html"
+          generated_at: "2026-05-18"
+        tags: [oncology, LAG-3, Regeneron, Phase-3, clinical-trials]
+        status: synthesized
+
+      - article_id: 19e3ada1f03d7292-02
+        position: 2
+        source:
+          url_raw: "https://e.endpointsnews.com/t/t-l-wdudhiy-tuyklrtyty-k/"
+          url_canonical: "https://endpointsnews.com/2026/05/18/cder-chief-hoeg-fired-fda-shakeup/"
+          domain: endpointsnews.com
+          anchor_text: "Updated: CDER chief Høeg, skeptic of vaccines and antidepressants, is fired in high-level FDA shakeup"
+          resolve_status: redirect_wrapper
+          parse_confidence: medium
+        content:
+          full_body_available: false
+          full_body_chars: 0
+          fetch_status: bot_blocked
+        routing:
+          category: vital-signs
+          notebook_id: 389894a2-195f-4b50-a49d-df62cea24eb5
+          notebook_title: "reading-list-2026-05-18-05 🏥 Healthcare Reading"
+        synthesis:
+          status: complete
+          source: email_body
+          bullets:
+            - "CDER chief Tracy Beth Høeg, known as a skeptic of vaccines and antidepressants, was fired in a high-level FDA leadership shakeup shortly after outgoing commissioner Marty Makary's resignation."
+            - "The departure marks a continued period of leadership instability at the FDA, with Endpoints noting Makary's departure and Høeg's firing happening in close succession."
+          generated_at: "2026-05-18"
+          confidence_note: email excerpt only; endpointsnews.com bot-blocked
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3ada1f03d7292-02.html"
+          generated_at: "2026-05-18"
+        tags: [FDA, CDER, leadership, regulation, Hoeg, Makary]
+        status: synthesized
+
+  - email_id: msg-19e3b706df89a6db
+    thread_id: 19e3b706df89a6db
+    received_at: "2026-05-18T14:12:46Z"
+    label: vital-signs
+    sender: editors@go.fiercepharma.com
+    sender_name: Fierce Pharma
+    subject: "| 05.18.26 | BeOne hit again in FDA ad crackdown; BridgeBio shows ATTM-CM's 'hidden impact'"
+    article_count: 2
+    articles:
+
+      - article_id: 19e3b706df89a6db-01
+        position: 1
+        source:
+          url_raw: "https://www.fiercepharma.com/marketing/beone-medicines-tv-drug-ad-clarity-hit-fda-watchdog-misleading-suggestions"
+          url_canonical: "https://www.fiercepharma.com/marketing/beone-medicines-tv-drug-ad-clarity-hit-fda-watchdog-misleading-suggestions"
+          domain: fiercepharma.com
+          anchor_text: "BeOne Medicines' Brukinsa TV ad 'Clarity' hit by FDA over 'misleading suggestions'"
+          resolve_status: success
+          parse_confidence: medium
+        content:
+          full_body_available: false
+          full_body_chars: 0
+          fetch_status: bot_blocked
+        routing:
+          category: vital-signs
+          notebook_id: 389894a2-195f-4b50-a49d-df62cea24eb5
+          notebook_title: "reading-list-2026-05-18-05 🏥 Healthcare Reading"
+        synthesis:
+          status: complete
+          source: email_body
+          bullets:
+            - "The FDA issued an untitled letter to BeOne Medicines' U.S. subsidiary over a TV commercial promoting its BTK blood cancer drug Brukinsa, stating the ad used 'compelling and attention-grabbing visuals' that did not hold up to scrutiny."
+            - "The FDA characterized the Brukinsa 'Clarity' ad as making misleading suggestions about the drug's efficacy or safety profile."
+          generated_at: "2026-05-18"
+          confidence_note: email excerpt only; fiercepharma.com bot-blocked
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3b706df89a6db-01.html"
+          generated_at: "2026-05-18"
+        tags: [FDA, pharma-marketing, BeOne-Medicines, Brukinsa, drug-advertising]
+        status: synthesized
+
+      - article_id: 19e3b706df89a6db-02
+        position: 2
+        source:
+          url_raw: "https://www.fiercepharma.com/pharma/oral-glp-1-tracker-launch-trajectories-lilly-foundayo-novo-wegovy-pill"
+          url_canonical: "https://www.fiercepharma.com/pharma/oral-glp-1-tracker-launch-trajectories-lilly-foundayo-novo-wegovy-pill"
+          domain: fiercepharma.com
+          anchor_text: "The Oral GLP-1 Tracker: Wegovy pill total scripts down for first time"
+          resolve_status: success
+          parse_confidence: medium
+        content:
+          full_body_available: false
+          full_body_chars: 0
+          fetch_status: bot_blocked
+        routing:
+          category: vital-signs
+          notebook_id: 389894a2-195f-4b50-a49d-df62cea24eb5
+          notebook_title: "reading-list-2026-05-18-05 🏥 Healthcare Reading"
+        synthesis:
+          status: complete
+          source: email_body
+          bullets:
+            - "Novo Nordisk's Wegovy pill recorded its first-ever week of declining total scripts, marking a potential inflection point in the oral GLP-1 market as Eli Lilly's Foundayo competes for share."
+            - "Fierce Pharma launched a weekly Oral GLP-1 Tracker using analyst notes and IQVIA data to monitor prescription trends and shifting market shares between Wegovy pill and Foundayo."
+          generated_at: "2026-05-18"
+          confidence_note: email excerpt only; fiercepharma.com bot-blocked
+        infographic:
+          status: complete
+          path: "/Users/dhk/Documents/dev/adventures-in-ai/dhkondata/reading-db/briefs/2026-05-18/19e3b706df89a6db-02.html"
+          generated_at: "2026-05-18"
+        tags: [GLP-1, Wegovy, Foundayo, Novo-Nordisk, Eli-Lilly, pharma]
+        status: synthesized
