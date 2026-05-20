@@ -174,7 +174,7 @@ studio_create(
 
 ---
 
-## STEP 5 (Light mode): Poll, Title & Download Audio
+## STEP 5 (Light mode): Poll, Title & Publish Audio
 
 Poll each notebook with `studio_status` every 30 seconds until `status == "complete"`.
 Timeout: 10 minutes. Log any that time out and continue with the rest.
@@ -200,23 +200,22 @@ Titling rules:
 - 3 bullets minimum, 5 maximum
 - Sources line: `Newsletter Name (topic shorthand) · ...`
 
-### Download
+### Download & Publish
 
-Use `audio_dir` from feeds.json:
+Once all artifacts are titled, hand off to `rwe-publish` for download, m4a→mp3
+conversion, and Element.fm upload:
 
 ```bash
-nlm download audio <notebook_id> \
-  --output "<audio_dir>/YYYY-MM-DD-<slug>.m4a"
+rwe-publish --date YYYY-MM-DD --no-wait-for-studio-status --audio-format mp3
 ```
 
-Convert to MP3:
-```bash
-ffmpeg -i "<audio_dir>/YYYY-MM-DD-<slug>.m4a" \
-  -codec:a libmp3lame -q:a 2 \
-  "<audio_dir>/YYYY-MM-DD-<slug>.mp3"
-```
+`--no-wait-for-studio-status` skips re-polling — readiness was already confirmed
+during the titling step above. `rwe-publish` is idempotent: already-downloaded files
+are skipped automatically.
 
-Skip download if `<audio_dir>/YYYY-MM-DD-<slug>.mp3` already exists.
+To skip the Element.fm upload (e.g. catch-up run or missing API key), add
+`--download-only`. Do not manually invoke `nlm download` or `ffmpeg` — `rwe-publish`
+handles both.
 
 ---
 
@@ -445,9 +444,9 @@ After writing, confirm file path and record count.
 
 ---
 
-## STEP 9 (Deep): Poll, Title & Download Audio
+## STEP 9 (Deep): Poll, Title & Publish Audio
 
-Now that article work is complete, poll audio status for all notebooks.
+Now that article work is complete, poll audio status and title all notebooks.
 
 Poll each notebook with `studio_status` every 30 seconds until `status == "complete"`.
 Timeout: 10 minutes. Log any that time out and continue with the rest.
@@ -471,23 +470,22 @@ Titling rules:
 - 3 bullets minimum, 5 maximum
 - Sources line: `Newsletter Name (topic shorthand) · ...`
 
-### Download
+### Download & Publish
 
-Use `audio_dir` from feeds.json for this feed:
+Once all artifacts are titled, hand off to `rwe-publish` for download, m4a→mp3
+conversion, and Element.fm upload:
 
 ```bash
-nlm download audio <notebook_id> \
-  --output "<audio_dir>/YYYY-MM-DD-<slug>.m4a"
+rwe-publish --date YYYY-MM-DD --no-wait-for-studio-status --audio-format mp3
 ```
 
-Convert to MP3:
-```bash
-ffmpeg -i "<audio_dir>/YYYY-MM-DD-<slug>.m4a" \
-  -codec:a libmp3lame -q:a 2 \
-  "<audio_dir>/YYYY-MM-DD-<slug>.mp3"
-```
+`--no-wait-for-studio-status` skips re-polling — readiness was already confirmed
+during the titling step above. `rwe-publish` is idempotent: already-downloaded files
+are skipped automatically.
 
-Skip download if `<audio_dir>/YYYY-MM-DD-<slug>.mp3` already exists.
+To skip the Element.fm upload (e.g. catch-up run or missing API key), add
+`--download-only`. Do not manually invoke `nlm download` or `ffmpeg` — `rwe-publish`
+handles both.
 
 ---
 
@@ -535,8 +533,7 @@ Nothing was deleted or archived in Gmail.
 - Tool call limit hit mid-run: report what is done, what is pending; continue next turn with "proceed"
 - No emails on a given day in range: skip that day silently, no empty notebooks
 - `studio_status` timeout (10 min): log it, continue with other notebooks
-- Audio file already exists at download path: skip download, note in report
-- ffmpeg unavailable: skip MP3 conversion, save m4a only, flag in report
+- Audio file already exists at download path: `rwe-publish` skips automatically
 
 Deep only:
 - URL resolve fails: store `url_raw` only, set `resolve_status: failed`, continue

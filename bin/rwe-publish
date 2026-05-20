@@ -6,6 +6,13 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "${HERE}/rwe-common.sh"
 
+# Load user shell environment so API keys (CLAUDE_ELEMENT_FM_KEY, etc.) are
+# available when rwe-publish is invoked from a skill or cron context where the
+# interactive shell profile has not been sourced.
+# shellcheck disable=SC1090,SC1091
+[[ -f "${HOME}/.zshrc"    ]] && source "${HOME}/.zshrc"    2>/dev/null || true
+[[ -f "${HOME}/.zprofile" ]] && source "${HOME}/.zprofile" 2>/dev/null || true
+
 REPO_ROOT="$(rwe_repo_root "${HERE}")"
 RWE_ROOT="${REPO_ROOT}/reading-with-ears"
 SYNCED="${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py"
