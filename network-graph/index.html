@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkedIn Network Graph</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f3f2ef;
+      color: #1d1d1d;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Left sidebar ────────────────── */
+    .sidebar-left {
+      width: 268px;
+      min-width: 268px;
+      background: white;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 14px 16px;
+      background: #0A66C2;
+      color: white;
+      flex-shrink: 0;
+    }
+    .sidebar-header h1 { font-size: 15px; font-weight: 700; }
+    .sidebar-header p  { font-size: 11px; opacity: 0.85; margin-top: 2px; line-height: 1.4; }
+
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+
+    /* Upload area */
+    .upload-area {
+      border: 2px dashed #d0d0d0;
+      border-radius: 8px;
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.18s;
+      background: #fafafa;
+    }
+    .upload-area:hover,
+    .upload-area.drag-over { border-color: #0A66C2; background: #e8f2ff; }
+    .upload-area .upload-icon { font-size: 26px; margin-bottom: 6px; }
+    .upload-area p { font-size: 12px; color: #555; }
+    .upload-area .upload-hint {
+      font-size: 10px; color: #999; margin-top: 5px; line-height: 1.4;
+    }
+    #file-input { display: none; }
+
+    /* File items */
+    .file-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .file-item {
+      background: #f8f8f8;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      padding: 9px 10px;
+    }
+    .file-item-header {
+      display: flex; align-items: center; gap: 7px; margin-bottom: 6px;
+    }
+    .file-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .file-filename {
+      font-size: 10px; color: #888; flex: 1;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .remove-file {
+      background: none; border: none; cursor: pointer;
+      color: #bbb; font-size: 14px; line-height: 1; padding: 0 2px;
+    }
+    .remove-file:hover { color: #e53935; }
+    .file-owner-input {
+      width: 100%;
+      padding: 5px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .file-owner-input:focus { outline: none; border-color: #0A66C2; }
+    .file-stats { font-size: 10px; color: #aaa; margin-top: 4px; }
+
+    /* Buttons */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 8px 0;
+      background: #0A66C2;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn:hover { background: #0856a8; }
+    .btn:disabled { background: #b0c4de; cursor: default; }
+
+    /* Primary selector */
+    .styled-select {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+      background: white;
+      cursor: pointer;
+    }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+    .stat-card {
+      background: #f0f7ff;
+      border-radius: 6px;
+      padding: 8px 4px;
+      text-align: center;
+    }
+    .stat-number { font-size: 18px; font-weight: 700; color: #0A66C2; }
+    .stat-label  { font-size: 10px; color: #666; margin-top: 1px; }
+
+    /* Legend */
+    .legend { display: flex; flex-direction: column; gap: 5px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #444; }
+    .legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+
+    hr.divider { border: none; border-top: 1px solid #eee; margin: 0; }
+
+    /* ── Main graph ────────────────── */
+    .main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #fafafa;
+    }
+
+    #graph-svg { width: 100%; height: 100%; }
+
+    .empty-state {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center; color: #bbb; pointer-events: none;
+      user-select: none;
+    }
+    .empty-state h2 { font-size: 20px; margin-bottom: 8px; }
+    .empty-state p  { font-size: 13px; }
+
+    /* Zoom controls */
+    .graph-controls {
+      position: absolute; top: 12px; left: 12px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .ctrl-btn {
+      width: 30px; height: 30px;
+      background: white; border: 1px solid #ddd; border-radius: 4px;
+      cursor: pointer; font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #444;
+    }
+    .ctrl-btn:hover { background: #f0f0f0; }
+
+    /* Performance warning */
+    .perf-warning {
+      position: absolute; bottom: 12px; left: 50%;
+      transform: translateX(-50%);
+      background: #fff3cd; border: 1px solid #ffc107;
+      border-radius: 6px; padding: 7px 14px;
+      font-size: 11px; color: #856404; display: none;
+      max-width: 380px; text-align: center;
+    }
+
+    /* D3 node/link styles */
+    .link {
+      stroke: #d0d0d0;
+      stroke-opacity: 0.5;
+      stroke-width: 1;
+    }
+    .link.path-edge {
+      stroke: #FFD700;
+      stroke-opacity: 1;
+      stroke-width: 2.5;
+    }
+    .node circle {
+      cursor: pointer;
+    }
+    .node text {
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* ── Right sidebar (search) ────── */
+    .sidebar-right {
+      width: 306px;
+      min-width: 306px;
+      background: white;
+      border-left: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .search-header {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0;
+    }
+    .search-header h2 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+
+    .search-input-wrap { position: relative; }
+    .search-input {
+      width: 100%;
+      padding: 8px 12px 8px 32px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      font-size: 13px;
+      background: #f5f5f5;
+    }
+    .search-input:focus { outline: none; border-color: #0A66C2; background: white; }
+    .search-icon {
+      position: absolute; left: 10px; top: 50%;
+      transform: translateY(-50%); color: #aaa; font-size: 14px;
+      pointer-events: none;
+    }
+
+    .search-results {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px;
+    }
+
+    .no-results {
+      padding: 24px 16px;
+      text-align: center;
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .results-count {
+      font-size: 10px; color: #888;
+      padding: 6px 10px 4px;
+      border-bottom: 1px solid #f0f0f0;
+      margin-bottom: 4px;
+    }
+
+    .result-item {
+      padding: 9px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border: 1px solid transparent;
+      margin-bottom: 3px;
+    }
+    .result-item:hover  { background: #f0f7ff; }
+    .result-item.active { background: #e8f0fe; border-color: #0A66C2; }
+
+    .result-name {
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .result-meta { font-size: 11px; color: #666; margin-top: 2px; }
+
+    /* Path display */
+    .result-path { margin-top: 6px; }
+    .path-display {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 2px;
+    }
+    .path-node {
+      background: #e8f0fe;
+      padding: 1px 6px;
+      border-radius: 3px;
+      color: #0A66C2;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .path-node.you { background: #fde8e8; color: #c0392b; }
+    .path-node.target { background: #e8f5e9; color: #1b5e20; }
+    .path-arrow { color: #ccc; font-size: 11px; }
+
+    /* Strength badges */
+    .badge {
+      display: inline-block; padding: 1px 7px;
+      border-radius: 10px; font-size: 10px; font-weight: 600;
+    }
+    .badge-1 { background: #d4edda; color: #155724; }
+    .badge-2 { background: #cce5ff; color: #004085; }
+    .badge-3 { background: #fff3cd; color: #856404; }
+    .badge-n { background: #f8d7da; color: #721c24; }
+
+    /* Tooltip */
+    .tooltip {
+      position: fixed;
+      background: rgba(20,20,20,0.9);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 9999;
+      max-width: 210px;
+      display: none;
+    }
+    .tooltip.visible { display: block; }
+    .tip-name     { font-weight: 700; margin-bottom: 2px; }
+    .tip-company  { color: #ccc; }
+    .tip-position { color: #aaa; font-size: 11px; }
+    .tip-degree   { color: #88c9ff; font-size: 11px; margin-top: 4px; }
+    .tip-sources  { color: #a8e6cf; font-size: 10px; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- ── LEFT SIDEBAR ─────────────────────────────── -->
+  <div class="sidebar-left">
+    <div class="sidebar-header">
+      <h1>LinkedIn Network Graph</h1>
+      <p>Combine connection exports to map your extended network</p>
+    </div>
+
+    <div class="sidebar-scroll">
+
+      <!-- Upload -->
+      <div>
+        <div class="section-label">Upload LinkedIn Exports</div>
+        <div class="upload-area" id="upload-area">
+          <div class="upload-icon">📂</div>
+          <p>Click or drag CSV files here</p>
+          <p class="upload-hint">LinkedIn → Settings → Data Privacy → Get a copy of your data → Connections.csv</p>
+        </div>
+        <input type="file" id="file-input" accept=".csv" multiple>
+      </div>
+
+      <!-- File list -->
+      <div class="file-list" id="file-list"></div>
+
+      <!-- Primary user -->
+      <div id="primary-section" style="display:none">
+        <hr class="divider">
+        <div class="section-label">Starting point (You)</div>
+        <select class="styled-select" id="primary-select"></select>
+      </div>
+
+      <!-- Stats -->
+      <div id="stats-section" style="display:none">
+        <hr class="divider">
+        <div class="section-label">Graph Stats</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="stat-people">0</div>
+            <div class="stat-label">People</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-connections">0</div>
+            <div class="stat-label">Connections</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-companies">0</div>
+            <div class="stat-label">Companies</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-files">0</div>
+            <div class="stat-label">Files</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div id="legend-section" style="display:none">
+        <hr class="divider">
+        <div class="section-label">Legend</div>
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#E63946"></div>
+            <span>You (primary user)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#F4A261"></div>
+            <span>Other file owners</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#2196F3"></div>
+            <span>1st degree connections</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#4CAF50"></div>
+            <span>2nd degree connections</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#9E9E9E"></div>
+            <span>3rd+ degree connections</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── MAIN GRAPH ──────────────────────────────── -->
+  <div class="main" id="main">
+    <div class="empty-state" id="empty-state">
+      <h2>Your Network Graph</h2>
+      <p>Upload LinkedIn connection CSV files on the left to get started</p>
+    </div>
+
+    <svg id="graph-svg"></svg>
+
+    <div class="graph-controls">
+      <button class="ctrl-btn" id="zoom-in"  title="Zoom in">+</button>
+      <button class="ctrl-btn" id="zoom-out" title="Zoom out">−</button>
+      <button class="ctrl-btn" id="zoom-fit" title="Fit to screen">⊡</button>
+    </div>
+
+    <div class="perf-warning" id="perf-warning">
+      ⚠️ Large graph (&gt;1 500 nodes). Simulation may be slow.
+      Try zooming into a cluster or searching for a company to highlight a path.
+    </div>
+  </div>
+
+  <!-- ── RIGHT SIDEBAR (search) ─────────────────── -->
+  <div class="sidebar-right">
+    <div class="search-header">
+      <h2>Find Your Path to a Company</h2>
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="company-search" class="search-input" placeholder="Type a company name…">
+      </div>
+    </div>
+    <div class="search-results" id="search-results">
+      <div class="no-results">
+        Search for a company above to discover who you know there and the shortest path to reach them.
+      </div>
+    </div>
+  </div>
+
+  <!-- Tooltip -->
+  <div class="tooltip" id="tooltip">
+    <div class="tip-name"    id="tip-name"></div>
+    <div class="tip-company" id="tip-company"></div>
+    <div class="tip-position" id="tip-position"></div>
+    <div class="tip-degree"  id="tip-degree"></div>
+    <div class="tip-sources" id="tip-sources"></div>
+  </div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const OWNER_COLORS = ['#F4A261','#E76F51','#2A9D8F','#E9C46A','#8338EC','#FB5607'];
+
+let nodeMap       = new Map();  // id → node object
+let adjacency     = new Map();  // id → Set<id>
+let fileOwners    = [];         // [{ id, name, color }]
+let loadedFiles   = [];         // [{ file, content, ownerName, color, rowCount }]
+let primaryUserId = null;
+
+let svg, zoomBehavior, svgGroup;
+let nodeSelection, linkSelection;
+let simulation;
+
+// ═══════════════════════════════════════════════════════
+//  FILE UPLOAD
+// ═══════════════════════════════════════════════════════
+const fileInput  = document.getElementById('file-input');
+const uploadArea = document.getElementById('upload-area');
+
+uploadArea.addEventListener('click',     () => fileInput.click());
+uploadArea.addEventListener('dragover',  e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+uploadArea.addEventListener('drop',      e => { e.preventDefault(); uploadArea.classList.remove('drag-over'); ingestFiles(e.dataTransfer.files); });
+fileInput .addEventListener('change',    () => { ingestFiles(fileInput.files); fileInput.value = ''; });
+
+function ingestFiles(fileList) {
+  Array.from(fileList)
+    .filter(f => f.name.toLowerCase().endsWith('.csv'))
+    .forEach(f => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        loadedFiles.push({
+          file:      f,
+          content:   e.target.result,
+          ownerName: guessName(f.name, loadedFiles.length),
+          color:     OWNER_COLORS[loadedFiles.length % OWNER_COLORS.length],
+          rowCount:  0
+        });
+        renderFileList();
+      };
+      reader.readAsText(f);
+    });
+}
+
+function guessName(filename, idx) {
+  const base = filename
+    .replace(/\.csv$/i, '')
+    .replace(/^Connections[-_]?/i, '')
+    .replace(/[-_]/g, ' ')
+    .trim();
+  return base || ('Person ' + (idx + 1));
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = '';
+
+  loadedFiles.forEach((entry, idx) => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    item.innerHTML = `
+      <div class="file-item-header">
+        <div class="file-dot" style="background:${entry.color}"></div>
+        <span class="file-filename" title="${entry.file.name}">${entry.file.name}</span>
+        <button class="remove-file" data-idx="${idx}" title="Remove">×</button>
+      </div>
+      <input type="text" class="file-owner-input" placeholder="Whose connections are these?"
+             value="${entry.ownerName}" data-idx="${idx}">
+      <div class="file-stats" id="fstats-${idx}">
+        ${entry.rowCount > 0 ? entry.rowCount.toLocaleString() + ' connections loaded' : 'Ready to process'}
+      </div>
+    `;
+    list.appendChild(item);
+  });
+
+  // Events
+  list.querySelectorAll('.file-owner-input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const i = +e.target.dataset.idx;
+      loadedFiles[i].ownerName = e.target.value.trim() || ('Person ' + (i + 1));
+    });
+  });
+  list.querySelectorAll('.remove-file').forEach(btn => {
+    btn.addEventListener('click', e => {
+      loadedFiles.splice(+e.currentTarget.dataset.idx, 1);
+      renderFileList();
+    });
+  });
+
+  // Build button
+  let buildBtn = document.getElementById('build-btn');
+  if (!buildBtn) {
+    buildBtn = document.createElement('button');
+    buildBtn.id = 'build-btn';
+    buildBtn.className = 'btn';
+    buildBtn.textContent = 'Build Network Graph';
+    buildBtn.addEventListener('click', buildGraph);
+    list.after(buildBtn);
+  }
+  buildBtn.style.display = loadedFiles.length ? 'block' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+//  CSV PARSING
+// ═══════════════════════════════════════════════════════
+function parseLinkedInCSV(csvText, ownerName, color) {
+  const ownerId = normalizeId(ownerName);
+
+  // Ensure owner node exists
+  if (!nodeMap.has(ownerId)) {
+    nodeMap.set(ownerId, {
+      id: ownerId, name: ownerName,
+      company: '', position: '', connectedOn: '',
+      type: 'owner', sources: [ownerName],
+      degree: null, connectionCount: 0
+    });
+    adjacency.set(ownerId, new Set());
+  }
+
+  fileOwners.push({ id: ownerId, name: ownerName, color });
+  if (!primaryUserId) primaryUserId = ownerId;
+
+  // LinkedIn exports sometimes have a 2-3 line preamble before the CSV header
+  const lines = csvText.split('\n');
+  const headerIdx = lines.findIndex(l =>
+    /first\s*name/i.test(l) || /firstname/i.test(l)
+  );
+  const cleanCsv = lines.slice(headerIdx >= 0 ? headerIdx : 0).join('\n');
+
+  const { data } = Papa.parse(cleanCsv, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: h => h.trim()
+  });
+
+  let count = 0;
+  data.forEach(row => {
+    const first    = (row['First Name'] || row['FirstName']  || '').trim();
+    const last     = (row['Last Name']  || row['LastName']   || '').trim();
+    const fullName = [first, last].filter(Boolean).join(' ');
+    if (!fullName) return;
+
+    const company    = (row['Company']    || '').trim();
+    const position   = (row['Position']   || '').trim();
+    const connectedOn = (row['Connected On'] || '').trim();
+
+    const nodeId = normalizeId(fullName);
+    if (nodeId === ownerId) return; // skip self-reference
+
+    if (!nodeMap.has(nodeId)) {
+      nodeMap.set(nodeId, {
+        id: nodeId, name: fullName,
+        company, position, connectedOn,
+        type: 'connection', sources: [ownerName],
+        degree: null, connectionCount: 0
+      });
+      adjacency.set(nodeId, new Set());
+    } else {
+      const n = nodeMap.get(nodeId);
+      if (!n.sources.includes(ownerName)) n.sources.push(ownerName);
+      if (!n.company  && company)   n.company  = company;
+      if (!n.position && position)  n.position = position;
+    }
+
+    // Bidirectional edge (LinkedIn connections are mutual)
+    adjacency.get(ownerId).add(nodeId);
+    adjacency.get(nodeId).add(ownerId);
+    count++;
+  });
+
+  return count;
+}
+
+function normalizeId(name) {
+  return name.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+// ═══════════════════════════════════════════════════════
+//  GRAPH BUILDING
+// ═══════════════════════════════════════════════════════
+function buildGraph() {
+  // Reset
+  nodeMap.clear();
+  adjacency.clear();
+  fileOwners = [];
+  primaryUserId = null;
+
+  loadedFiles.forEach((entry, idx) => {
+    const ownerName = entry.ownerName || ('Person ' + (idx + 1));
+    entry.rowCount = parseLinkedInCSV(entry.content, ownerName, entry.color);
+    const statsEl = document.getElementById(`fstats-${idx}`);
+    if (statsEl) statsEl.textContent = entry.rowCount.toLocaleString() + ' connections loaded';
+  });
+
+  // Update connection counts
+  nodeMap.forEach((node, id) => {
+    node.connectionCount = adjacency.get(id)?.size || 0;
+  });
+
+  computeDegrees();
+  updatePrimarySelector();
+  updateStats();
+  renderD3Graph();
+
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('stats-section').style.display = 'block';
+  document.getElementById('legend-section').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════
+//  BFS – DEGREES FROM PRIMARY USER
+// ═══════════════════════════════════════════════════════
+function computeDegrees() {
+  nodeMap.forEach(n => { n.degree = null; });
+  if (!primaryUserId || !nodeMap.has(primaryUserId)) return;
+
+  const queue   = [primaryUserId];
+  const visited = new Map([[primaryUserId, 0]]);
+
+  while (queue.length) {
+    const cur = queue.shift();
+    const deg = visited.get(cur);
+    nodeMap.get(cur).degree = deg;
+    for (const nb of (adjacency.get(cur) || [])) {
+      if (!visited.has(nb)) {
+        visited.set(nb, deg + 1);
+        queue.push(nb);
+      }
+    }
+  }
+}
+
+// BFS – shortest path between two nodes
+function shortestPath(startId, targetId) {
+  if (startId === targetId) return [startId];
+  const queue   = [[startId]];
+  const visited = new Set([startId]);
+
+  while (queue.length) {
+    const path = queue.shift();
+    const cur  = path[path.length - 1];
+    for (const nb of (adjacency.get(cur) || [])) {
+      if (!visited.has(nb)) {
+        const newPath = [...path, nb];
+        if (nb === targetId) return newPath;
+        visited.add(nb);
+        queue.push(newPath);
+      }
+    }
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════
+//  NODE APPEARANCE
+// ═══════════════════════════════════════════════════════
+function nodeColor(n) {
+  if (n.id === primaryUserId) return '#E63946';
+  if (fileOwners.find(o => o.id === n.id)) {
+    return (fileOwners.find(o => o.id === n.id)).color;
+  }
+  if (n.degree === 1) return '#2196F3';
+  if (n.degree === 2) return '#4CAF50';
+  if (n.degree !== null) return '#9E9E9E';
+  return '#BDBDBD';
+}
+
+function nodeRadius(n) {
+  if (n.id === primaryUserId) return 14;
+  if (fileOwners.find(o => o.id === n.id)) return 10;
+  return Math.max(4, Math.min(9, 3 + Math.sqrt(n.connectionCount) * 0.7));
+}
+
+// ═══════════════════════════════════════════════════════
+//  D3 FORCE GRAPH
+// ═══════════════════════════════════════════════════════
+function renderD3Graph() {
+  const svgEl = document.getElementById('graph-svg');
+  const W = svgEl.clientWidth;
+  const H = svgEl.clientHeight;
+
+  d3.select('#graph-svg').selectAll('*').remove();
+  svg = d3.select('#graph-svg');
+
+  // Warn for large graphs
+  const tooLarge = nodeMap.size > 1500;
+  document.getElementById('perf-warning').style.display = tooLarge ? 'block' : 'none';
+
+  // Zoom
+  zoomBehavior = d3.zoom()
+    .scaleExtent([0.03, 8])
+    .on('zoom', e => svgGroup.attr('transform', e.transform));
+  svg.call(zoomBehavior);
+
+  svgGroup = svg.append('g');
+
+  // Build data arrays
+  const nodes = Array.from(nodeMap.values()).map(n => ({ ...n }));
+  const nodeIds = new Set(nodes.map(n => n.id));
+  const seen = new Set();
+  const links = [];
+  adjacency.forEach((neighbors, sid) => {
+    if (!nodeIds.has(sid)) return;
+    neighbors.forEach(tid => {
+      if (!nodeIds.has(tid)) return;
+      const key = sid < tid ? `${sid}||${tid}` : `${tid}||${sid}`;
+      if (!seen.has(key)) { seen.add(key); links.push({ source: sid, target: tid }); }
+    });
+  });
+
+  // Simulation
+  simulation = d3.forceSimulation(nodes)
+    .force('link',      d3.forceLink(links).id(d => d.id).distance(55).strength(0.25))
+    .force('charge',    d3.forceManyBody().strength(-70))
+    .force('center',    d3.forceCenter(W / 2, H / 2))
+    .force('collision', d3.forceCollide().radius(d => nodeRadius(d) + 2));
+
+  // Links
+  linkSelection = svgGroup.append('g').attr('class', 'links')
+    .selectAll('line').data(links).join('line').attr('class', 'link');
+
+  // Nodes
+  nodeSelection = svgGroup.append('g').attr('class', 'nodes')
+    .selectAll('g').data(nodes).join('g')
+    .attr('class', 'node')
+    .call(d3.drag()
+      .on('start', (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on('end',   (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
+    );
+
+  nodeSelection.append('circle')
+    .attr('r',    d => nodeRadius(d))
+    .attr('fill', d => nodeColor(d))
+    .attr('stroke',       d => d.id === primaryUserId ? 'white' : 'none')
+    .attr('stroke-width', d => d.id === primaryUserId ? 2.5 : 0);
+
+  // Labels for primary + file owners only
+  nodeSelection
+    .filter(d => d.id === primaryUserId || !!fileOwners.find(o => o.id === d.id))
+    .append('text')
+    .attr('dy', d => -(nodeRadius(d) + 4))
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '10px')
+    .attr('font-weight', '700')
+    .attr('fill', '#333')
+    .text(d => d.name.split(' ')[0]);
+
+  // Tooltip
+  const tip = document.getElementById('tooltip');
+  nodeSelection
+    .on('mouseover', (e, d) => {
+      tip.classList.add('visible');
+      document.getElementById('tip-name').textContent     = d.name;
+      document.getElementById('tip-company').textContent  = d.company  || '';
+      document.getElementById('tip-position').textContent = d.position || '';
+      const degText = d.degree === 0 ? 'You'
+                    : d.degree === 1 ? '1st degree connection'
+                    : d.degree === 2 ? '2nd degree connection'
+                    : d.degree !== null ? `${d.degree} hops away`
+                    : 'Degree unknown';
+      document.getElementById('tip-degree').textContent  = degText + ` · ${d.connectionCount} links`;
+      document.getElementById('tip-sources').textContent = d.sources.length > 0
+        ? 'In: ' + d.sources.join(', ') + "'s export"
+        : '';
+    })
+    .on('mousemove', e => {
+      tip.style.left = (e.clientX + 14) + 'px';
+      tip.style.top  = (e.clientY - 12) + 'px';
+    })
+    .on('mouseout', () => tip.classList.remove('visible'));
+
+  // Tick
+  simulation.on('tick', () => {
+    linkSelection
+      .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    nodeSelection.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+
+  // Zoom controls
+  document.getElementById('zoom-in') .onclick = () => svg.transition().duration(300).call(zoomBehavior.scaleBy, 1.5);
+  document.getElementById('zoom-out').onclick = () => svg.transition().duration(300).call(zoomBehavior.scaleBy, 0.67);
+  document.getElementById('zoom-fit').onclick = fitGraph;
+}
+
+function fitGraph() {
+  if (!svgGroup) return;
+  const svgEl = document.getElementById('graph-svg');
+  const W = svgEl.clientWidth, H = svgEl.clientHeight;
+  const b = svgGroup.node().getBBox();
+  if (!b.width || !b.height) return;
+  const scale = 0.88 * Math.min(W / b.width, H / b.height);
+  const tx = (W - scale * (2 * b.x + b.width))  / 2;
+  const ty = (H - scale * (2 * b.y + b.height)) / 2;
+  svg.transition().duration(700)
+    .call(zoomBehavior.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+}
+
+// ═══════════════════════════════════════════════════════
+//  PATH HIGHLIGHTING
+// ═══════════════════════════════════════════════════════
+function highlightPathTo(targetId) {
+  clearHighlight();
+  if (!primaryUserId) return;
+  const path = shortestPath(primaryUserId, targetId);
+  if (!path) return;
+
+  const pathNodes = new Set(path);
+  const pathEdges = new Set();
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i], b = path[i + 1];
+    pathEdges.add(a < b ? `${a}||${b}` : `${b}||${a}`);
+  }
+
+  nodeSelection?.selectAll('circle')
+    .attr('opacity',      d => pathNodes.has(d.id) ? 1 : 0.15)
+    .attr('stroke',       d => pathNodes.has(d.id) ? '#FFD700' : (d.id === primaryUserId ? 'white' : 'none'))
+    .attr('stroke-width', d => pathNodes.has(d.id) ? 3 : (d.id === primaryUserId ? 2.5 : 0));
+
+  linkSelection?.each(function(d) {
+    const key = d.source.id < d.target.id
+      ? `${d.source.id}||${d.target.id}`
+      : `${d.target.id}||${d.source.id}`;
+    const onPath = pathEdges.has(key);
+    d3.select(this)
+      .attr('opacity',      onPath ? 1    : 0.05)
+      .attr('stroke',       onPath ? '#FFD700' : '#d0d0d0')
+      .attr('stroke-width', onPath ? 2.5  : 1)
+      .classed('path-edge', onPath);
+  });
+}
+
+function clearHighlight() {
+  nodeSelection?.selectAll('circle')
+    .attr('opacity', 1)
+    .attr('stroke',       d => d.id === primaryUserId ? 'white' : 'none')
+    .attr('stroke-width', d => d.id === primaryUserId ? 2.5 : 0);
+  linkSelection
+    ?.attr('opacity', 0.5).attr('stroke', '#d0d0d0').attr('stroke-width', 1)
+    .classed('path-edge', false);
+}
+
+function panToNode(nodeId) {
+  if (!simulation || !svg) return;
+  const nd = simulation.nodes().find(n => n.id === nodeId);
+  if (!nd) return;
+  const svgEl = document.getElementById('graph-svg');
+  const W = svgEl.clientWidth, H = svgEl.clientHeight;
+  const t = d3.zoomTransform(svg.node());
+  svg.transition().duration(600).call(
+    zoomBehavior.transform,
+    d3.zoomIdentity
+      .translate(W / 2 - t.k * nd.x, H / 2 - t.k * nd.y)
+      .scale(t.k)
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+//  COMPANY SEARCH
+// ═══════════════════════════════════════════════════════
+const searchInput   = document.getElementById('company-search');
+const searchResults = document.getElementById('search-results');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  if (q.length < 2) {
+    searchResults.innerHTML = '<div class="no-results">Search for a company to discover who you know there and the shortest path to reach them.</div>';
+    clearHighlight();
+    return;
+  }
+
+  const matches = [];
+  nodeMap.forEach((node, id) => {
+    if (!node.company) return;
+    if (node.company.toLowerCase().includes(q)) matches.push(node);
+  });
+
+  if (!matches.length) {
+    searchResults.innerHTML = `<div class="no-results">No connections found at companies matching "<strong>${escHtml(searchInput.value)}</strong>".</div>`;
+    clearHighlight();
+    return;
+  }
+
+  // Compute paths and sort by hop count
+  const rows = matches.map(node => {
+    const path = primaryUserId ? shortestPath(primaryUserId, node.id) : null;
+    return { node, path, hops: path ? path.length - 1 : 999 };
+  }).sort((a, b) => a.hops - b.hops || a.node.name.localeCompare(b.node.name));
+
+  renderResults(rows);
+});
+
+function renderResults(rows) {
+  searchResults.innerHTML = '';
+
+  const countEl = document.createElement('div');
+  countEl.className = 'results-count';
+  countEl.textContent = `${rows.length} connection${rows.length !== 1 ? 's' : ''} found`;
+  searchResults.appendChild(countEl);
+
+  rows.forEach(({ node, path, hops }) => {
+    const item = document.createElement('div');
+    item.className = 'result-item';
+
+    const badgeClass = hops === 1 ? 'badge-1' : hops === 2 ? 'badge-2' : hops === 3 ? 'badge-3' : 'badge-n';
+    const hopLabel   = hops === 1 ? '1st degree' : hops === 2 ? '2nd degree' : hops === 3 ? '3rd degree' : `${hops} hops`;
+
+    let pathHtml = '';
+    if (path && path.length > 1) {
+      const pathNodes = path.map((id, i) => {
+        const nd = nodeMap.get(id);
+        const label = nd ? nd.name.split(' ')[0] : id;
+        const cls   = i === 0 ? 'path-node you' : i === path.length - 1 ? 'path-node target' : 'path-node';
+        return `${i > 0 ? '<span class="path-arrow">→</span>' : ''}<span class="${cls}">${escHtml(label)}</span>`;
+      }).join('');
+      pathHtml = `<div class="result-path"><div class="path-display">${pathNodes}</div></div>`;
+    }
+
+    const intro = hops === 1 ? 'Direct connection'
+                : hops === 2 && path ? `Ask ${nodeMap.get(path[1])?.name?.split(' ')[0] || '…'} to introduce you`
+                : path ? `${hops - 1} people between you`
+                : 'No path found';
+
+    item.innerHTML = `
+      <div class="result-name">
+        ${escHtml(node.name)}
+        <span class="badge ${badgeClass}">${hopLabel}</span>
+      </div>
+      <div class="result-meta">
+        ${node.position ? escHtml(node.position) + ' · ' : ''}${escHtml(node.company)}
+      </div>
+      <div style="font-size:10px;color:#888;margin-top:3px;">${escHtml(intro)}</div>
+      ${pathHtml}
+    `;
+
+    item.addEventListener('click', () => {
+      searchResults.querySelectorAll('.result-item').forEach(el => el.classList.remove('active'));
+      item.classList.add('active');
+      if (path) { highlightPathTo(node.id); panToNode(node.id); }
+    });
+
+    searchResults.appendChild(item);
+  });
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ═══════════════════════════════════════════════════════
+//  PRIMARY USER SELECTOR
+// ═══════════════════════════════════════════════════════
+function updatePrimarySelector() {
+  const section = document.getElementById('primary-section');
+  const select  = document.getElementById('primary-select');
+
+  if (!fileOwners.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  select.innerHTML = '';
+  fileOwners.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.id;
+    opt.textContent = o.name;
+    if (o.id === primaryUserId) opt.selected = true;
+    select.appendChild(opt);
+  });
+
+  // Remove old listener by replacing node
+  const fresh = select.cloneNode(true);
+  select.parentNode.replaceChild(fresh, select);
+  fresh.addEventListener('change', () => {
+    primaryUserId = fresh.value;
+    computeDegrees();
+    renderD3Graph();
+    if (searchInput.value.trim().length >= 2) searchInput.dispatchEvent(new Event('input'));
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════════════
+function updateStats() {
+  const companies = new Set();
+  nodeMap.forEach(n => { if (n.company) companies.add(n.company.toLowerCase()); });
+
+  let edgeCount = 0;
+  adjacency.forEach(s => edgeCount += s.size);
+
+  document.getElementById('stat-people').textContent      = nodeMap.size.toLocaleString();
+  document.getElementById('stat-connections').textContent = (edgeCount / 2).toLocaleString();
+  document.getElementById('stat-companies').textContent   = companies.size.toLocaleString();
+  document.getElementById('stat-files').textContent       = loadedFiles.length;
+}
+</script>
+</body>
+</html>
