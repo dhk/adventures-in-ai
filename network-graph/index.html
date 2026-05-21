@@ -287,9 +287,74 @@
     .tip-degree   { color: #88c9ff; font-size: 11px; margin-top: 4px; }
     .tip-warmth   { color: #86efac; font-size: 10px; margin-top: 2px; }
     .tip-sources  { color: #a8e6cf; font-size: 10px; margin-top: 2px; }
+
+    /* ── Password gate ───────────────── */
+    .pw-overlay {
+      position: fixed; inset: 0; z-index: 10000;
+      background: #0A66C2;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pw-box {
+      background: white; border-radius: 12px; padding: 40px 36px;
+      width: 320px; text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+    }
+    .pw-logo  { font-size: 32px; margin-bottom: 10px; }
+    .pw-title { font-size: 20px; font-weight: 700; color: #1d1d1d; margin-bottom: 4px; }
+    .pw-sub   { font-size: 12px; color: #999; margin-bottom: 22px; line-height: 1.5; }
+    .pw-input {
+      width: 100%; padding: 10px 14px;
+      border: 2px solid #ddd; border-radius: 8px;
+      font-size: 15px; text-align: center; letter-spacing: 3px;
+      margin-bottom: 10px; transition: border-color 0.15s;
+    }
+    .pw-input:focus { outline: none; border-color: #0A66C2; }
+    .pw-input.shake { animation: pw-shake 0.4s; }
+    @keyframes pw-shake {
+      0%,100% { transform: translateX(0); }
+      20%,60%  { transform: translateX(-7px); }
+      40%,80%  { transform: translateX(7px); }
+    }
+    .pw-btn {
+      width: 100%; padding: 11px; background: #0A66C2; color: white;
+      border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .pw-btn:hover { background: #0856a8; }
+    .pw-error { color: #e53935; font-size: 12px; margin-top: 8px; min-height: 16px; }
+
+    /* ── Seed banner ─────────────────── */
+    .seed-banner {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(255,255,255,0.96); border: 1px solid #ddd; border-radius: 6px;
+      padding: 6px 11px; font-size: 11px; color: #666; display: none;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .seed-banner strong { color: #0A66C2; }
+
+    /* ── Export button ───────────────── */
+    .btn-outline {
+      display: block; width: 100%; padding: 7px 0;
+      background: transparent; color: #0A66C2;
+      border: 1.5px solid #0A66C2; border-radius: 20px;
+      font-size: 12px; font-weight: 600; cursor: pointer; text-align: center;
+    }
+    .btn-outline:hover { background: #e8f0fe; }
+    .export-hint { font-size: 10px; color: #aaa; margin-top: 6px; line-height: 1.5; }
   </style>
 </head>
 <body>
+
+<!-- ── PASSWORD GATE ─────────────────────────────── -->
+<div class="pw-overlay" id="pw-overlay" style="display:none">
+  <div class="pw-box">
+    <div class="pw-logo">🔗</div>
+    <div class="pw-title">Network Graph</div>
+    <div class="pw-sub">Enter the access password to continue</div>
+    <input type="password" id="pw-input" class="pw-input" placeholder="••••••••" autocomplete="off">
+    <button class="pw-btn" id="pw-btn">Continue →</button>
+    <div class="pw-error" id="pw-error"></div>
+  </div>
+</div>
 
 <!-- ── LEFT SIDEBAR ──────────────────────────────── -->
 <div class="sidebar-left">
@@ -355,6 +420,14 @@
       </div>
     </div>
 
+    <!-- Export -->
+    <div id="export-section" style="display:none">
+      <hr class="divider">
+      <div class="section-label">Publish</div>
+      <button class="btn-outline" id="export-btn">Export Seeded Page</button>
+      <p class="export-hint">Downloads a self-contained index.html with your graph baked in. Replace the file in your repo and push — GitHub Pages serves it instantly.</p>
+    </div>
+
   </div>
 </div>
 
@@ -365,6 +438,7 @@
     <p>Upload LinkedIn CSV exports on the left to get started</p>
   </div>
 
+  <div class="seed-banner" id="seed-banner"></div>
   <svg id="graph-svg"></svg>
 
   <div class="graph-controls">
@@ -410,6 +484,10 @@
 //  CONSTANTS
 // ═══════════════════════════════════════════════════════
 const OWNER_COLORS = ['#F4A261','#E76F51','#2A9D8F','#E9C46A','#8338EC','#FB5607'];
+
+// ── Injected by Export Seeded Page (do not rename these) ──────────
+const SEED_DATA = null;
+const PASSWORD_HASH = ''; // SHA-256 hex of access password, '' = no auth
 
 // Metadata for each recognised LinkedIn export type
 const FILE_META = {
@@ -835,10 +913,11 @@ function buildGraph() {
   renderD3Graph();
   renderFileList(); // refresh buttons/stats
 
-  document.getElementById('empty-state').style.display    = 'none';
-  document.getElementById('stats-section').style.display  = 'block';
-  document.getElementById('enrich-section').style.display = 'block';
-  document.getElementById('legend-section').style.display = 'block';
+  document.getElementById('empty-state').style.display     = 'none';
+  document.getElementById('stats-section').style.display   = 'block';
+  document.getElementById('enrich-section').style.display  = 'block';
+  document.getElementById('legend-section').style.display  = 'block';
+  document.getElementById('export-section').style.display  = 'block';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1251,6 +1330,146 @@ function updatePrimarySelector() {
 
 function normalizeId(name) { return name.toLowerCase().replace(/\s+/g,' ').trim(); }
 function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ═══════════════════════════════════════════════════════
+//  PASSWORD GATE
+// ═══════════════════════════════════════════════════════
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function initPasswordGate() {
+  if (!PASSWORD_HASH) return;
+  if (sessionStorage.getItem('ng_auth') === PASSWORD_HASH) return;
+
+  const overlay = document.getElementById('pw-overlay');
+  const input   = document.getElementById('pw-input');
+  const btn     = document.getElementById('pw-btn');
+  const errEl   = document.getElementById('pw-error');
+  overlay.style.display = 'flex';
+
+  async function attempt() {
+    errEl.textContent = '';
+    const hash = await sha256(input.value);
+    if (hash === PASSWORD_HASH) {
+      sessionStorage.setItem('ng_auth', PASSWORD_HASH);
+      overlay.style.display = 'none';
+    } else {
+      errEl.textContent = 'Incorrect password — try again';
+      input.classList.add('shake');
+      input.value = '';
+      setTimeout(() => input.classList.remove('shake'), 450);
+      input.focus();
+    }
+  }
+
+  btn.addEventListener('click', attempt);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') attempt(); });
+  input.focus();
+}
+
+// ═══════════════════════════════════════════════════════
+//  LOAD SEED DATA
+// ═══════════════════════════════════════════════════════
+function loadSeedData(data) {
+  primaryUserId = data.primaryUserId;
+  fileOwners    = data.fileOwners || [];
+
+  nodeMap.clear();
+  (data.nodes || []).forEach(n => nodeMap.set(n.id, n));
+
+  adjacency.clear();
+  Object.entries(data.adjacency || {}).forEach(([id, neighbors]) => {
+    adjacency.set(id, new Set(neighbors));
+  });
+
+  edgeData.clear();
+  Object.entries(data.edgeData || {}).forEach(([k, v]) => {
+    edgeData.set(k, { ...v, lastMessage: v.lastMessage ? new Date(v.lastMessage) : null });
+  });
+
+  nodeMap.forEach((node, id) => { node.connectionCount = adjacency.get(id)?.size || 0; });
+  computeDegrees();
+  graphBuilt = true;
+
+  updatePrimarySelector();
+  updateStats();
+  updateEnrichmentStatus();
+  renderD3Graph();
+
+  ['stats-section','enrich-section','legend-section','export-section'].forEach(id => {
+    document.getElementById(id).style.display = 'block';
+  });
+  document.getElementById('empty-state').style.display = 'none';
+
+  const banner = document.getElementById('seed-banner');
+  const d = data.exportedAt ? new Date(data.exportedAt) : null;
+  banner.innerHTML = `<strong>Seeded graph</strong>${d ? ' · ' + d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : ''} · Upload your connections on the left to add yourself`;
+  banner.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════
+//  EXPORT SEEDED PAGE
+//  Fetches the current page source, injects SEED_DATA and
+//  PASSWORD_HASH, and triggers a download of index.html.
+// ═══════════════════════════════════════════════════════
+async function exportSeededPage() {
+  const pw   = prompt('Set a password for the published page\n(leave blank to publish without a password):');
+  if (pw === null) return; // user cancelled
+  const hash = pw.trim() ? await sha256(pw.trim()) : '';
+
+  const seedData = {
+    exportedAt:    new Date().toISOString(),
+    primaryUserId,
+    fileOwners,
+    nodes:     Array.from(nodeMap.values()),
+    adjacency: Object.fromEntries(
+      Array.from(adjacency.entries()).map(([k,v]) => [k, Array.from(v)])
+    ),
+    edgeData:  Object.fromEntries(
+      Array.from(edgeData.entries()).map(([k,v]) => [k, {
+        ...v, lastMessage: v.lastMessage instanceof Date ? v.lastMessage.toISOString() : v.lastMessage
+      }])
+    ),
+  };
+
+  // Get clean page source (fetch preferred; outerHTML as fallback for file://)
+  let html;
+  try {
+    const res = await fetch(window.location.href);
+    if (!res.ok) throw new Error();
+    html = await res.text();
+  } catch {
+    html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  }
+
+  // Inject the two sentinel constants
+  html = html.replace(
+    /const SEED_DATA\s*=\s*null;/,
+    `const SEED_DATA = ${JSON.stringify(seedData)};`
+  );
+  html = html.replace(
+    /const PASSWORD_HASH\s*=\s*'[^']*';/,
+    `const PASSWORD_HASH = '${hash}';`
+  );
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'index.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  await initPasswordGate();
+  if (SEED_DATA) loadSeedData(SEED_DATA);
+  document.getElementById('export-btn').addEventListener('click', exportSeededPage);
+});
 </script>
 </body>
 </html>
