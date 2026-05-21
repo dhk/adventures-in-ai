@@ -20,8 +20,8 @@
 
     /* ── Left sidebar ────────────────── */
     .sidebar-left {
-      width: 268px;
-      min-width: 268px;
+      width: 272px;
+      min-width: 272px;
       background: white;
       border-right: 1px solid #ddd;
       display: flex;
@@ -68,14 +68,29 @@
     }
     .upload-area:hover,
     .upload-area.drag-over { border-color: #0A66C2; background: #e8f2ff; }
-    .upload-area .upload-icon { font-size: 26px; margin-bottom: 6px; }
+    .upload-area .upload-icon { font-size: 24px; margin-bottom: 6px; }
     .upload-area p { font-size: 12px; color: #555; }
-    .upload-area .upload-hint {
-      font-size: 10px; color: #999; margin-top: 5px; line-height: 1.4;
-    }
+    .upload-area .upload-hint { font-size: 10px; color: #999; margin-top: 4px; line-height: 1.4; }
     #file-input { display: none; }
 
-    /* File items */
+    /* Type badges on file items */
+    .type-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+    }
+    .type-connections     { background: #dbeafe; color: #1d4ed8; }
+    .type-messages        { background: #dcfce7; color: #166534; }
+    .type-recommendations { background: #fef3c7; color: #92400e; }
+    .type-invitations     { background: #ede9fe; color: #5b21b6; }
+    .type-unknown         { background: #f1f5f9; color: #64748b; }
+
+    /* File list */
     .file-list { display: flex; flex-direction: column; gap: 8px; }
 
     .file-item {
@@ -85,9 +100,9 @@
       padding: 9px 10px;
     }
     .file-item-header {
-      display: flex; align-items: center; gap: 7px; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
     }
-    .file-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .file-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .file-filename {
       font-size: 10px; color: #888; flex: 1;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -98,85 +113,76 @@
     }
     .remove-file:hover { color: #e53935; }
     .file-owner-input {
-      width: 100%;
-      padding: 5px 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 12px;
+      width: 100%; padding: 5px 8px;
+      border: 1px solid #ddd; border-radius: 4px; font-size: 12px;
     }
     .file-owner-input:focus { outline: none; border-color: #0A66C2; }
+    .file-owner-select {
+      width: 100%; padding: 5px 8px;
+      border: 1px solid #ddd; border-radius: 4px; font-size: 12px;
+      background: white; cursor: pointer;
+    }
+    .file-owner-select:focus { outline: none; border-color: #0A66C2; }
     .file-stats { font-size: 10px; color: #aaa; margin-top: 4px; }
 
     /* Buttons */
     .btn {
-      display: block;
-      width: 100%;
+      display: block; width: 100%;
       padding: 8px 0;
-      background: #0A66C2;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
+      background: #0A66C2; color: white;
+      border: none; border-radius: 20px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; text-align: center;
     }
-    .btn:hover { background: #0856a8; }
+    .btn:hover    { background: #0856a8; }
     .btn:disabled { background: #b0c4de; cursor: default; }
+    .btn.rebuild  { background: #e65100; }
+    .btn.rebuild:hover { background: #bf360c; }
 
     /* Primary selector */
     .styled-select {
-      width: 100%;
-      padding: 6px 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 12px;
-      background: white;
-      cursor: pointer;
+      width: 100%; padding: 6px 8px;
+      border: 1px solid #ddd; border-radius: 4px;
+      font-size: 12px; background: white; cursor: pointer;
     }
 
-    /* Stats grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 7px;
-    }
-    .stat-card {
-      background: #f0f7ff;
-      border-radius: 6px;
-      padding: 8px 4px;
-      text-align: center;
-    }
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .stat-card { background: #f0f7ff; border-radius: 6px; padding: 8px 4px; text-align: center; }
     .stat-number { font-size: 18px; font-weight: 700; color: #0A66C2; }
     .stat-label  { font-size: 10px; color: #666; margin-top: 1px; }
 
+    /* Enrichment status */
+    .enrich-list { display: flex; flex-direction: column; gap: 6px; }
+    .enrich-row {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 11px;
+    }
+    .enrich-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+    .enrich-label { font-weight: 600; color: #333; }
+    .enrich-desc  { color: #888; font-size: 10px; margin-top: 1px; }
+    .enrich-loaded { color: #166534; font-size: 10px; margin-top: 1px; }
+
     /* Legend */
     .legend { display: flex; flex-direction: column; gap: 5px; }
-    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #444; }
-    .legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #444; }
+    .legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-line { width: 20px; height: 3px; border-radius: 2px; flex-shrink: 0; }
 
     hr.divider { border: none; border-top: 1px solid #eee; margin: 0; }
 
     /* ── Main graph ────────────────── */
-    .main {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      background: #fafafa;
-    }
-
+    .main { flex: 1; position: relative; overflow: hidden; background: #fafafa; }
     #graph-svg { width: 100%; height: 100%; }
 
     .empty-state {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      text-align: center; color: #bbb; pointer-events: none;
-      user-select: none;
+      text-align: center; color: #bbb; pointer-events: none; user-select: none;
     }
     .empty-state h2 { font-size: 20px; margin-bottom: 8px; }
     .empty-state p  { font-size: 13px; }
 
-    /* Zoom controls */
     .graph-controls {
       position: absolute; top: 12px; left: 12px;
       display: flex; flex-direction: column; gap: 4px;
@@ -190,307 +196,263 @@
     }
     .ctrl-btn:hover { background: #f0f0f0; }
 
-    /* Performance warning */
     .perf-warning {
-      position: absolute; bottom: 12px; left: 50%;
-      transform: translateX(-50%);
-      background: #fff3cd; border: 1px solid #ffc107;
-      border-radius: 6px; padding: 7px 14px;
-      font-size: 11px; color: #856404; display: none;
-      max-width: 380px; text-align: center;
+      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+      background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px;
+      padding: 7px 14px; font-size: 11px; color: #856404;
+      display: none; max-width: 380px; text-align: center;
     }
 
-    /* D3 node/link styles */
-    .link {
-      stroke: #d0d0d0;
-      stroke-opacity: 0.5;
-      stroke-width: 1;
-    }
-    .link.path-edge {
-      stroke: #FFD700;
-      stroke-opacity: 1;
-      stroke-width: 2.5;
-    }
-    .node circle {
-      cursor: pointer;
-    }
-    .node text {
-      pointer-events: none;
-      user-select: none;
-    }
+    /* D3 elements */
+    .link { stroke: #d8d8d8; stroke-opacity: 0.5; stroke-width: 1; fill: none; }
 
-    /* ── Right sidebar (search) ────── */
+    /* ── Right sidebar ────────────── */
     .sidebar-right {
-      width: 306px;
-      min-width: 306px;
-      background: white;
-      border-left: 1px solid #ddd;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      width: 310px; min-width: 310px;
+      background: white; border-left: 1px solid #ddd;
+      display: flex; flex-direction: column; overflow: hidden;
     }
-
     .search-header {
-      padding: 14px 14px 10px;
-      border-bottom: 1px solid #eee;
-      flex-shrink: 0;
+      padding: 14px 14px 10px; border-bottom: 1px solid #eee; flex-shrink: 0;
     }
     .search-header h2 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
-
     .search-input-wrap { position: relative; }
     .search-input {
-      width: 100%;
-      padding: 8px 12px 8px 32px;
-      border: 1px solid #ddd;
-      border-radius: 20px;
-      font-size: 13px;
-      background: #f5f5f5;
+      width: 100%; padding: 8px 12px 8px 32px;
+      border: 1px solid #ddd; border-radius: 20px;
+      font-size: 13px; background: #f5f5f5;
     }
     .search-input:focus { outline: none; border-color: #0A66C2; background: white; }
     .search-icon {
       position: absolute; left: 10px; top: 50%;
-      transform: translateY(-50%); color: #aaa; font-size: 14px;
-      pointer-events: none;
+      transform: translateY(-50%); color: #aaa; font-size: 14px; pointer-events: none;
     }
 
-    .search-results {
-      flex: 1;
-      overflow-y: auto;
-      padding: 6px;
-    }
+    .search-results { flex: 1; overflow-y: auto; padding: 6px; }
 
-    .no-results {
-      padding: 24px 16px;
-      text-align: center;
-      color: #aaa;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .results-count {
-      font-size: 10px; color: #888;
-      padding: 6px 10px 4px;
-      border-bottom: 1px solid #f0f0f0;
-      margin-bottom: 4px;
-    }
+    .no-results { padding: 24px 16px; text-align: center; color: #aaa; font-size: 12px; line-height: 1.6; }
+    .results-count { font-size: 10px; color: #888; padding: 6px 10px 4px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
 
     .result-item {
-      padding: 9px 10px;
-      border-radius: 7px;
-      cursor: pointer;
-      transition: background 0.12s;
-      border: 1px solid transparent;
-      margin-bottom: 3px;
+      padding: 9px 10px; border-radius: 7px; cursor: pointer;
+      transition: background 0.12s; border: 1px solid transparent; margin-bottom: 3px;
     }
     .result-item:hover  { background: #f0f7ff; }
     .result-item.active { background: #e8f0fe; border-color: #0A66C2; }
 
     .result-name {
-      font-weight: 600;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-wrap: wrap;
+      font-weight: 600; font-size: 13px;
+      display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
     }
-    .result-meta { font-size: 11px; color: #666; margin-top: 2px; }
+    .result-meta   { font-size: 11px; color: #666; margin-top: 2px; }
+    .result-intro  { font-size: 10px; color: #888; margin-top: 3px; }
 
     /* Path display */
-    .result-path { margin-top: 6px; }
-    .path-display {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 2px;
-    }
-    .path-node {
-      background: #e8f0fe;
-      padding: 1px 6px;
-      border-radius: 3px;
-      color: #0A66C2;
-      font-size: 10px;
-      white-space: nowrap;
-    }
+    .result-path   { margin-top: 6px; }
+    .path-display  { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+    .path-node     { background: #e8f0fe; padding: 1px 6px; border-radius: 3px; color: #0A66C2; font-size: 10px; white-space: nowrap; }
     .path-node.you { background: #fde8e8; color: #c0392b; }
     .path-node.target { background: #e8f5e9; color: #1b5e20; }
-    .path-arrow { color: #ccc; font-size: 11px; }
+    .path-arrow    { color: #ccc; font-size: 11px; }
 
-    /* Strength badges */
-    .badge {
-      display: inline-block; padding: 1px 7px;
-      border-radius: 10px; font-size: 10px; font-weight: 600;
+    /* Warmth indicators on path connectors */
+    .warmth-dot {
+      width: 7px; height: 7px; border-radius: 50%; display: inline-block; vertical-align: middle; margin: 0 1px;
     }
+    .w-strong { background: #16a34a; }
+    .w-warm   { background: #f59e0b; }
+    .w-cold   { background: #d1d5db; }
+
+    /* Degree + warmth badges */
+    .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; }
     .badge-1 { background: #d4edda; color: #155724; }
     .badge-2 { background: #cce5ff; color: #004085; }
     .badge-3 { background: #fff3cd; color: #856404; }
     .badge-n { background: #f8d7da; color: #721c24; }
 
+    .warmth-badge { display: inline-block; padding: 1px 5px; border-radius: 10px; font-size: 9px; font-weight: 600; }
+    .wb-strong { background: #dcfce7; color: #14532d; }
+    .wb-warm   { background: #fef9c3; color: #713f12; }
+
     /* Tooltip */
     .tooltip {
-      position: fixed;
-      background: rgba(20,20,20,0.9);
-      color: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      pointer-events: none;
-      z-index: 9999;
-      max-width: 210px;
-      display: none;
+      position: fixed; background: rgba(20,20,20,0.92); color: white;
+      padding: 9px 12px; border-radius: 6px; font-size: 12px;
+      pointer-events: none; z-index: 9999; max-width: 220px; display: none;
     }
     .tooltip.visible { display: block; }
     .tip-name     { font-weight: 700; margin-bottom: 2px; }
     .tip-company  { color: #ccc; }
     .tip-position { color: #aaa; font-size: 11px; }
     .tip-degree   { color: #88c9ff; font-size: 11px; margin-top: 4px; }
+    .tip-warmth   { color: #86efac; font-size: 10px; margin-top: 2px; }
     .tip-sources  { color: #a8e6cf; font-size: 10px; margin-top: 2px; }
   </style>
 </head>
 <body>
 
-  <!-- ── LEFT SIDEBAR ─────────────────────────────── -->
-  <div class="sidebar-left">
-    <div class="sidebar-header">
-      <h1>LinkedIn Network Graph</h1>
-      <p>Combine connection exports to map your extended network</p>
-    </div>
-
-    <div class="sidebar-scroll">
-
-      <!-- Upload -->
-      <div>
-        <div class="section-label">Upload LinkedIn Exports</div>
-        <div class="upload-area" id="upload-area">
-          <div class="upload-icon">📂</div>
-          <p>Click or drag CSV files here</p>
-          <p class="upload-hint">LinkedIn → Settings → Data Privacy → Get a copy of your data → Connections.csv</p>
-        </div>
-        <input type="file" id="file-input" accept=".csv" multiple>
-      </div>
-
-      <!-- File list -->
-      <div class="file-list" id="file-list"></div>
-
-      <!-- Primary user -->
-      <div id="primary-section" style="display:none">
-        <hr class="divider">
-        <div class="section-label">Starting point (You)</div>
-        <select class="styled-select" id="primary-select"></select>
-      </div>
-
-      <!-- Stats -->
-      <div id="stats-section" style="display:none">
-        <hr class="divider">
-        <div class="section-label">Graph Stats</div>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-number" id="stat-people">0</div>
-            <div class="stat-label">People</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="stat-connections">0</div>
-            <div class="stat-label">Connections</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="stat-companies">0</div>
-            <div class="stat-label">Companies</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="stat-files">0</div>
-            <div class="stat-label">Files</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Legend -->
-      <div id="legend-section" style="display:none">
-        <hr class="divider">
-        <div class="section-label">Legend</div>
-        <div class="legend">
-          <div class="legend-item">
-            <div class="legend-dot" style="background:#E63946"></div>
-            <span>You (primary user)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-dot" style="background:#F4A261"></div>
-            <span>Other file owners</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-dot" style="background:#2196F3"></div>
-            <span>1st degree connections</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-dot" style="background:#4CAF50"></div>
-            <span>2nd degree connections</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-dot" style="background:#9E9E9E"></div>
-            <span>3rd+ degree connections</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
+<!-- ── LEFT SIDEBAR ──────────────────────────────── -->
+<div class="sidebar-left">
+  <div class="sidebar-header">
+    <h1>LinkedIn Network Graph</h1>
+    <p>Upload any LinkedIn export files to progressively enrich your network</p>
   </div>
 
-  <!-- ── MAIN GRAPH ──────────────────────────────── -->
-  <div class="main" id="main">
-    <div class="empty-state" id="empty-state">
-      <h2>Your Network Graph</h2>
-      <p>Upload LinkedIn connection CSV files on the left to get started</p>
+  <div class="sidebar-scroll">
+
+    <!-- Upload -->
+    <div>
+      <div class="section-label">Upload LinkedIn Data</div>
+      <div class="upload-area" id="upload-area">
+        <div class="upload-icon">📂</div>
+        <p>Click or drag CSV files here</p>
+        <p class="upload-hint">Accepts: Connections · Messages · Recommendations · Invitations</p>
+      </div>
+      <input type="file" id="file-input" accept=".csv" multiple>
     </div>
 
-    <svg id="graph-svg"></svg>
+    <!-- File list -->
+    <div class="file-list" id="file-list"></div>
 
-    <div class="graph-controls">
-      <button class="ctrl-btn" id="zoom-in"  title="Zoom in">+</button>
-      <button class="ctrl-btn" id="zoom-out" title="Zoom out">−</button>
-      <button class="ctrl-btn" id="zoom-fit" title="Fit to screen">⊡</button>
+    <!-- Primary user -->
+    <div id="primary-section" style="display:none">
+      <hr class="divider">
+      <div class="section-label">Starting point (You)</div>
+      <select class="styled-select" id="primary-select"></select>
     </div>
 
-    <div class="perf-warning" id="perf-warning">
-      ⚠️ Large graph (&gt;1 500 nodes). Simulation may be slow.
-      Try zooming into a cluster or searching for a company to highlight a path.
-    </div>
-  </div>
-
-  <!-- ── RIGHT SIDEBAR (search) ─────────────────── -->
-  <div class="sidebar-right">
-    <div class="search-header">
-      <h2>Find Your Path to a Company</h2>
-      <div class="search-input-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="company-search" class="search-input" placeholder="Type a company name…">
+    <!-- Stats -->
+    <div id="stats-section" style="display:none">
+      <hr class="divider">
+      <div class="section-label">Graph Stats</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-number" id="stat-people">0</div><div class="stat-label">People</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-edges">0</div><div class="stat-label">Connections</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-companies">0</div><div class="stat-label">Companies</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-warm">0</div><div class="stat-label">Warm Edges</div></div>
       </div>
     </div>
-    <div class="search-results" id="search-results">
-      <div class="no-results">
-        Search for a company above to discover who you know there and the shortest path to reach them.
+
+    <!-- Enrichment status -->
+    <div id="enrich-section" style="display:none">
+      <hr class="divider">
+      <div class="section-label">Data Loaded</div>
+      <div class="enrich-list" id="enrich-list"></div>
+    </div>
+
+    <!-- Legend -->
+    <div id="legend-section" style="display:none">
+      <hr class="divider">
+      <div class="section-label">Legend</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#E63946"></div><span>You (primary)</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F4A261"></div><span>Other file owners</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2196F3"></div><span>1st degree</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4CAF50"></div><span>2nd degree</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#9E9E9E"></div><span>3rd+ degree</span></div>
+        <div class="legend-item"><div class="legend-line" style="background:#16a34a;opacity:0.8"></div><span>Warm/strong tie</span></div>
+        <div class="legend-item"><div class="legend-line" style="background:#d1d5db"></div><span>No warmth data</span></div>
       </div>
     </div>
+
+  </div>
+</div>
+
+<!-- ── MAIN GRAPH ────────────────────────────────── -->
+<div class="main" id="main">
+  <div class="empty-state" id="empty-state">
+    <h2>Your Network Graph</h2>
+    <p>Upload LinkedIn CSV exports on the left to get started</p>
   </div>
 
-  <!-- Tooltip -->
-  <div class="tooltip" id="tooltip">
-    <div class="tip-name"    id="tip-name"></div>
-    <div class="tip-company" id="tip-company"></div>
-    <div class="tip-position" id="tip-position"></div>
-    <div class="tip-degree"  id="tip-degree"></div>
-    <div class="tip-sources" id="tip-sources"></div>
+  <svg id="graph-svg"></svg>
+
+  <div class="graph-controls">
+    <button class="ctrl-btn" id="zoom-in"  title="Zoom in">+</button>
+    <button class="ctrl-btn" id="zoom-out" title="Zoom out">−</button>
+    <button class="ctrl-btn" id="zoom-fit" title="Fit to screen">⊡</button>
   </div>
+
+  <div class="perf-warning" id="perf-warning">
+    ⚠️ Large graph (&gt;1 500 nodes) — simulation may be slow.
+    Search for a company on the right to highlight a specific path.
+  </div>
+</div>
+
+<!-- ── RIGHT SIDEBAR ─────────────────────────────── -->
+<div class="sidebar-right">
+  <div class="search-header">
+    <h2>Find Your Path to a Company</h2>
+    <div class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="company-search" class="search-input" placeholder="Type a company name…">
+    </div>
+  </div>
+  <div class="search-results" id="search-results">
+    <div class="no-results">
+      Search for a company to discover who you know there and the best path to reach them.
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip">
+  <div class="tip-name"    id="tip-name"></div>
+  <div class="tip-company" id="tip-company"></div>
+  <div class="tip-position" id="tip-position"></div>
+  <div class="tip-degree"  id="tip-degree"></div>
+  <div class="tip-warmth"  id="tip-warmth"></div>
+  <div class="tip-sources" id="tip-sources"></div>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  STATE
+//  CONSTANTS
 // ═══════════════════════════════════════════════════════
 const OWNER_COLORS = ['#F4A261','#E76F51','#2A9D8F','#E9C46A','#8338EC','#FB5607'];
 
-let nodeMap       = new Map();  // id → node object
-let adjacency     = new Map();  // id → Set<id>
-let fileOwners    = [];         // [{ id, name, color }]
-let loadedFiles   = [];         // [{ file, content, ownerName, color, rowCount }]
-let primaryUserId = null;
+// Metadata for each recognised LinkedIn export type
+const FILE_META = {
+  connections:     { badge: 'Connections',     cls: 'type-connections',     icon: '🔗', desc: 'People & edges in your network', needsOwner: true  },
+  messages:        { badge: 'Messages',        cls: 'type-messages',        icon: '💬', desc: 'Tie strength from conversation history', needsOwner: true  },
+  recommendations: { badge: 'Recommendations', cls: 'type-recommendations', icon: '⭐', desc: 'Strongest ties — written endorsements', needsOwner: false },
+  invitations:     { badge: 'Invitations',     cls: 'type-invitations',     icon: '📨', desc: 'Who reached out first', needsOwner: false },
+  unknown:         { badge: '?',               cls: 'type-unknown',         icon: '📄', desc: 'Unrecognised file — check headers', needsOwner: false },
+};
 
-let svg, zoomBehavior, svgGroup;
-let nodeSelection, linkSelection;
-let simulation;
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let nodeMap    = new Map();   // id → node
+let adjacency  = new Map();   // id → Set<id>
+let edgeData   = new Map();   // edgeKey → { messageCount, lastMessage, hasRecommendation, invDir, invHasNote }
+let fileOwners = [];          // [{ id, name, color }]
+let loadedFiles = [];         // [{ file, content, type, ownerName/associatedId, color?, rowCount, matchCount }]
+let primaryUserId = null;
+let graphBuilt = false;
+
+let svg, zoomBehavior, svgGroup, nodeSelection, linkSelection, simulation;
+
+// ═══════════════════════════════════════════════════════
+//  FILE TYPE DETECTION
+// ═══════════════════════════════════════════════════════
+function detectFileType(filename, content) {
+  const name = filename.toLowerCase();
+  if (/connection/i.test(name)) return 'connections';
+  if (/message/i.test(name))    return 'messages';
+  if (/recommend/i.test(name))  return 'recommendations';
+  if (/invitation/i.test(name)) return 'invitations';
+
+  // Fall back to sniffing the first non-empty line for known headers
+  const firstLine = content.split('\n').find(l => l.trim().length > 0) || '';
+  const h = firstLine.toLowerCase();
+  if (h.includes('conversation'))        return 'messages';
+  if (h.includes('recommendation'))      return 'recommendations';
+  if (h.includes('invitation') || (h.includes('from') && h.includes('direction'))) return 'invitations';
+  if (h.includes('first name') && h.includes('company')) return 'connections';
+
+  return 'unknown';
+}
 
 // ═══════════════════════════════════════════════════════
 //  FILE UPLOAD
@@ -504,61 +466,102 @@ uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag
 uploadArea.addEventListener('drop',      e => { e.preventDefault(); uploadArea.classList.remove('drag-over'); ingestFiles(e.dataTransfer.files); });
 fileInput .addEventListener('change',    () => { ingestFiles(fileInput.files); fileInput.value = ''; });
 
-function ingestFiles(fileList) {
-  Array.from(fileList)
-    .filter(f => f.name.toLowerCase().endsWith('.csv'))
-    .forEach(f => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        loadedFiles.push({
-          file:      f,
-          content:   e.target.result,
-          ownerName: guessName(f.name, loadedFiles.length),
-          color:     OWNER_COLORS[loadedFiles.length % OWNER_COLORS.length],
-          rowCount:  0
-        });
-        renderFileList();
-      };
-      reader.readAsText(f);
-    });
+function ingestFiles(list) {
+  Array.from(list).filter(f => f.name.toLowerCase().endsWith('.csv')).forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const content  = e.target.result;
+      const type     = detectFileType(f.name, content);
+      const entry    = { file: f, content, type, rowCount: 0, matchCount: 0 };
+
+      if (type === 'connections') {
+        entry.ownerName = guessName(f.name, loadedFiles.filter(x => x.type === 'connections').length);
+        entry.color     = OWNER_COLORS[fileOwners.length % OWNER_COLORS.length];
+      } else {
+        // Will be associated with a file owner via selector
+        entry.associatedId = primaryUserId || null;
+      }
+
+      loadedFiles.push(entry);
+
+      // If graph already built and this is an enrichment file, process it immediately
+      if (graphBuilt && type !== 'connections' && type !== 'unknown') {
+        processEnrichmentFile(entry);
+        refreshEdgeVisuals();
+        updateEnrichmentStatus();
+        updateStats();
+        if (document.getElementById('company-search').value.trim().length >= 2)
+          document.getElementById('company-search').dispatchEvent(new Event('input'));
+      }
+
+      renderFileList();
+    };
+    reader.readAsText(f);
+  });
 }
 
 function guessName(filename, idx) {
-  const base = filename
-    .replace(/\.csv$/i, '')
-    .replace(/^Connections[-_]?/i, '')
-    .replace(/[-_]/g, ' ')
-    .trim();
+  const base = filename.replace(/\.csv$/i,'').replace(/^Connections[-_]?/i,'').replace(/[-_]/g,' ').trim();
   return base || ('Person ' + (idx + 1));
 }
 
+// ═══════════════════════════════════════════════════════
+//  FILE LIST RENDER
+// ═══════════════════════════════════════════════════════
 function renderFileList() {
   const list = document.getElementById('file-list');
   list.innerHTML = '';
 
   loadedFiles.forEach((entry, idx) => {
+    const meta = FILE_META[entry.type] || FILE_META.unknown;
     const item = document.createElement('div');
     item.className = 'file-item';
+
+    // Owner control HTML differs by type
+    let ownerHtml = '';
+    if (entry.type === 'connections') {
+      ownerHtml = `<input type="text" class="file-owner-input"
+        placeholder="Whose connections?" value="${escHtml(entry.ownerName || '')}" data-idx="${idx}">`;
+    } else if (entry.type !== 'unknown' && fileOwners.length > 0) {
+      const opts = fileOwners.map(o =>
+        `<option value="${o.id}" ${entry.associatedId === o.id ? 'selected' : ''}>${escHtml(o.name)}</option>`
+      ).join('');
+      ownerHtml = `<select class="file-owner-select" data-idx="${idx}">
+        <option value="">— whose account? —</option>${opts}</select>`;
+    } else if (entry.type !== 'unknown') {
+      ownerHtml = `<input type="text" class="file-owner-input"
+        placeholder="Whose account is this from?" value="${escHtml(entry.associatedName || '')}" data-idx="${idx}">`;
+    }
+
+    const statusText = entry.rowCount  > 0 ? `${entry.rowCount.toLocaleString()} rows loaded`
+                     : entry.matchCount > 0 ? `${entry.matchCount.toLocaleString()} matches enriched`
+                     : 'Ready';
+
     item.innerHTML = `
       <div class="file-item-header">
-        <div class="file-dot" style="background:${entry.color}"></div>
-        <span class="file-filename" title="${entry.file.name}">${entry.file.name}</span>
+        ${entry.color ? `<div class="file-dot" style="background:${entry.color}"></div>` : ''}
+        <span class="type-badge ${meta.cls}">${meta.badge}</span>
+        <span class="file-filename" title="${escHtml(entry.file.name)}">${escHtml(entry.file.name)}</span>
         <button class="remove-file" data-idx="${idx}" title="Remove">×</button>
       </div>
-      <input type="text" class="file-owner-input" placeholder="Whose connections are these?"
-             value="${entry.ownerName}" data-idx="${idx}">
-      <div class="file-stats" id="fstats-${idx}">
-        ${entry.rowCount > 0 ? entry.rowCount.toLocaleString() + ' connections loaded' : 'Ready to process'}
-      </div>
+      ${ownerHtml}
+      <div class="file-stats" id="fstats-${idx}">${statusText}</div>
     `;
     list.appendChild(item);
   });
 
-  // Events
+  // Bind events
   list.querySelectorAll('.file-owner-input').forEach(inp => {
     inp.addEventListener('input', e => {
       const i = +e.target.dataset.idx;
-      loadedFiles[i].ownerName = e.target.value.trim() || ('Person ' + (i + 1));
+      if (loadedFiles[i].type === 'connections') loadedFiles[i].ownerName = e.target.value.trim() || ('Person ' + (i+1));
+      else loadedFiles[i].associatedName = e.target.value.trim();
+    });
+  });
+  list.querySelectorAll('.file-owner-select').forEach(sel => {
+    sel.addEventListener('change', e => {
+      const i = +e.target.dataset.idx;
+      loadedFiles[i].associatedId = e.target.value;
     });
   });
   list.querySelectorAll('.remove-file').forEach(btn => {
@@ -568,82 +571,124 @@ function renderFileList() {
     });
   });
 
-  // Build button
+  // Build / Rebuild button
   let buildBtn = document.getElementById('build-btn');
   if (!buildBtn) {
     buildBtn = document.createElement('button');
     buildBtn.id = 'build-btn';
     buildBtn.className = 'btn';
-    buildBtn.textContent = 'Build Network Graph';
     buildBtn.addEventListener('click', buildGraph);
     list.after(buildBtn);
   }
-  buildBtn.style.display = loadedFiles.length ? 'block' : 'none';
+  const hasConnections = loadedFiles.some(f => f.type === 'connections');
+  buildBtn.style.display = hasConnections ? 'block' : 'none';
+  if (hasConnections) {
+    const needsRebuild = graphBuilt && loadedFiles.some(f => f.type === 'connections' && !f.rowCount);
+    buildBtn.textContent = needsRebuild ? 'Rebuild Network Graph' : (graphBuilt ? 'Rebuild' : 'Build Network Graph');
+    buildBtn.className   = needsRebuild ? 'btn rebuild' : 'btn';
+  }
 }
 
 // ═══════════════════════════════════════════════════════
-//  CSV PARSING
+//  EDGE DATA HELPERS
 // ═══════════════════════════════════════════════════════
-function parseLinkedInCSV(csvText, ownerName, color) {
+function edgeKey(a, b)  { return a < b ? `${a}||${b}` : `${b}||${a}`; }
+function getEdgeData(a, b) { return edgeData.get(edgeKey(a, b)) || {}; }
+
+function patchEdgeData(a, b, updates) {
+  const k = edgeKey(a, b);
+  const existing = edgeData.get(k) || {};
+  edgeData.set(k, { ...existing, ...updates });
+}
+
+// 0–10 warmth score from enrichment signals
+function warmthScore(a, b) {
+  const d = getEdgeData(a, b);
+  let s = 0;
+  if (d.messageCount > 0) {
+    s += Math.min(5, Math.log10(d.messageCount + 1) * 3.5);
+    if (d.lastMessage) {
+      const days = (Date.now() - new Date(d.lastMessage)) / 86400000;
+      s += days < 90 ? 3 : days < 365 ? 1.5 : 0.5;
+    }
+  }
+  if (d.hasRecommendation) s += 6;
+  if (d.invDir === 'received') s += 1.5;
+  else if (d.invDir === 'sent') s += 0.5;
+  if (d.invHasNote) s += 0.5;
+  return Math.min(10, s);
+}
+
+function warmthClass(score) {
+  if (score >= 6) return 'w-strong';
+  if (score >= 3) return 'w-warm';
+  return 'w-cold';
+}
+
+function warmthText(a, b) {
+  const d = getEdgeData(a, b);
+  const parts = [];
+  if (d.messageCount) parts.push(`${d.messageCount.toLocaleString()} messages`);
+  if (d.lastMessage) {
+    const days = Math.round((Date.now() - new Date(d.lastMessage)) / 86400000);
+    parts.push(`last ${days < 1 ? 'today' : days === 1 ? 'yesterday' : days < 30 ? days + 'd ago' : days < 365 ? Math.round(days/30) + 'mo ago' : Math.round(days/365) + 'yr ago'}`);
+  }
+  if (d.hasRecommendation) parts.push('recommendation');
+  if (d.invDir) parts.push(d.invDir === 'received' ? 'they connected you' : 'you connected them');
+  return parts.join(' · ');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CSV PARSING – skip LinkedIn preamble lines
+// ═══════════════════════════════════════════════════════
+function stripPreamble(content) {
+  const lines = content.split('\n');
+  const hi    = lines.findIndex(l => /first\s*name|conversation\s*id|from.*to.*sent|first\s+name/i.test(l));
+  return lines.slice(hi >= 0 ? hi : 0).join('\n');
+}
+
+function parseCsv(content) {
+  return Papa.parse(stripPreamble(content), {
+    header: true, skipEmptyLines: true,
+    transformHeader: h => h.trim()
+  }).data;
+}
+
+// ═══════════════════════════════════════════════════════
+//  PARSE: Connections.csv
+// ═══════════════════════════════════════════════════════
+function parseConnections(content, ownerName, color) {
   const ownerId = normalizeId(ownerName);
 
-  // Ensure owner node exists
   if (!nodeMap.has(ownerId)) {
-    nodeMap.set(ownerId, {
-      id: ownerId, name: ownerName,
-      company: '', position: '', connectedOn: '',
-      type: 'owner', sources: [ownerName],
-      degree: null, connectionCount: 0
-    });
+    nodeMap.set(ownerId, { id: ownerId, name: ownerName, company:'', position:'', type:'owner', sources:[ownerName], degree:null, connectionCount:0 });
     adjacency.set(ownerId, new Set());
   }
-
   fileOwners.push({ id: ownerId, name: ownerName, color });
   if (!primaryUserId) primaryUserId = ownerId;
 
-  // LinkedIn exports sometimes have a 2-3 line preamble before the CSV header
-  const lines = csvText.split('\n');
-  const headerIdx = lines.findIndex(l =>
-    /first\s*name/i.test(l) || /firstname/i.test(l)
-  );
-  const cleanCsv = lines.slice(headerIdx >= 0 ? headerIdx : 0).join('\n');
-
-  const { data } = Papa.parse(cleanCsv, {
-    header: true,
-    skipEmptyLines: true,
-    transformHeader: h => h.trim()
-  });
-
   let count = 0;
-  data.forEach(row => {
-    const first    = (row['First Name'] || row['FirstName']  || '').trim();
-    const last     = (row['Last Name']  || row['LastName']   || '').trim();
-    const fullName = [first, last].filter(Boolean).join(' ');
-    if (!fullName) return;
+  parseCsv(content).forEach(row => {
+    const first = (row['First Name'] || row['FirstName'] || '').trim();
+    const last  = (row['Last Name']  || row['LastName']  || '').trim();
+    const name  = [first, last].filter(Boolean).join(' ');
+    if (!name) return;
 
     const company    = (row['Company']    || '').trim();
     const position   = (row['Position']   || '').trim();
     const connectedOn = (row['Connected On'] || '').trim();
-
-    const nodeId = normalizeId(fullName);
-    if (nodeId === ownerId) return; // skip self-reference
+    const nodeId = normalizeId(name);
+    if (nodeId === ownerId) return;
 
     if (!nodeMap.has(nodeId)) {
-      nodeMap.set(nodeId, {
-        id: nodeId, name: fullName,
-        company, position, connectedOn,
-        type: 'connection', sources: [ownerName],
-        degree: null, connectionCount: 0
-      });
+      nodeMap.set(nodeId, { id:nodeId, name, company, position, connectedOn, type:'connection', sources:[ownerName], degree:null, connectionCount:0 });
       adjacency.set(nodeId, new Set());
     } else {
       const n = nodeMap.get(nodeId);
       if (!n.sources.includes(ownerName)) n.sources.push(ownerName);
-      if (!n.company  && company)   n.company  = company;
-      if (!n.position && position)  n.position = position;
+      if (!n.company  && company)  n.company  = company;
+      if (!n.position && position) n.position = position;
     }
-
-    // Bidirectional edge (LinkedIn connections are mutual)
     adjacency.get(ownerId).add(nodeId);
     adjacency.get(nodeId).add(ownerId);
     count++;
@@ -652,80 +697,181 @@ function parseLinkedInCSV(csvText, ownerName, color) {
   return count;
 }
 
-function normalizeId(name) {
-  return name.toLowerCase().replace(/\s+/g, ' ').trim();
+// ═══════════════════════════════════════════════════════
+//  PARSE: Messages.csv
+//  Groups rows by conversation title (= other person for 1:1 chats)
+//  and counts message volume + recency per person.
+// ═══════════════════════════════════════════════════════
+function parseMessages(content, ownerNodeId) {
+  if (!nodeMap.has(ownerNodeId)) return 0;
+
+  // conversation title → { count, latestDate }
+  const convMap = new Map();
+
+  parseCsv(content).forEach(row => {
+    const title = (row['CONVERSATION TITLE'] || row['ConversationTitle'] || '').trim();
+    const date  = (row['DATE'] || row['SentAt'] || row['Date'] || '').trim();
+    if (!title || title.includes(',')) return; // skip group chats
+
+    const entry = convMap.get(title) || { count: 0, latestDate: null };
+    entry.count++;
+    if (date) {
+      const d = new Date(date);
+      if (!isNaN(d) && (!entry.latestDate || d > entry.latestDate)) entry.latestDate = d;
+    }
+    convMap.set(title, entry);
+  });
+
+  let matched = 0;
+  convMap.forEach((conv, title) => {
+    const targetId = normalizeId(title);
+    if (nodeMap.has(targetId) && targetId !== ownerNodeId) {
+      const prev = getEdgeData(ownerNodeId, targetId);
+      patchEdgeData(ownerNodeId, targetId, {
+        messageCount: (prev.messageCount || 0) + conv.count,
+        lastMessage:  (!prev.lastMessage || (conv.latestDate && conv.latestDate > prev.lastMessage))
+                       ? conv.latestDate : prev.lastMessage,
+      });
+      matched++;
+    }
+  });
+  return matched;
 }
 
 // ═══════════════════════════════════════════════════════
-//  GRAPH BUILDING
+//  PARSE: Recommendations.csv
+//  Marks edges with hasRecommendation = true, a strong tie signal.
+// ═══════════════════════════════════════════════════════
+function parseRecommendations(content, ownerNodeId) {
+  let matched = 0;
+  parseCsv(content).forEach(row => {
+    const first = (row['First Name'] || '').trim();
+    const last  = (row['Last Name']  || '').trim();
+    const name  = [first, last].filter(Boolean).join(' ');
+    if (!name) return;
+    const targetId = normalizeId(name);
+    if (nodeMap.has(targetId) && targetId !== ownerNodeId) {
+      patchEdgeData(ownerNodeId, targetId, { hasRecommendation: true });
+      matched++;
+    }
+  });
+  return matched;
+}
+
+// ═══════════════════════════════════════════════════════
+//  PARSE: Invitations.csv
+//  Records who initiated the connection and whether
+//  the invite carried a personal note.
+// ═══════════════════════════════════════════════════════
+function parseInvitations(content, ownerNodeId) {
+  let matched = 0;
+  parseCsv(content).forEach(row => {
+    const from      = (row['From']      || '').trim();
+    const to        = (row['To']        || '').trim();
+    const direction = (row['Direction'] || '').trim().toUpperCase();
+    const message   = (row['Message']   || '').trim();
+
+    const otherName = direction === 'SENT' ? to : from;
+    if (!otherName) return;
+
+    const targetId = normalizeId(otherName);
+    if (nodeMap.has(targetId) && targetId !== ownerNodeId) {
+      patchEdgeData(ownerNodeId, targetId, {
+        invDir:     direction === 'RECEIVED' ? 'received' : 'sent',
+        invHasNote: message.length > 0,
+      });
+      matched++;
+    }
+  });
+  return matched;
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROCESS A SINGLE ENRICHMENT FILE
+// ═══════════════════════════════════════════════════════
+function processEnrichmentFile(entry) {
+  const ownerId = entry.associatedId
+    || (fileOwners.length === 1 ? fileOwners[0].id : primaryUserId);
+
+  if (!ownerId) return;
+
+  let matched = 0;
+  if (entry.type === 'messages')        matched = parseMessages(entry.content, ownerId);
+  if (entry.type === 'recommendations') matched = parseRecommendations(entry.content, ownerId);
+  if (entry.type === 'invitations')     matched = parseInvitations(entry.content, ownerId);
+
+  entry.matchCount    = matched;
+  entry.associatedId  = ownerId;
+  const statsEl = document.getElementById(`fstats-${loadedFiles.indexOf(entry)}`);
+  if (statsEl) statsEl.textContent = `${matched.toLocaleString()} matches enriched`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  BUILD GRAPH
 // ═══════════════════════════════════════════════════════
 function buildGraph() {
-  // Reset
-  nodeMap.clear();
-  adjacency.clear();
-  fileOwners = [];
-  primaryUserId = null;
+  nodeMap.clear(); adjacency.clear(); edgeData.clear(); fileOwners = []; primaryUserId = null;
 
-  loadedFiles.forEach((entry, idx) => {
+  // 1. Process all connections files first
+  loadedFiles.filter(f => f.type === 'connections').forEach((entry, idx) => {
     const ownerName = entry.ownerName || ('Person ' + (idx + 1));
-    entry.rowCount = parseLinkedInCSV(entry.content, ownerName, entry.color);
-    const statsEl = document.getElementById(`fstats-${idx}`);
-    if (statsEl) statsEl.textContent = entry.rowCount.toLocaleString() + ' connections loaded';
+    entry.rowCount  = parseConnections(entry.content, ownerName, entry.color);
   });
 
   // Update connection counts
-  nodeMap.forEach((node, id) => {
-    node.connectionCount = adjacency.get(id)?.size || 0;
+  nodeMap.forEach((node, id) => { node.connectionCount = adjacency.get(id)?.size || 0; });
+
+  // 2. Process all enrichment files
+  loadedFiles.filter(f => f.type !== 'connections' && f.type !== 'unknown').forEach(entry => {
+    processEnrichmentFile(entry);
   });
 
   computeDegrees();
+  graphBuilt = true;
+
   updatePrimarySelector();
   updateStats();
+  updateEnrichmentStatus();
   renderD3Graph();
+  renderFileList(); // refresh buttons/stats
 
-  document.getElementById('empty-state').style.display = 'none';
-  document.getElementById('stats-section').style.display = 'block';
+  document.getElementById('empty-state').style.display    = 'none';
+  document.getElementById('stats-section').style.display  = 'block';
+  document.getElementById('enrich-section').style.display = 'block';
   document.getElementById('legend-section').style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════
-//  BFS – DEGREES FROM PRIMARY USER
+//  BFS – degree from primary user
 // ═══════════════════════════════════════════════════════
 function computeDegrees() {
   nodeMap.forEach(n => { n.degree = null; });
   if (!primaryUserId || !nodeMap.has(primaryUserId)) return;
-
   const queue   = [primaryUserId];
   const visited = new Map([[primaryUserId, 0]]);
-
   while (queue.length) {
     const cur = queue.shift();
     const deg = visited.get(cur);
     nodeMap.get(cur).degree = deg;
     for (const nb of (adjacency.get(cur) || [])) {
-      if (!visited.has(nb)) {
-        visited.set(nb, deg + 1);
-        queue.push(nb);
-      }
+      if (!visited.has(nb)) { visited.set(nb, deg + 1); queue.push(nb); }
     }
   }
 }
 
-// BFS – shortest path between two nodes
+// BFS – shortest path
 function shortestPath(startId, targetId) {
   if (startId === targetId) return [startId];
   const queue   = [[startId]];
   const visited = new Set([startId]);
-
   while (queue.length) {
     const path = queue.shift();
     const cur  = path[path.length - 1];
     for (const nb of (adjacency.get(cur) || [])) {
       if (!visited.has(nb)) {
-        const newPath = [...path, nb];
-        if (nb === targetId) return newPath;
-        visited.add(nb);
-        queue.push(newPath);
+        const np = [...path, nb];
+        if (nb === targetId) return np;
+        visited.add(nb); queue.push(np);
       }
     }
   }
@@ -733,13 +879,12 @@ function shortestPath(startId, targetId) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  NODE APPEARANCE
+//  D3 GRAPH RENDERING
 // ═══════════════════════════════════════════════════════
 function nodeColor(n) {
   if (n.id === primaryUserId) return '#E63946';
-  if (fileOwners.find(o => o.id === n.id)) {
-    return (fileOwners.find(o => o.id === n.id)).color;
-  }
+  const o = fileOwners.find(f => f.id === n.id);
+  if (o) return o.color;
   if (n.degree === 1) return '#2196F3';
   if (n.degree === 2) return '#4CAF50';
   if (n.degree !== null) return '#9E9E9E';
@@ -748,83 +893,75 @@ function nodeColor(n) {
 
 function nodeRadius(n) {
   if (n.id === primaryUserId) return 14;
-  if (fileOwners.find(o => o.id === n.id)) return 10;
+  if (fileOwners.find(f => f.id === n.id)) return 10;
   return Math.max(4, Math.min(9, 3 + Math.sqrt(n.connectionCount) * 0.7));
 }
 
-// ═══════════════════════════════════════════════════════
-//  D3 FORCE GRAPH
-// ═══════════════════════════════════════════════════════
+function linkStroke(sid, tid) {
+  const s = warmthScore(sid, tid);
+  if (s >= 6) return '#16a34a';
+  if (s >= 3) return '#ca8a04';
+  return '#d8d8d8';
+}
+function linkWidth(sid, tid)   { const s = warmthScore(sid, tid); return s >= 6 ? 2.5 : s >= 3 ? 1.8 : 1; }
+function linkOpacity(sid, tid) { const s = warmthScore(sid, tid); return s >= 3 ? 0.75 : 0.4; }
+
 function renderD3Graph() {
   const svgEl = document.getElementById('graph-svg');
-  const W = svgEl.clientWidth;
-  const H = svgEl.clientHeight;
-
+  const W = svgEl.clientWidth, H = svgEl.clientHeight;
   d3.select('#graph-svg').selectAll('*').remove();
   svg = d3.select('#graph-svg');
 
-  // Warn for large graphs
-  const tooLarge = nodeMap.size > 1500;
-  document.getElementById('perf-warning').style.display = tooLarge ? 'block' : 'none';
+  document.getElementById('perf-warning').style.display = nodeMap.size > 1500 ? 'block' : 'none';
 
-  // Zoom
-  zoomBehavior = d3.zoom()
-    .scaleExtent([0.03, 8])
-    .on('zoom', e => svgGroup.attr('transform', e.transform));
+  zoomBehavior = d3.zoom().scaleExtent([0.03, 8]).on('zoom', e => svgGroup.attr('transform', e.transform));
   svg.call(zoomBehavior);
-
   svgGroup = svg.append('g');
 
-  // Build data arrays
-  const nodes = Array.from(nodeMap.values()).map(n => ({ ...n }));
+  const nodes  = Array.from(nodeMap.values()).map(n => ({ ...n }));
   const nodeIds = new Set(nodes.map(n => n.id));
-  const seen = new Set();
-  const links = [];
+  const seen = new Set(), links = [];
   adjacency.forEach((neighbors, sid) => {
     if (!nodeIds.has(sid)) return;
     neighbors.forEach(tid => {
       if (!nodeIds.has(tid)) return;
-      const key = sid < tid ? `${sid}||${tid}` : `${tid}||${sid}`;
-      if (!seen.has(key)) { seen.add(key); links.push({ source: sid, target: tid }); }
+      const k = sid < tid ? `${sid}||${tid}` : `${tid}||${sid}`;
+      if (!seen.has(k)) { seen.add(k); links.push({ source: sid, target: tid }); }
     });
   });
 
-  // Simulation
   simulation = d3.forceSimulation(nodes)
     .force('link',      d3.forceLink(links).id(d => d.id).distance(55).strength(0.25))
     .force('charge',    d3.forceManyBody().strength(-70))
     .force('center',    d3.forceCenter(W / 2, H / 2))
     .force('collision', d3.forceCollide().radius(d => nodeRadius(d) + 2));
 
-  // Links
   linkSelection = svgGroup.append('g').attr('class', 'links')
-    .selectAll('line').data(links).join('line').attr('class', 'link');
+    .selectAll('line').data(links).join('line')
+    .attr('class', 'link')
+    .attr('stroke',         d => linkStroke(d.source, d.target))
+    .attr('stroke-width',   d => linkWidth(d.source, d.target))
+    .attr('stroke-opacity', d => linkOpacity(d.source, d.target));
 
-  // Nodes
   nodeSelection = svgGroup.append('g').attr('class', 'nodes')
-    .selectAll('g').data(nodes).join('g')
-    .attr('class', 'node')
+    .selectAll('g').data(nodes).join('g').attr('class', 'node')
     .call(d3.drag()
-      .on('start', (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
-      .on('end',   (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
-    );
+      .on('start', (e,d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag',  (e,d) => { d.fx=e.x; d.fy=e.y; })
+      .on('end',   (e,d) => { if (!e.active) simulation.alphaTarget(0); d.fx=null; d.fy=null; }));
 
   nodeSelection.append('circle')
-    .attr('r',    d => nodeRadius(d))
-    .attr('fill', d => nodeColor(d))
+    .attr('r',            d => nodeRadius(d))
+    .attr('fill',         d => nodeColor(d))
     .attr('stroke',       d => d.id === primaryUserId ? 'white' : 'none')
     .attr('stroke-width', d => d.id === primaryUserId ? 2.5 : 0);
 
-  // Labels for primary + file owners only
   nodeSelection
     .filter(d => d.id === primaryUserId || !!fileOwners.find(o => o.id === d.id))
     .append('text')
     .attr('dy', d => -(nodeRadius(d) + 4))
     .attr('text-anchor', 'middle')
-    .attr('font-size', '10px')
-    .attr('font-weight', '700')
-    .attr('fill', '#333')
+    .attr('font-size', '10px').attr('font-weight', '700').attr('fill', '#333')
     .text(d => d.name.split(' ')[0]);
 
   // Tooltip
@@ -833,36 +970,34 @@ function renderD3Graph() {
     .on('mouseover', (e, d) => {
       tip.classList.add('visible');
       document.getElementById('tip-name').textContent     = d.name;
-      document.getElementById('tip-company').textContent  = d.company  || '';
+      document.getElementById('tip-company').textContent  = d.company || '';
       document.getElementById('tip-position').textContent = d.position || '';
-      const degText = d.degree === 0 ? 'You'
-                    : d.degree === 1 ? '1st degree connection'
-                    : d.degree === 2 ? '2nd degree connection'
-                    : d.degree !== null ? `${d.degree} hops away`
-                    : 'Degree unknown';
-      document.getElementById('tip-degree').textContent  = degText + ` · ${d.connectionCount} links`;
-      document.getElementById('tip-sources').textContent = d.sources.length > 0
-        ? 'In: ' + d.sources.join(', ') + "'s export"
-        : '';
+      const degTxt = d.degree === 0 ? 'You' : d.degree === 1 ? '1st degree' : d.degree === 2 ? '2nd degree' : d.degree !== null ? `${d.degree} hops away` : '';
+      document.getElementById('tip-degree').textContent   = degTxt + (d.connectionCount ? ` · ${d.connectionCount} links` : '');
+      const ws = primaryUserId ? warmthScore(primaryUserId, d.id) : 0;
+      document.getElementById('tip-warmth').textContent   = ws > 0 ? `Warmth: ${warmthText(primaryUserId, d.id)}` : '';
+      document.getElementById('tip-sources').textContent  = d.sources?.length ? 'In: ' + d.sources.join(', ') : '';
     })
-    .on('mousemove', e => {
-      tip.style.left = (e.clientX + 14) + 'px';
-      tip.style.top  = (e.clientY - 12) + 'px';
-    })
-    .on('mouseout', () => tip.classList.remove('visible'));
+    .on('mousemove', e => { tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-12)+'px'; })
+    .on('mouseout',  () => tip.classList.remove('visible'));
 
-  // Tick
   simulation.on('tick', () => {
-    linkSelection
-      .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
-      .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    linkSelection.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
     nodeSelection.attr('transform', d => `translate(${d.x},${d.y})`);
   });
 
-  // Zoom controls
   document.getElementById('zoom-in') .onclick = () => svg.transition().duration(300).call(zoomBehavior.scaleBy, 1.5);
   document.getElementById('zoom-out').onclick = () => svg.transition().duration(300).call(zoomBehavior.scaleBy, 0.67);
   document.getElementById('zoom-fit').onclick = fitGraph;
+}
+
+// Re-colour edges without rebuilding the simulation (used after enrichment)
+function refreshEdgeVisuals() {
+  if (!linkSelection) return;
+  linkSelection
+    .attr('stroke',         d => linkStroke(d.source.id || d.source, d.target.id || d.target))
+    .attr('stroke-width',   d => linkWidth( d.source.id || d.source, d.target.id || d.target))
+    .attr('stroke-opacity', d => linkOpacity(d.source.id || d.source, d.target.id || d.target));
 }
 
 function fitGraph() {
@@ -872,10 +1007,8 @@ function fitGraph() {
   const b = svgGroup.node().getBBox();
   if (!b.width || !b.height) return;
   const scale = 0.88 * Math.min(W / b.width, H / b.height);
-  const tx = (W - scale * (2 * b.x + b.width))  / 2;
-  const ty = (H - scale * (2 * b.y + b.height)) / 2;
-  svg.transition().duration(700)
-    .call(zoomBehavior.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+  const tx = (W - scale*(2*b.x+b.width)) / 2, ty = (H - scale*(2*b.y+b.height)) / 2;
+  svg.transition().duration(700).call(zoomBehavior.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
 }
 
 // ═══════════════════════════════════════════════════════
@@ -883,32 +1016,31 @@ function fitGraph() {
 // ═══════════════════════════════════════════════════════
 function highlightPathTo(targetId) {
   clearHighlight();
-  if (!primaryUserId) return;
+  if (!primaryUserId || !nodeSelection || !linkSelection) return;
   const path = shortestPath(primaryUserId, targetId);
   if (!path) return;
 
-  const pathNodes = new Set(path);
-  const pathEdges = new Set();
+  const pNodes = new Set(path);
+  const pEdges = new Set();
   for (let i = 0; i < path.length - 1; i++) {
-    const a = path[i], b = path[i + 1];
-    pathEdges.add(a < b ? `${a}||${b}` : `${b}||${a}`);
+    const a = path[i], b = path[i+1];
+    pEdges.add(a < b ? `${a}||${b}` : `${b}||${a}`);
   }
 
-  nodeSelection?.selectAll('circle')
-    .attr('opacity',      d => pathNodes.has(d.id) ? 1 : 0.15)
-    .attr('stroke',       d => pathNodes.has(d.id) ? '#FFD700' : (d.id === primaryUserId ? 'white' : 'none'))
-    .attr('stroke-width', d => pathNodes.has(d.id) ? 3 : (d.id === primaryUserId ? 2.5 : 0));
+  nodeSelection.selectAll('circle')
+    .attr('opacity',      d => pNodes.has(d.id) ? 1 : 0.12)
+    .attr('stroke',       d => pNodes.has(d.id) ? '#FFD700' : (d.id === primaryUserId ? 'white' : 'none'))
+    .attr('stroke-width', d => pNodes.has(d.id) ? 3 : (d.id === primaryUserId ? 2.5 : 0));
 
-  linkSelection?.each(function(d) {
-    const key = d.source.id < d.target.id
-      ? `${d.source.id}||${d.target.id}`
-      : `${d.target.id}||${d.source.id}`;
-    const onPath = pathEdges.has(key);
+  linkSelection.each(function(d) {
+    const k = (d.source.id||d.source) < (d.target.id||d.target)
+      ? `${d.source.id||d.source}||${d.target.id||d.target}`
+      : `${d.target.id||d.target}||${d.source.id||d.source}`;
+    const on = pEdges.has(k);
     d3.select(this)
-      .attr('opacity',      onPath ? 1    : 0.05)
-      .attr('stroke',       onPath ? '#FFD700' : '#d0d0d0')
-      .attr('stroke-width', onPath ? 2.5  : 1)
-      .classed('path-edge', onPath);
+      .attr('opacity',      on ? 1 : 0.04)
+      .attr('stroke',       on ? '#FFD700' : '#d8d8d8')
+      .attr('stroke-width', on ? 3 : 1);
   });
 }
 
@@ -917,9 +1049,7 @@ function clearHighlight() {
     .attr('opacity', 1)
     .attr('stroke',       d => d.id === primaryUserId ? 'white' : 'none')
     .attr('stroke-width', d => d.id === primaryUserId ? 2.5 : 0);
-  linkSelection
-    ?.attr('opacity', 0.5).attr('stroke', '#d0d0d0').attr('stroke-width', 1)
-    .classed('path-edge', false);
+  if (linkSelection) refreshEdgeVisuals();
 }
 
 function panToNode(nodeId) {
@@ -931,9 +1061,7 @@ function panToNode(nodeId) {
   const t = d3.zoomTransform(svg.node());
   svg.transition().duration(600).call(
     zoomBehavior.transform,
-    d3.zoomIdentity
-      .translate(W / 2 - t.k * nd.x, H / 2 - t.k * nd.y)
-      .scale(t.k)
+    d3.zoomIdentity.translate(W/2 - t.k*nd.x, H/2 - t.k*nd.y).scale(t.k)
   );
 }
 
@@ -946,28 +1074,33 @@ const searchResults = document.getElementById('search-results');
 searchInput.addEventListener('input', () => {
   const q = searchInput.value.trim().toLowerCase();
   if (q.length < 2) {
-    searchResults.innerHTML = '<div class="no-results">Search for a company to discover who you know there and the shortest path to reach them.</div>';
+    searchResults.innerHTML = '<div class="no-results">Search for a company to discover who you know there and the best path to reach them.</div>';
     clearHighlight();
     return;
   }
 
   const matches = [];
-  nodeMap.forEach((node, id) => {
-    if (!node.company) return;
-    if (node.company.toLowerCase().includes(q)) matches.push(node);
+  nodeMap.forEach((node) => {
+    if (node.company && node.company.toLowerCase().includes(q)) matches.push(node);
   });
 
   if (!matches.length) {
-    searchResults.innerHTML = `<div class="no-results">No connections found at companies matching "<strong>${escHtml(searchInput.value)}</strong>".</div>`;
+    searchResults.innerHTML = `<div class="no-results">No connections at companies matching "<strong>${escHtml(searchInput.value)}</strong>".</div>`;
     clearHighlight();
     return;
   }
 
-  // Compute paths and sort by hop count
   const rows = matches.map(node => {
     const path = primaryUserId ? shortestPath(primaryUserId, node.id) : null;
     return { node, path, hops: path ? path.length - 1 : 999 };
-  }).sort((a, b) => a.hops - b.hops || a.node.name.localeCompare(b.node.name));
+  }).sort((a, b) => {
+    // Sort by hops first, then by warmth of first edge (desc), then name
+    if (a.hops !== b.hops) return a.hops - b.hops;
+    const wa = a.path ? warmthScore(a.path[0], a.path[1] || a.path[0]) : 0;
+    const wb = b.path ? warmthScore(b.path[0], b.path[1] || b.path[0]) : 0;
+    if (wb !== wa) return wb - wa;
+    return a.node.name.localeCompare(b.node.name);
+  });
 
   renderResults(rows);
 });
@@ -984,34 +1117,46 @@ function renderResults(rows) {
     const item = document.createElement('div');
     item.className = 'result-item';
 
-    const badgeClass = hops === 1 ? 'badge-1' : hops === 2 ? 'badge-2' : hops === 3 ? 'badge-3' : 'badge-n';
-    const hopLabel   = hops === 1 ? '1st degree' : hops === 2 ? '2nd degree' : hops === 3 ? '3rd degree' : `${hops} hops`;
+    const badgeCls  = hops === 1 ? 'badge-1' : hops === 2 ? 'badge-2' : hops === 3 ? 'badge-3' : 'badge-n';
+    const hopLabel  = hops === 1 ? '1st degree' : hops === 2 ? '2nd degree' : hops === 3 ? '3rd degree' : `${hops} hops`;
 
-    let pathHtml = '';
-    if (path && path.length > 1) {
-      const pathNodes = path.map((id, i) => {
-        const nd = nodeMap.get(id);
-        const label = nd ? nd.name.split(' ')[0] : id;
-        const cls   = i === 0 ? 'path-node you' : i === path.length - 1 ? 'path-node target' : 'path-node';
-        return `${i > 0 ? '<span class="path-arrow">→</span>' : ''}<span class="${cls}">${escHtml(label)}</span>`;
-      }).join('');
-      pathHtml = `<div class="result-path"><div class="path-display">${pathNodes}</div></div>`;
+    // Intro suggestion with warmth context
+    let intro = '';
+    if (hops === 1) {
+      intro = 'Direct — reach out yourself';
+    } else if (hops === 2 && path) {
+      const connector = nodeMap.get(path[1]);
+      const ws = warmthScore(path[0], path[1]);
+      const wt = warmthText(path[0], path[1]);
+      intro = `Ask ${connector?.name?.split(' ')[0] || '…'} to introduce you`;
+      if (wt) intro += ` (${wt})`;
+    } else if (path) {
+      intro = `${hops - 1} steps via ${nodeMap.get(path[1])?.name?.split(' ')[0] || '…'}`;
     }
 
-    const intro = hops === 1 ? 'Direct connection'
-                : hops === 2 && path ? `Ask ${nodeMap.get(path[1])?.name?.split(' ')[0] || '…'} to introduce you`
-                : path ? `${hops - 1} people between you`
-                : 'No path found';
+    // Path with warmth dots between hops
+    let pathHtml = '';
+    if (path && path.length > 1) {
+      const parts = [];
+      path.forEach((id, i) => {
+        const nd  = nodeMap.get(id);
+        const lbl = nd ? nd.name.split(' ')[0] : id;
+        const cls = i === 0 ? 'path-node you' : i === path.length - 1 ? 'path-node target' : 'path-node';
+        if (i > 0) {
+          const ws = warmthScore(path[i-1], id);
+          parts.push(`<span class="warmth-dot ${warmthClass(ws)}" title="${warmthText(path[i-1], id) || 'no warmth data'}"></span>`);
+        }
+        parts.push(`<span class="${cls}">${escHtml(lbl)}</span>`);
+      });
+      pathHtml = `<div class="result-path"><div class="path-display">${parts.join('')}</div></div>`;
+    }
 
     item.innerHTML = `
       <div class="result-name">
-        ${escHtml(node.name)}
-        <span class="badge ${badgeClass}">${hopLabel}</span>
+        ${escHtml(node.name)} <span class="badge ${badgeCls}">${hopLabel}</span>
       </div>
-      <div class="result-meta">
-        ${node.position ? escHtml(node.position) + ' · ' : ''}${escHtml(node.company)}
-      </div>
-      <div style="font-size:10px;color:#888;margin-top:3px;">${escHtml(intro)}</div>
+      <div class="result-meta">${node.position ? escHtml(node.position) + ' · ' : ''}${escHtml(node.company)}</div>
+      ${intro ? `<div class="result-intro">${escHtml(intro)}</div>` : ''}
       ${pathHtml}
     `;
 
@@ -1020,35 +1165,80 @@ function renderResults(rows) {
       item.classList.add('active');
       if (path) { highlightPathTo(node.id); panToNode(node.id); }
     });
-
     searchResults.appendChild(item);
   });
 }
 
-function escHtml(str) {
-  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ═══════════════════════════════════════════════════════
+//  ENRICHMENT STATUS PANEL
+// ═══════════════════════════════════════════════════════
+function updateEnrichmentStatus() {
+  const list = document.getElementById('enrich-list');
+  list.innerHTML = '';
+
+  const typeOrder = ['connections','messages','recommendations','invitations'];
+
+  typeOrder.forEach(type => {
+    const meta   = FILE_META[type];
+    const loaded = loadedFiles.filter(f => f.type === type);
+    const row    = document.createElement('div');
+    row.className = 'enrich-row';
+
+    if (loaded.length) {
+      const summary = type === 'connections'
+        ? loaded.map(f => {
+            const owner = fileOwners.find(o => f.ownerName && normalizeId(f.ownerName) === o.id);
+            return `${f.ownerName || '?'} (${(f.rowCount||0).toLocaleString()})`;
+          }).join(', ')
+        : loaded.map(f => `${(f.matchCount||0).toLocaleString()} matched`).join(', ');
+
+      row.innerHTML = `
+        <div class="enrich-icon">${meta.icon}</div>
+        <div>
+          <div class="enrich-label">${meta.badge}</div>
+          <div class="enrich-loaded">✓ ${summary}</div>
+        </div>`;
+    } else {
+      row.innerHTML = `
+        <div class="enrich-icon" style="opacity:0.35">${meta.icon}</div>
+        <div>
+          <div class="enrich-label" style="color:#aaa">${meta.badge}</div>
+          <div class="enrich-desc">${meta.desc}</div>
+        </div>`;
+    }
+    list.appendChild(row);
+  });
 }
 
 // ═══════════════════════════════════════════════════════
-//  PRIMARY USER SELECTOR
+//  STATS & PRIMARY SELECTOR
 // ═══════════════════════════════════════════════════════
+function updateStats() {
+  const companies = new Set();
+  nodeMap.forEach(n => { if (n.company) companies.add(n.company.toLowerCase()); });
+
+  let edgeCount = 0;
+  adjacency.forEach(s => edgeCount += s.size);
+
+  let warmEdges = 0;
+  edgeData.forEach((d, k) => { if (warmthScore(...k.split('||')) >= 3) warmEdges++; });
+
+  document.getElementById('stat-people').textContent    = nodeMap.size.toLocaleString();
+  document.getElementById('stat-edges').textContent     = (edgeCount / 2).toLocaleString();
+  document.getElementById('stat-companies').textContent = companies.size.toLocaleString();
+  document.getElementById('stat-warm').textContent      = warmEdges.toLocaleString();
+}
+
 function updatePrimarySelector() {
   const section = document.getElementById('primary-section');
   const select  = document.getElementById('primary-select');
-
   if (!fileOwners.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
-  select.innerHTML = '';
-  fileOwners.forEach(o => {
-    const opt = document.createElement('option');
-    opt.value = o.id;
-    opt.textContent = o.name;
-    if (o.id === primaryUserId) opt.selected = true;
-    select.appendChild(opt);
-  });
+  select.innerHTML = fileOwners.map(o =>
+    `<option value="${o.id}" ${o.id === primaryUserId ? 'selected' : ''}>${escHtml(o.name)}</option>`
+  ).join('');
 
-  // Remove old listener by replacing node
   const fresh = select.cloneNode(true);
   select.parentNode.replaceChild(fresh, select);
   fresh.addEventListener('change', () => {
@@ -1059,21 +1249,8 @@ function updatePrimarySelector() {
   });
 }
 
-// ═══════════════════════════════════════════════════════
-//  STATS
-// ═══════════════════════════════════════════════════════
-function updateStats() {
-  const companies = new Set();
-  nodeMap.forEach(n => { if (n.company) companies.add(n.company.toLowerCase()); });
-
-  let edgeCount = 0;
-  adjacency.forEach(s => edgeCount += s.size);
-
-  document.getElementById('stat-people').textContent      = nodeMap.size.toLocaleString();
-  document.getElementById('stat-connections').textContent = (edgeCount / 2).toLocaleString();
-  document.getElementById('stat-companies').textContent   = companies.size.toLocaleString();
-  document.getElementById('stat-files').textContent       = loadedFiles.length;
-}
+function normalizeId(name) { return name.toLowerCase().replace(/\s+/g,' ').trim(); }
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 </body>
 </html>
