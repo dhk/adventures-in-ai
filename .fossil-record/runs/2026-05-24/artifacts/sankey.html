@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fossil Record — Sankey</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #080c10; color: #c9d1d9;
+    font-family: 'IBM Plex Mono', 'Fira Code', monospace;
+    font-size: 13px; height: 100vh; display: flex; flex-direction: column;
+  }
+  #root { display: flex; flex-direction: column; height: 100%; }
+  .header {
+    padding: 12px 20px; border-bottom: 1px solid #1e2a38;
+    display: flex; align-items: center; gap: 16px; background: #0d1117;
+  }
+  .header h1 { font-size: 13px; color: #58a6ff; letter-spacing: 0.08em; text-transform: uppercase; }
+  .era-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 3px;
+    background: #1e2a38; color: #8b949e; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .era-badge.pivot { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .canvas-wrap { flex: 1; overflow: auto; position: relative; display: flex; align-items: center; justify-content: center; }
+  .sidebar {
+    width: 280px; border-left: 1px solid #1e2a38;
+    background: #0d1117; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .commit-panel { padding: 16px; border-bottom: 1px solid #1e2a38; flex-shrink: 0; }
+  .commit-panel .chash { color: #58a6ff; font-size: 11px; margin-bottom: 4px; }
+  .commit-panel .cdate { color: #8b949e; font-size: 11px; margin-bottom: 8px; }
+  .commit-panel .cmsg  { color: #e6edf3; font-size: 12px; line-height: 1.5; }
+  .concept-list { padding: 12px 16px; overflow-y: auto; flex: 1; }
+  .concept-list h3 {
+    color: #8b949e; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.1em; margin-bottom: 10px;
+  }
+  .concept-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 0; border-bottom: 1px solid #1a2232; font-size: 11px;
+  }
+  .concept-name { color: #c9d1d9; }
+  .state-badge {
+    font-size: 9px; padding: 1px 5px; border-radius: 2px;
+    font-weight: 600; letter-spacing: 0.05em;
+  }
+  .stepper { padding: 12px 16px; border-top: 1px solid #1e2a38; background: #0d1117; flex-shrink: 0; }
+  .stepper-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .stepper-controls button {
+    background: #1e2a38; border: none; color: #c9d1d9;
+    padding: 4px 10px; border-radius: 3px; cursor: pointer;
+    font-family: inherit; font-size: 12px;
+  }
+  .stepper-controls button:hover { background: #2d3f55; }
+  .stepper-controls button:disabled { opacity: 0.3; cursor: default; }
+  .stepper-label { flex: 1; text-align: center; color: #8b949e; font-size: 11px; }
+  input[type=range] { width: 100%; accent-color: #58a6ff; }
+  .presenter-overlay {
+    position: fixed; inset: 0; display: flex;
+    align-items: center; justify-content: center; pointer-events: none; z-index: 10;
+  }
+  .presenter-card {
+    background: rgba(13,17,23,0.92); border: 1px solid #2d3f55; border-radius: 8px;
+    padding: 24px 32px; max-width: 520px; text-align: center; backdrop-filter: blur(4px);
+  }
+  .presenter-card .phash { color: #58a6ff; font-size: 12px; margin-bottom: 6px; }
+  .presenter-card .pmsg  { color: #e6edf3; font-size: 18px; line-height: 1.5; font-family: sans-serif; }
+  .presenter-card .hint  { color: #4a5568; font-size: 11px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+/* DATA — injected by phase4a_sankey.py */
+const SNAPSHOTS = [
+  {
+    "commit_index": 0,
+    "hash": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "hash_short": "66adc53",
+    "date": "2026-03-21",
+    "message": "podcast generator support scripts",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 1,
+    "hash": "631b5af6f8d99f6d624776c0a3f5fb0f6e7d60e6",
+    "hash_short": "631b5af",
+    "date": "2026-03-28",
+    "message": "fix ynml",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 2,
+    "hash": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "hash_short": "bafc0b1",
+    "date": "2026-03-28",
+    "message": "Skill for supporting handoff notes",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 3,
+    "hash": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "hash_short": "aba9c02",
+    "date": "2026-03-29",
+    "message": "improve model review",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 4,
+    "hash": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "hash_short": "dd57c7e",
+    "date": "2026-03-29",
+    "message": "feat: add multi-model-review skill (Claude + Codex via MCP)",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 5,
+    "hash": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "hash_short": "f7996b9",
+    "date": "2026-04-05",
+    "message": "sunday refactor",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 6,
+    "hash": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "hash_short": "754f6ab",
+    "date": "2026-04-08",
+    "message": "more updates",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 7,
+    "hash": "11c735e2071244a7cc8a152b6c72d0491eaa2e2a",
+    "hash_short": "11c735e",
+    "date": "2026-04-27",
+    "message": "Add reading-list-builder skill \u2014 deterministic unified pipeline",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 8,
+    "hash": "31cf926584a199eafd717f2ca791d9d0004accd0",
+    "hash_short": "31cf926",
+    "date": "2026-04-27",
+    "message": "Add skill version check to rwe-run and rwe-catchup",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 9,
+    "hash": "5085205188dc5d59720057829c7ddfb1ad3b3d00",
+    "hash_short": "5085205",
+    "date": "2026-04-27",
+    "message": "Simplify: skill handles build only, rwe-publish handles Element.fm",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 10,
+    "hash": "8f38f3bd6c175b03d4f7495bccbd1a9d32f9739b",
+    "hash_short": "8f38f3b",
+    "date": "2026-04-27",
+    "message": "Add catch-up mode for backfilling missed days",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 11,
+    "hash": "ade339796fe66418fe929d82444e0c843187db94",
+    "hash_short": "ade3397",
+    "date": "2026-04-27",
+    "message": "Add per-feed sentinel files to prevent duplicates on partial retry",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 12,
+    "hash": "b72c0603c2fa412c01447388542693c8f73636dc",
+    "hash_short": "b72c060",
+    "date": "2026-05-09",
+    "message": "feat(reading-list-builder): v2.1 \u2014 deep pipeline + reading-db",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 13,
+    "hash": "232c9f893709e4d4dfbeed3c91a42714fff46de8",
+    "hash_short": "232c9f8",
+    "date": "2026-05-13",
+    "message": "Add model tier guidance to reading-list-builder skill (v2.1)",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  },
+  {
+    "commit_index": 14,
+    "hash": "8997cfadf2454f439cbb269e348537fbb82e7ffa",
+    "hash_short": "8997cfa",
+    "date": "2026-05-20",
+    "message": "feat(rwe): wire reading-list-builder to rwe-publish for download/publish",
+    "era": "era-0",
+    "nodes": [],
+    "links": [],
+    "concept_summary": {}
+  }
+];
+const ERAS = ["era-0"];
+const PIVOT_COMMITS = [];
+
+const LC_COLOR = {
+  BORN:   "#22c55e",
+  STABLE: "#64748b",
+  MORPHED:"#f59e0b",
+  SPLIT:  "#60a5fa",
+  MERGED: "#60a5fa",
+  DIED:   "#ef4444",
+};
+
+function isDemoMode() {
+  return new URLSearchParams(window.location.search).get("demo") === "1";
+}
+
+// ─── SVG Sankey layout ───────────────────────────────────────────────────
+function SankeyCanvas({ snapshot }) {
+  if (!snapshot || !snapshot.nodes) return <svg width={600} height={300} />;
+  const nodes = snapshot.nodes;
+  const links = snapshot.links || [];
+  const summary = snapshot.concept_summary || {};
+
+  const W = 640, nodeW = 130, nodeH = 34, padY = 14;
+  const dying = new Set(Object.entries(summary).filter(([,s]) => s === "DIED").map(([id]) => id));
+  const alive = nodes.filter(n => !dying.has(n.id));
+  const dead  = nodes.filter(n =>  dying.has(n.id));
+  const H = Math.max(220, (Math.max(alive.length, dead.length) * (nodeH + padY)) + 80);
+
+  const col0X = 40, col1X = W - nodeW - 40;
+  const layout = {};
+  alive.forEach((n, i) => {
+    layout[n.id] = { x: col1X, y: 40 + i * (nodeH + padY), w: nodeW, h: nodeH,
+      color: LC_COLOR[n.fate === "green" ? "BORN" : n.fate === "red" ? "DIED" : n.fate === "amber" ? "MORPHED" : "STABLE"],
+      label: n.label || n.id };
+  });
+  dead.forEach((n, i) => {
+    layout[n.id] = { x: col0X, y: 40 + i * (nodeH + padY), w: nodeW, h: nodeH,
+      color: "#ef4444", label: n.label || n.id };
+  });
+
+  const linkPaths = links.map((link, i) => {
+    const src = layout[link.source];
+    if (!src) return null;
+    const sx = src.x + src.w, sy = src.y + src.h / 2;
+    if (link.target === "∅" || !layout[link.target]) {
+      const ex = W - 16, ey = H / 2;
+      const cx = (sx + ex) / 2;
+      return <path key={i}
+        d={`M${sx},${sy} C${cx},${sy} ${cx},${ey} ${ex},${ey}`}
+        stroke="#ef444466" strokeWidth="2" fill="none" strokeDasharray="4 3" />;
+    }
+    const tgt = layout[link.target];
+    const ex = tgt.x, ey = tgt.y + tgt.h / 2;
+    const cx = (sx + ex) / 2;
+    return <path key={i}
+      d={`M${sx},${sy} C${cx},${sy} ${cx},${ey} ${ex},${ey}`}
+      stroke="#58a6ff44" strokeWidth="2" fill="none" />;
+  });
+
+  return (
+    <svg width={W} height={H} style={{display:"block"}}>
+      <line x1={col0X+nodeW} y1={0} x2={col0X+nodeW} y2={H} stroke="#1e2a38" strokeWidth={1}/>
+      <line x1={col1X} y1={0} x2={col1X} y2={H} stroke="#1e2a38" strokeWidth={1}/>
+      {linkPaths}
+      {Object.values(layout).map((n, i) => (
+        <g key={i} transform={`translate(${n.x},${n.y})`}>
+          <rect width={n.w} height={n.h} rx={4}
+            fill={n.color + "22"} stroke={n.color} strokeWidth={1.5}/>
+          <text x={n.w/2} y={n.h/2+4} textAnchor="middle"
+            fill={n.color} fontSize={10} fontFamily="monospace">{n.label}</text>
+        </g>
+      ))}
+      {dying.size > 0 && (
+        <g transform={`translate(${W-22},${H/2-16})`}>
+          <rect width={22} height={32} rx={4} fill="#ef444422" stroke="#ef4444" strokeWidth={1.5}/>
+          <text x={11} y={20} textAnchor="middle" fill="#ef4444" fontSize={13}>∅</text>
+        </g>
+      )}
+      <text x={col0X} y={22} fill="#4a5568" fontSize={10}>dying</text>
+      <text x={col1X} y={22} fill="#4a5568" fontSize={10}>alive</text>
+    </svg>
+  );
+}
+
+// ─── App ─────────────────────────────────────────────────────────────────
+function App() {
+  const demo = isDemoMode();
+  const [idx, setIdx] = React.useState(0);
+  const snap = SNAPSHOTS[idx] || null;
+  const isPivot = snap && PIVOT_COMMITS.includes(snap.hash_short);
+
+  React.useEffect(() => {
+    if (!demo) return;
+    const onKey = e => {
+      if (e.key === "ArrowRight") setIdx(i => Math.min(i+1, SNAPSHOTS.length-1));
+      if (e.key === "ArrowLeft")  setIdx(i => Math.max(i-1, 0));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [demo]);
+
+  const stateCounts = snap
+    ? Object.values(snap.concept_summary || {}).reduce((acc, s) => {
+        acc[s] = (acc[s]||0)+1; return acc;
+      }, {})
+    : {};
+
+  return (
+    <div id="root">
+      <div className="header">
+        <h1>Fossil Record — Sankey</h1>
+        {snap && <span className={`era-badge${isPivot ? " pivot" : ""}`}>
+          {isPivot ? "⚡ pivot · " : ""}{snap.era}
+        </span>}
+        {Object.entries(stateCounts).map(([s,n]) => (
+          <span key={s} style={{fontSize:"10px", color:LC_COLOR[s]||"#8b949e"}}>
+            {n} {s.toLowerCase()}
+          </span>
+        ))}
+      </div>
+
+      <div className="main">
+        <div className="canvas-wrap">
+          <SankeyCanvas snapshot={snap} />
+        </div>
+
+        <div className="sidebar">
+          <div className="commit-panel">
+            {snap ? (<>
+              <div className="chash">{snap.hash_short} · {idx+1}/{SNAPSHOTS.length}</div>
+              <div className="cdate">{snap.date}</div>
+              <div className="cmsg">{snap.message}</div>
+            </>) : <div className="cmsg">No snapshots loaded.</div>}
+          </div>
+
+          <div className="concept-list">
+            <h3>This commit</h3>
+            {snap && Object.entries(snap.concept_summary || {}).map(([id, state]) => (
+              <div key={id} className="concept-row">
+                <span className="concept-name">{id}</span>
+                <span className="state-badge" style={{
+                  background: (LC_COLOR[state]||"#64748b")+"22",
+                  color: LC_COLOR[state]||"#64748b"
+                }}>{state}</span>
+              </div>
+            ))}
+          </div>
+
+          {!demo && (
+            <div className="stepper">
+              <div className="stepper-controls">
+                <button onClick={()=>setIdx(i=>Math.max(i-1,0))} disabled={idx===0}>‹ prev</button>
+                <span className="stepper-label">{idx+1} / {SNAPSHOTS.length}</span>
+                <button onClick={()=>setIdx(i=>Math.min(i+1,SNAPSHOTS.length-1))} disabled={idx===SNAPSHOTS.length-1}>next ›</button>
+              </div>
+              <input type="range" min={0} max={SNAPSHOTS.length-1} value={idx}
+                onChange={e=>setIdx(Number(e.target.value))}/>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {demo && snap && (
+        <div className="presenter-overlay">
+          <div className="presenter-card">
+            <div className="phash">{snap.hash_short} · {snap.date} · {snap.era}</div>
+            <div className="pmsg">{snap.message}</div>
+            <div className="hint">← → to navigate · {idx+1}/{SNAPSHOTS.length}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>

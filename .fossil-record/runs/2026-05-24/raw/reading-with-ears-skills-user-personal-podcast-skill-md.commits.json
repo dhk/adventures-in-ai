@@ -1,0 +1,37 @@
+{
+  "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+  "tier": 1,
+  "patch_size_chars": 8238,
+  "commits": [
+    {
+      "hash": "66adc531c2d9738074ed4870516906e271b8ef08",
+      "date": "2026-03-21",
+      "message": "podcast generator support scripts",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 0,
+      "deletions": 0,
+      "net_loc_delta": 0,
+      "absolute_loc": 0
+    },
+    {
+      "hash": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+      "date": "2026-04-05",
+      "message": "sunday refactor",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 146,
+      "deletions": 0,
+      "net_loc_delta": 146,
+      "absolute_loc": 146
+    },
+    {
+      "hash": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+      "date": "2026-04-08",
+      "message": "more updates",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 3,
+      "deletions": 2,
+      "net_loc_delta": 1,
+      "absolute_loc": 147
+    }
+  ]
+}

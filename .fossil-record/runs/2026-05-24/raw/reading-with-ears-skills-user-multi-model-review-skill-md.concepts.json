@@ -1,0 +1,318 @@
+[
+  {
+    "concept_id": "multi-model-orchestration",
+    "concept_label": "Multi-Model Review Orchestration",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 3,
+    "evidence": [
+      "+ Uses Claude as orchestrator and Codex as a second-opinion reviewer via MCP.",
+      "+ The value is in the *divergence* \u2014 where models disagree is where you should investigate."
+    ],
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "codex-mcp-integration",
+      "review-mode-selection",
+      "sequential-then-parallel",
+      "divergence-signal",
+      "synthesis-format",
+      "edge-case-handling"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "codex-mcp-integration",
+    "concept_label": "Codex MCP Server Integration",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 3,
+    "evidence": [
+      "+compatibility: \"Requires: Codex registered as MCP server (claude mcp add codex -- npx codex mcp-server)\"",
+      "+ Call the `codex` MCP tool with the appropriate prompt below.",
+      "+ Pass the original content verbatim \u2014 do not summarize or pre-process it."
+    ],
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "multi-model-orchestration",
+      "edge-case-handling"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "review-mode-selection",
+    "concept_label": "Review Mode Selection",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": [
+      "+ | `/review-redteam` | Proposal, plan, design doc \u2014 find what breaks |",
+      "+ | `/review-steelman` | Draft or idea \u2014 find the strongest version |",
+      "+ | `/review-debate` | Claim or argument \u2014 stress-test both sides |",
+      "+ | `/review-code` | Code \u2014 correctness, security, edge cases |",
+      "+ If unclear, default to `/review-redteam`."
+    ],
+    "certainty": 3,
+    "autonomy": 2,
+    "linked_concepts": [
+      "multi-model-orchestration",
+      "mode-specific-prompts"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "sequential-then-parallel",
+    "concept_label": "Sequential Review Order",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": [
+      "+ Before calling Codex, Claude completes its own full review using the selected mode.",
+      "+ Do not call Codex first \u2014 independent reviews are more valuable than sequential ones."
+    ],
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "multi-model-orchestration",
+      "independence-preservation"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "independence-preservation",
+    "concept_label": "Independent Review Preservation",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": [
+      "+ Do not call Codex first \u2014 independent reviews are more valuable than sequential ones."
+    ],
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "sequential-then-parallel",
+      "divergence-signal"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "mode-specific-prompts",
+    "concept_label": "Mode-Specific Prompt Templates",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": [
+      "+ ### Red Team prompt (Claude's own)",
+      "+ ### Steelman prompt (Claude's own)",
+      "+ ### Debate prompt (Claude's own)",
+      "+ ### Code Review prompt (Claude's own)",
+      "+ ### Red Team prompt for Codex",
+      "+ ### Steelman prompt for Codex",
+      "+ ### Debate prompt for Codex",
+      "+ ### Code Review prompt for Codex"
+    ],
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "review-mode-selection",
+      "codex-mcp-integration"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "divergence-signal",
+    "concept_label": "Divergence as Signal",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 3,
+    "evidence": [
+      "+ The value is in the *divergence* \u2014 where models disagree is where you should investigate.",
+      "+ | Signal | Noise |",
+      "+ | Claude flags X, Codex doesn't | Both say \"looks good\" |",
+      "+ | Codex raises issue Claude missed | Both list the same generic risks |",
+      "+ Two models agreeing does not mean they are right \u2014 it may mean they share a blind spot."
+    ],
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "synthesis-format",
+      "independence-preservation"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "synthesis-format",
+    "concept_label": "Structured Synthesis Format",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": [
+      "+ CONSENSUS (both flagged):",
+      "+ DIVERGENT \u2014 Claude only:",
+      "+ DIVERGENT \u2014 Codex only:",
+      "+ THE CRUX: [the single most important unresolved question]",
+      "+ RECOMMENDED NEXT STEP: [one concrete action]"
+    ],
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "divergence-signal",
+      "multi-model-orchestration"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "codex-followup-probe",
+    "concept_label": "Codex Validation Follow-up Probe",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": [
+      "+ If Codex validates without critique, follow up via `codex-reply` with:",
+      "+ Assume the proposal is wrong. What breaks first?"
+    ],
+    "certainty": 2,
+    "autonomy": 3,
+    "linked_concepts": [
+      "codex-mcp-integration",
+      "edge-case-handling"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "edge-case-handling",
+    "concept_label": "Edge Case Handling",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 1,
+    "evidence": [
+      "+ **Codex MCP not available**: Tell user to run `claude mcp add codex -- npx codex mcp-server` and restart the session",
+      "+ **Codex validates without critique**: Follow up with the \"Assume the proposal is wrong\" prompt via `codex-reply`",
+      "+ **Models fully agree**: Note the consensus but flag that shared training data may explain agreement; suggest a human domain expert review",
+      "+ **Content too long for single call**: Summarize to key claims before sending to Codex; note the truncation in the synthesis",
+      "+ **No mode specified**: Default to red team and confirm with user before proceeding"
+    ],
+    "certainty": 2,
+    "autonomy": 2,
+    "linked_concepts": [
+      "codex-mcp-integration",
+      "review-mode-selection",
+      "codex-followup-probe"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "skill-trigger-phrases",
+    "concept_label": "Natural Language Skill Triggers",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 1,
+    "evidence": [
+      "+ Use this skill whenever the user says anything like \"review this with Codex\", \"get a second opinion\", \"red team this\", \"have Codex critique this\", \"multi-model review\", \"ask Codex what it thinks\", \"steelman this proposal\", \"debate this\", or \"review this code with another model\"."
+    ],
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "review-mode-selection",
+      "multi-model-orchestration"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "parallel-execution",
+    "concept_label": "Parallel Review Execution",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 3,
+    "evidence": [
+      "+## Step 1: Run Both Reviews in Parallel",
+      "+ Call the Codex MCP tool AND complete Claude's own review at the same time.",
+      "+ Do NOT wait for Codex before forming your own view \u2014 parallel execution preserves independence.",
+      "+ Do NOT show the user anything until both reviews are complete."
+    ],
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "sequential-then-parallel",
+      "independence-preservation"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "sequential-then-parallel",
+    "concept_label": "Sequential Review Order",
+    "lifecycle_state": "MORPHED",
+    "category": "REPLACE",
+    "significance": 3,
+    "evidence": [
+      "- Before calling Codex, Claude completes its own full review using the selected mode.",
+      "- Do not call Codex first \u2014 independent reviews are more valuable than sequential ones.",
+      "+## Step 1: Run Both Reviews in Parallel",
+      "+ Call the Codex MCP tool AND complete Claude's own review at the same time.",
+      "+ Do NOT wait for Codex before forming your own view \u2014 parallel execution preserves independence."
+    ],
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "parallel-execution",
+      "independence-preservation"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "raw-outputs-before-synthesis",
+    "concept_label": "Raw Outputs Before Synthesis",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": [
+      "+## Step 3: Show Raw Outputs, Then Synthesize",
+      "+ **CRITICAL: Always show both raw reviews separately before synthesizing.**",
+      "+ Do not collapse them into a single pre-synthesized response. The user needs to see",
+      "+ what each model contributed independently \u2014 that visibility is the whole point.",
+      "+ Output in this exact order:"
+    ],
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "synthesis-format",
+      "divergence-signal"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "divergent-codex-only-emphasis",
+    "concept_label": "Codex-Only Divergence Emphasis",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": [
+      "+ The DIVERGENT \u2014 Codex only section is the highest-value output. If it is empty,",
+      "+ something went wrong \u2014 re-prompt Codex with \"What did Claude likely miss?\""
+    ],
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "divergence-signal",
+      "codex-followup-probe",
+      "synthesis-format"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "concept_id": "file-location",
+    "concept_label": "Skill File Location",
+    "lifecycle_state": "MORPHED",
+    "category": "INFRA",
+    "significance": 1,
+    "evidence": [
+      "rename from dhk-daily-brief/skills/user/multi-model-review/SKILL.md",
+      "rename to reading-with-ears/skills/user/multi-model-review/SKILL.md"
+    ],
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  }
+]

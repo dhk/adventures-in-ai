@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fossil Record — Prompt Archaeology</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #080c10; color: #c9d1d9;
+    font-family: 'IBM Plex Mono', 'Fira Code', monospace;
+    font-size: 12px;
+  }
+  #root { display: flex; flex-direction: column; min-height: 100vh; }
+  .header {
+    padding: 12px 24px; border-bottom: 1px solid #1e2a38;
+    background: #0d1117; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 20;
+  }
+  .header h1 { font-size: 13px; color: #58a6ff; letter-spacing: 0.08em; text-transform: uppercase; }
+  .tabs { display: flex; gap: 2px; padding: 0 24px; background: #0d1117; border-bottom: 1px solid #1e2a38; position: sticky; top: 45px; z-index: 19; }
+  .tab {
+    padding: 8px 16px; font-size: 11px; cursor: pointer; border: none;
+    background: none; color: #8b949e; font-family: inherit; letter-spacing: 0.05em;
+    border-bottom: 2px solid transparent; text-transform: uppercase;
+  }
+  .tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+  .tab:hover { color: #c9d1d9; }
+  .panel { padding: 24px; }
+
+  /* Concept Grid */
+  .grid-wrap { overflow-x: auto; }
+  table.concept-grid { border-collapse: collapse; width: 100%; }
+  table.concept-grid th {
+    text-align: left; padding: 6px 12px; font-size: 10px;
+    color: #4a5568; text-transform: uppercase; letter-spacing: 0.08em;
+    border-bottom: 1px solid #1e2a38; white-space: nowrap;
+  }
+  table.concept-grid th.ver { text-align: center; }
+  table.concept-grid td { padding: 5px 12px; border-bottom: 1px solid #111820; vertical-align: middle; }
+  table.concept-grid td.concept-id { color: #8b949e; font-size: 11px; white-space: nowrap; }
+  .cell-born   { background: rgba(34,197,94,0.12);  color: #22c55e; }
+  .cell-stable { background: rgba(100,116,139,0.08); color: #64748b; }
+  .cell-morphed{ background: rgba(245,158,11,0.12); color: #f59e0b; }
+  .cell-died   { background: rgba(239,68,68,0.12);  color: #ef4444; }
+  .cell-split  { background: rgba(96,165,250,0.12); color: #60a5fa; }
+  .cell-merged { background: rgba(96,165,250,0.12); color: #60a5fa; }
+  .cell-absent { background: transparent; color: #1e2a38; }
+  .cell-badge {
+    font-size: 9px; padding: 1px 5px; border-radius: 2px; font-weight: 600;
+    letter-spacing: 0.04em; display: inline-block;
+  }
+
+  /* Exact language */
+  .lang-section { margin-bottom: 32px; }
+  .lang-section h2 { font-size: 11px; color: #58a6ff; margin-bottom: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .commit-block { margin-bottom: 20px; }
+  .commit-label {
+    font-size: 10px; color: #4a5568; margin-bottom: 6px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .commit-label .hash { color: #58a6ff; }
+  .commit-label .era-tag {
+    background: #1e2a38; padding: 1px 6px; border-radius: 2px;
+    font-size: 9px; text-transform: uppercase;
+  }
+  .evidence-block { padding: 8px 12px; background: #0d1117; border-left: 3px solid #1e2a38; margin-bottom: 4px; }
+  .evidence-block .concept-tag { font-size: 9px; color: #4a5568; margin-bottom: 4px; text-transform: uppercase; }
+  .ev-add  { color: #22c55e; font-size: 11px; line-height: 1.6; white-space: pre-wrap; }
+  .ev-del  { color: #ef4444; font-size: 11px; line-height: 1.6; white-space: pre-wrap; text-decoration: line-through; }
+  .ev-note { color: #8b949e; font-size: 11px; line-height: 1.6; font-style: italic; }
+
+  /* Sentiment chart */
+  .sentiment-wrap { overflow-x: auto; }
+  .chart-container { min-width: 500px; }
+  .chart-label { font-size: 10px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  svg.sentiment-chart { display: block; width: 100%; }
+
+  /* LOC chart */
+  .loc-bars { display: flex; flex-direction: column; gap: 12px; max-width: 700px; }
+  .loc-row { display: flex; align-items: center; gap: 10px; }
+  .loc-label { width: 180px; font-size: 10px; color: #8b949e; text-align: right; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .loc-bar-wrap { flex: 1; background: #0d1117; border-radius: 3px; height: 20px; position: relative; }
+  .loc-bar { height: 100%; border-radius: 3px; min-width: 2px; transition: width 0.3s; }
+  .loc-value { font-size: 10px; color: #4a5568; width: 40px; text-align: right; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const CONCEPTS_DATA = {
+  "run_date": "2026-05-24",
+  "eras": [
+    "era-0"
+  ],
+  "pivot_commits": [],
+  "concept_ids": [
+    "article-extraction",
+    "article-synthesis",
+    "audio-conversion",
+    "audio-download",
+    "audio-generation",
+    "blocked-domains-config",
+    "catchup-date-bounds",
+    "codex-followup-probe",
+    "codex-mcp-integration",
+    "commit-message-suggestion",
+    "deep-mode-pipeline",
+    "divergence-signal",
+    "divergent-codex-only-emphasis",
+    "edge-case-handling",
+    "element-fm-api",
+    "element-fm-publish",
+    "element-fm-upload",
+    "episode-category-slugs",
+    "episode-titling",
+    "feeds-json-config",
+    "file-location",
+    "file-naming-convention",
+    "full-day-upload",
+    "git-confirmation-gate",
+    "git-orient-step",
+    "git-push-ritual",
+    "handoff-note-generation",
+    "handoff-placement-choice",
+    "handoff-placement-tradeoffs",
+    "independence-preservation",
+    "infographic-generation",
+    "label-based-routing",
+    "light-mode-pipeline",
+    "mode-specific-prompts",
+    "model-tier-strategy",
+    "multi-model-orchestration",
+    "nlm-cli-download",
+    "notebook-creation",
+    "parallel-execution",
+    "per-feed-audio-prompt",
+    "per-feed-sentinel",
+    "podcast-pipeline",
+    "raw-outputs-before-synthesis",
+    "reading-db-yaml-write",
+    "review-mode-selection",
+    "rss-listening-setup",
+    "rwe-publish-delegation",
+    "sequential-then-parallel",
+    "skill-trigger-phrases",
+    "skill-version-frontmatter",
+    "synthesis-format",
+    "vital-signs-category"
+  ],
+  "records": [
+    {
+      "concept_id": "multi-model-orchestration",
+      "concept_label": "Multi-Model Review Orchestration",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+ Uses Claude as orchestrator and Codex as a second-opinion reviewer via MCP.",
+        "+ The value is in the *divergence* \u2014 where models disagree is where you should investigate."
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "codex-mcp-integration",
+        "review-mode-selection",
+        "sequential-then-parallel",
+        "divergence-signal",
+        "synthesis-format",
+        "edge-case-handling"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "codex-mcp-integration",
+      "concept_label": "Codex MCP Server Integration",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+compatibility: \"Requires: Codex registered as MCP server (claude mcp add codex -- npx codex mcp-server)\"",
+        "+ Call the `codex` MCP tool with the appropriate prompt below.",
+        "+ Pass the original content verbatim \u2014 do not summarize or pre-process it."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "multi-model-orchestration",
+        "edge-case-handling"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "review-mode-selection",
+      "concept_label": "Review Mode Selection",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+ | `/review-redteam` | Proposal, plan, design doc \u2014 find what breaks |",
+        "+ | `/review-steelman` | Draft or idea \u2014 find the strongest version |",
+        "+ | `/review-debate` | Claim or argument \u2014 stress-test both sides |",
+        "+ | `/review-code` | Code \u2014 correctness, security, edge cases |",
+        "+ If unclear, default to `/review-redteam`."
+      ],
+      "certainty": 3,
+      "autonomy": 2,
+      "linked_concepts": [
+        "multi-model-orchestration",
+        "mode-specific-prompts"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "sequential-then-parallel",
+      "concept_label": "Sequential Review Order",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+ Before calling Codex, Claude completes its own full review using the selected mode.",
+        "+ Do not call Codex first \u2014 independent reviews are more valuable than sequential ones."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "multi-model-orchestration",
+        "independence-preservation"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "independence-preservation",
+      "concept_label": "Independent Review Preservation",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+ Do not call Codex first \u2014 independent reviews are more valuable than sequential ones."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "sequential-then-parallel",
+        "divergence-signal"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "mode-specific-prompts",
+      "concept_label": "Mode-Specific Prompt Templates",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+ ### Red Team prompt (Claude's own)",
+        "+ ### Steelman prompt (Claude's own)",
+        "+ ### Debate prompt (Claude's own)",
+        "+ ### Code Review prompt (Claude's own)",
+        "+ ### Red Team prompt for Codex",
+        "+ ### Steelman prompt for Codex",
+        "+ ### Debate prompt for Codex",
+        "+ ### Code Review prompt for Codex"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "review-mode-selection",
+        "codex-mcp-integration"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "divergence-signal",
+      "concept_label": "Divergence as Signal",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+ The value is in the *divergence* \u2014 where models disagree is where you should investigate.",
+        "+ | Signal | Noise |",
+        "+ | Claude flags X, Codex doesn't | Both say \"looks good\" |",
+        "+ | Codex raises issue Claude missed | Both list the same generic risks |",
+        "+ Two models agreeing does not mean they are right \u2014 it may mean they share a blind spot."
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "synthesis-format",
+        "independence-preservation"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "synthesis-format",
+      "concept_label": "Structured Synthesis Format",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+ CONSENSUS (both flagged):",
+        "+ DIVERGENT \u2014 Claude only:",
+        "+ DIVERGENT \u2014 Codex only:",
+        "+ THE CRUX: [the single most important unresolved question]",
+        "+ RECOMMENDED NEXT STEP: [one concrete action]"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "divergence-signal",
+        "multi-model-orchestration"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "codex-followup-probe",
+      "concept_label": "Codex Validation Follow-up Probe",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+ If Codex validates without critique, follow up via `codex-reply` with:",
+        "+ Assume the proposal is wrong. What breaks first?"
+      ],
+      "certainty": 2,
+      "autonomy": 3,
+      "linked_concepts": [
+        "codex-mcp-integration",
+        "edge-case-handling"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "edge-case-handling",
+      "concept_label": "Edge Case Handling",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 1,
+      "evidence": [
+        "+ **Codex MCP not available**: Tell user to run `claude mcp add codex -- npx codex mcp-server` and restart the session",
+        "+ **Codex validates without critique**: Follow up with the \"Assume the proposal is wrong\" prompt via `codex-reply`",
+        "+ **Models fully agree**: Note the consensus but flag that shared training data may explain agreement; suggest a human domain expert review",
+        "+ **Content too long for single call**: Summarize to key claims before sending to Codex; note the truncation in the synthesis",
+        "+ **No mode specified**: Default to red team and confirm with user before proceeding"
+      ],
+      "certainty": 2,
+      "autonomy": 2,
+      "linked_concepts": [
+        "codex-mcp-integration",
+        "review-mode-selection",
+        "codex-followup-probe"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "skill-trigger-phrases",
+      "concept_label": "Natural Language Skill Triggers",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 1,
+      "evidence": [
+        "+ Use this skill whenever the user says anything like \"review this with Codex\", \"get a second opinion\", \"red team this\", \"have Codex critique this\", \"multi-model review\", \"ask Codex what it thinks\", \"steelman this proposal\", \"debate this\", or \"review this code with another model\"."
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "review-mode-selection",
+        "multi-model-orchestration"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "parallel-execution",
+      "concept_label": "Parallel Review Execution",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+## Step 1: Run Both Reviews in Parallel",
+        "+ Call the Codex MCP tool AND complete Claude's own review at the same time.",
+        "+ Do NOT wait for Codex before forming your own view \u2014 parallel execution preserves independence.",
+        "+ Do NOT show the user anything until both reviews are complete."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "sequential-then-parallel",
+        "independence-preservation"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "sequential-then-parallel",
+      "concept_label": "Sequential Review Order",
+      "lifecycle_state": "MORPHED",
+      "category": "REPLACE",
+      "significance": 3,
+      "evidence": [
+        "- Before calling Codex, Claude completes its own full review using the selected mode.",
+        "- Do not call Codex first \u2014 independent reviews are more valuable than sequential ones.",
+        "+## Step 1: Run Both Reviews in Parallel",
+        "+ Call the Codex MCP tool AND complete Claude's own review at the same time.",
+        "+ Do NOT wait for Codex before forming your own view \u2014 parallel execution preserves independence."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "parallel-execution",
+        "independence-preservation"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "raw-outputs-before-synthesis",
+      "concept_label": "Raw Outputs Before Synthesis",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+## Step 3: Show Raw Outputs, Then Synthesize",
+        "+ **CRITICAL: Always show both raw reviews separately before synthesizing.**",
+        "+ Do not collapse them into a single pre-synthesized response. The user needs to see",
+        "+ what each model contributed independently \u2014 that visibility is the whole point.",
+        "+ Output in this exact order:"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "synthesis-format",
+        "divergence-signal"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "divergent-codex-only-emphasis",
+      "concept_label": "Codex-Only Divergence Emphasis",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+ The DIVERGENT \u2014 Codex only section is the highest-value output. If it is empty,",
+        "+ something went wrong \u2014 re-prompt Codex with \"What did Claude likely miss?\""
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "divergence-signal",
+        "codex-followup-probe",
+        "synthesis-format"
+      ],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "file-location",
+      "concept_label": "Skill File Location",
+      "lifecycle_state": "MORPHED",
+      "category": "INFRA",
+      "significance": 1,
+      "evidence": [
+        "rename from dhk-daily-brief/skills/user/multi-model-review/SKILL.md",
+        "rename to reading-with-ears/skills/user/multi-model-review/SKILL.md"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [],
+      "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "skill-trigger-phrases",
+      "concept_label": "Skill Trigger Phrases",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+  Upload NotebookLM audio overviews to element.fm as podcast episodes. Use when",
+        "+  the user says anything like \"upload my podcasts\", \"publish to element.fm\",",
+        "+  \"upload the audio to my podcast\", \"push the reading list audio to element.fm\",",
+        "+  or \"publish today's episodes\"."
+      ],
+      "certainty": 3,
+      "autonomy": 1,
+      "linked_concepts": [
+        "podcast-pipeline",
+        "element-fm-upload"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "podcast-pipeline",
+      "concept_label": "Personal Podcast Pipeline",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+# Personal Podcast Pipeline",
+        "+Uploads NotebookLM audio overviews to element.fm and publishes them as episodes",
+        "+on the \"DHK Daily Brief \u2014 From Inbox to Earbuds\" show.",
+        "+Starred Gmail",
+        "+     \u2193",
+        "+NotebookLM notebooks (per category)",
+        "+     \u2193",
+        "+Audio Overview generated",
+        "+     \u2193",
+        "+nlm CLI download \u2192 ~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/",
+        "+     \u2193",
+        "+upload_to_elementfm.py \u2192 element.fm \"Daily Thinking\" show",
+        "+     \u2193",
+        "+Overcast / Apple Podcasts (via RSS feed)"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "element-fm-upload",
+        "nlm-cli-download",
+        "audio-conversion",
+        "file-naming-convention"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "element-fm-upload",
+      "concept_label": "Element.fm Upload Script",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+| Upload script | `~/scripts/upload_to_elementfm.py` |",
+        "+python3 ~/scripts/upload_to_elementfm.py \\",
+        "+  \"/Users/dhk/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/YYYY-MM-DD-news.m4a\"",
+        "+1. Convert `.m4a` \u2192 `.mp3` via ffmpeg",
+        "+2. POST to `/episodes` to create the episode",
+        "+3. POST audio file to `/episodes/{id}/audio`",
+        "+4. POST to `/episodes/{id}/publish`"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "podcast-pipeline",
+        "audio-conversion",
+        "element-fm-api"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "element-fm-api",
+      "concept_label": "Element.fm API Reference",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+All endpoints require `Authorization: Token $CLAUDE_ELEMENT_FM_KEY`.",
+        "+GET    /episodes                          \u2192 list episodes",
+        "+POST   /episodes                          \u2192 create episode {title, season_number, episode_number}",
+        "+POST   /episodes/{id}/audio              \u2192 upload audio (multipart, field: \"audio\", MP3 only)",
+        "+POST   /episodes/{id}/publish            \u2192 publish episode"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "element-fm-upload",
+        "podcast-pipeline"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "audio-conversion",
+      "concept_label": "M4A to MP3 Conversion",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+Audio files are converted from .m4a to .mp3 via ffmpeg before upload.",
+        "+- **MP3 only**: element.fm rejects non-MP3 files. The upload script handles conversion automatically via ffmpeg (`/opt/homebrew/bin/ffmpeg`)"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "element-fm-upload",
+        "podcast-pipeline"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "file-naming-convention",
+      "concept_label": "Audio File Naming Convention",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+| `YYYY-MM-DD-news.m4a` | \ud83d\udcf0 News & Current Affairs | \"\ud83d\udcf0 News & Current Affairs \u2014 Mon DD, YYYY\" |",
+        "+| `YYYY-MM-DD-think.m4a` | \ud83e\udde0 Things to Think About | \"\ud83e\udde0 Things to Think About \u2014 Mon DD, YYYY\" |",
+        "+| `YYYY-MM-DD-professional.m4a` | \ud83d\udcbc Professional Reading | \"\ud83d\udcbc Professional Reading \u2014 Mon DD, YYYY\" |"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "podcast-pipeline",
+        "episode-category-slugs"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "episode-category-slugs",
+      "concept_label": "Episode Category Slugs",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+for cat in news think professional; do",
+        "+  python3 ~/scripts/upload_to_elementfm.py \"$BASE/${DATE}-${cat}.m4a\"",
+        "+done"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "file-naming-convention",
+        "full-day-upload"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "nlm-cli-download",
+      "concept_label": "NLM CLI Download",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+nlm CLI download \u2192 ~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/",
+        "+nlm download audio \"<notebook-id>\" \\",
+        "+  --output \"/Users/dhk/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/YYYY-MM-DD-news.m4a\"",
+        "+Note: The MCP `download_artifact` tool currently fails due to Google auth cookie",
+        "+requirements. Use the `nlm` CLI directly from Terminal instead."
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "podcast-pipeline"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "full-day-upload",
+      "concept_label": "Full Day Batch Upload",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+## Full Day Upload (all three categories)",
+        "+for cat in news think professional; do",
+        "+  python3 ~/scripts/upload_to_elementfm.py \"$BASE/${DATE}-${cat}.m4a\"",
+        "+done"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "episode-category-slugs",
+        "element-fm-upload"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "edge-case-handling",
+      "concept_label": "Upload Edge Cases",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 1,
+      "evidence": [
+        "+- **MP3 only**: element.fm rejects non-MP3 files.",
+        "+- **Episode numbering**: Script auto-increments by fetching current episode count",
+        "+- **Publish fails**: Usually means show author name is missing \u2014 add in element.fm show settings",
+        "+- **Key not set**: Ensure `export CLAUDE_ELEMENT_FM_KEY='...'` is in `~/.zshrc` with no leading space",
+        "+- **Path spaces**: Always wrap the audio file path in double quotes"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "element-fm-upload",
+        "audio-conversion"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "file-location",
+      "concept_label": "Audio File Location",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 1,
+      "evidence": [
+        "+| Audio folder | `~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/` |"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "podcast-pipeline",
+        "nlm-cli-download"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "podcast-pipeline",
+      "concept_label": "Personal Podcast Pipeline",
+      "lifecycle_state": "MORPHED",
+      "category": "REFINE",
+      "significance": 2,
+      "evidence": [
+        "-upload_to_elementfm.py \u2192 element.fm \"Daily Thinking\" show",
+        "+upload_to_elementfm.py \u2192 element.fm show(s)",
+        "-Overcast / Apple Podcasts (via RSS feed)",
+        "+Apple Podcasts / any client using Element.fm RSS"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "element-fm-upload",
+        "nlm-cli-download",
+        "audio-conversion",
+        "file-naming-convention"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "rss-listening-setup",
+      "concept_label": "RSS Listening Setup",
+      "lifecycle_state": "MORPHED",
+      "category": "REFINE",
+      "significance": 1,
+      "evidence": [
+        "-- **Overcast**: Subscribe via the element.fm RSS feed URL (find in show settings)",
+        "-- **Apple Podcasts**: Submit the RSS feed at podcasters.apple.com (one-time setup)",
+        "-- Once subscribed, new episodes appear automatically after publishing",
+        "+- **Apple Podcasts / other clients**: Use each show's Element.fm RSS URL (show settings \u2192 distribution).",
+        "+- Submit feeds at [podcasters.apple.com](https://podcasters.apple.com) where needed (one-time per show).",
+        "+- New episodes appear in the feed after publishing from this pipeline."
+      ],
+      "certainty": 3,
+      "autonomy": 1,
+      "linked_concepts": [
+        "podcast-pipeline"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "vital-signs-category",
+      "concept_label": "Vital Signs Category Slug",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+| `YYYY-MM-DD-vital-signs.m4a` | \ud83c\udfe5 Healthcare Reading | \"\ud83c\udfe5 Healthcare Reading \u2014 Mon DD, YYYY\" |",
+        "-for cat in news think professional; do",
+        "+for cat in news think professional vital-signs; do"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "episode-category-slugs",
+        "file-naming-convention",
+        "full-day-upload"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "full-day-upload",
+      "concept_label": "Full Day Batch Upload",
+      "lifecycle_state": "MORPHED",
+      "category": "REFINE",
+      "significance": 2,
+      "evidence": [
+        "-## Full Day Upload (all three categories)",
+        "+## Full Day Upload (all enabled category slugs)",
+        "-for cat in news think professional; do",
+        "+for cat in news think professional vital-signs; do"
+      ],
+      "certainty": 3,
+      "autonomy": 3,
+      "linked_concepts": [
+        "episode-category-slugs",
+        "vital-signs-category",
+        "element-fm-upload"
+      ],
+      "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "feeds-json-config",
+      "concept_label": "Feeds JSON Config",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+**Before any Gmail or NotebookLM step**, read `config/feeds.json` (at",
+        "+`reading-with-ears/config/feeds.json` relative to the repo root; prefer",
+        "+`~/.config/reading-with-ears/feeds.json` if readable \u2014 it takes precedence).",
+        "+Extract from the top level:",
+        "+- **`workspace_id`** \u2014 used in every Element.fm API call",
+        "+- **`audio_dir`** \u2014 local download destination"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "label-based-routing",
+        "per-feed-audio-prompt",
+        "element-fm-publish",
+        "audio-download"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "label-based-routing",
+      "concept_label": "Label-Based Routing",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+Labels ARE the routing. No classification step. No approval gate.",
+        "+Search each enabled feed's labels individually (one call per label \u2014 don't merge into",
+        "+a union query, so each result stays associated with its feed):"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "feeds-json-config",
+        "notebook-creation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "notebook-creation",
+      "concept_label": "Notebook Creation & Sourcing",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+notebook_create(title=\"reading-list-YYYY-MM-DD-nn <notebook_category>\")",
+        "+**Add each email as a text source. Process all sources for notebook 1 before",
+        "+starting notebook 2:**"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "label-based-routing",
+        "feeds-json-config",
+        "audio-generation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "per-feed-audio-prompt",
+      "concept_label": "Per-Feed Audio Prompt",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+  focus_prompt=\"<audio_focus_prompt from feeds.json for this feed>\","
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "feeds-json-config",
+        "audio-generation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "audio-generation",
+      "concept_label": "Audio Overview Generation",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+studio_create(",
+        "+  notebook_id=<id>,",
+        "+  artifact_type=\"audio\",",
+        "+  audio_format=\"deep_dive\",",
+        "+  audio_length=\"long\","
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "notebook-creation",
+        "per-feed-audio-prompt",
+        "episode-titling",
+        "audio-download"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "episode-titling",
+      "concept_label": "Episode Titling",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+Once a notebook's audio is complete, call `notebook_describe` to get the AI-generated",
+        "+summary, then rename the artifact with a rich title, 3\u20135 insight-first bullets, and a",
+        "+sources line:",
+        "+- Bullets should state what something *means*, not what it *covers* \u2014 insight-first, not descriptive",
+        "+- 3 bullets minimum, 5 maximum \u2014 don't pad"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "audio-generation",
+        "audio-download"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "audio-download",
+      "concept_label": "Audio Download (nlm + ffmpeg)",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+nlm download audio <notebook_id> \\",
+        "+  --output \"<audio_dir>/YYYY-MM-DD-<slug>.m4a\"",
+        "+ffmpeg -i \"<audio_dir>/YYYY-MM-DD-<slug>.m4a\" \\",
+        "+  -codec:a libmp3lame -q:a 2 \\"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "audio-generation",
+        "element-fm-publish"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "element-fm-publish",
+      "concept_label": "Element.fm Publishing",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+## Phase 4 \u2014 Publish to Element.fm",
+        "+curl -s -X POST \\",
+        "+  \"https://app.element.fm/api/workspaces/<workspace_id>/shows/<elementfm_show_id>/episodes\"",
+        "+  -H \"Authorization: Token $CLAUDE_ELEMENT_FM_KEY\""
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "audio-download",
+        "per-feed-sentinel",
+        "feeds-json-config"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "per-feed-sentinel",
+      "concept_label": "Per-Feed Sentinel Files",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+Note the **state directory**: `~/.local/state/reading-with-ears/` \u2014 used for per-feed",
+        "+sentinel files that guard against duplicates on retry (see Phase 2 and Phase 4).",
+        "+~/.local/state/reading-with-ears/done-YYYY-MM-DD-<slug>",
+        "+If that file exists, this feed was already fully published in a previous run \u2014 skip it",
+        "+entirely"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "element-fm-publish",
+        "notebook-creation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "catchup-date-bounds",
+      "concept_label": "Catch-Up Date Bounds",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+**Single past date (catch-up mode):** when an explicit date is given that is not today,",
+        "+add a `before:` bound so the search is scoped to exactly that day:",
+        "+gmail_search_messages(q=\"label:<gmail_label> after:YYYY/MM/DD before:YYYY/MM/DD+1\")"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "label-based-routing"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "skill-version-frontmatter",
+      "concept_label": "Skill Version Frontmatter",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+version: \"1.0\""
+      ],
+      "certainty": 4,
+      "autonomy": 4,
+      "linked_concepts": [],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "element-fm-publish",
+      "concept_label": "Element.fm Publishing",
+      "lifecycle_state": "DIED",
+      "category": "REMOVE",
+      "significance": 3,
+      "evidence": [
+        "-## Phase 4 \u2014 Publish to Element.fm",
+        "-curl -s -X POST \\",
+        "-  \"https://app.element.fm/api/workspaces/<workspace_id>/shows/<elementfm_show_id>/episodes\"",
+        "-Stops at audio download \u2014 use rwe-publish to push to Element.fm."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "audio-download",
+        "rwe-publish-delegation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "per-feed-sentinel",
+      "concept_label": "Per-Feed Sentinel Files",
+      "lifecycle_state": "DIED",
+      "category": "REMOVE",
+      "significance": 2,
+      "evidence": [
+        "-Note the **state directory**: `~/.local/state/reading-with-ears/` \u2014 used for per-feed",
+        "-sentinel files that guard against duplicates on retry",
+        "-If that file exists, this feed was already fully published in a previous run \u2014 skip it"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "rwe-publish-delegation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "rwe-publish-delegation",
+      "concept_label": "rwe-publish Script Delegation",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+Stops at audio download \u2014 use rwe-publish to push to Element.fm.",
+        "+- **ffmpeg unavailable**: Skip conversion, attempt direct m4a upload via rwe-publish; flag if rejected"
+      ],
+      "certainty": 4,
+      "autonomy": 2,
+      "linked_concepts": [
+        "audio-download",
+        "element-fm-publish"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "skill-version-frontmatter",
+      "concept_label": "Skill Version Frontmatter",
+      "lifecycle_state": "MORPHED",
+      "category": "REFINE",
+      "significance": 1,
+      "evidence": [
+        "-version: \"1.0\"",
+        "+version: \"1.1\""
+      ],
+      "certainty": 4,
+      "autonomy": 4,
+      "linked_concepts": [],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "deep-mode-pipeline",
+      "concept_label": "Deep Mode Pipeline",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+Two modes. Default is always Deep. Read the trigger to determine which to run.",
+        "+**Deep mode** (default): `/reading-list-builder`, \"process my newsletters\",",
+        "+\"run the pipeline\", \"triage my inbox\", \"build my reading list\", \"deep reading list\",",
+        "+- Deep: \"Running in deep mode v2.1 -- [date range]\""
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "light-mode-pipeline",
+        "article-extraction",
+        "article-synthesis",
+        "infographic-generation",
+        "reading-db-yaml-write"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "light-mode-pipeline",
+      "concept_label": "Light Mode Pipeline",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+**Light mode** (explicit opt-in only): `/reading-list-builder light`, \"light reading",
+        "+list\", \"quick pipeline\", \"just notebooks\" -> run Steps 0-6 only. No article fetch,",
+        "+no synthesis, no YAML write."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "deep-mode-pipeline",
+        "audio-generation",
+        "audio-download"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "article-extraction",
+      "concept_label": "Article Link Extraction",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+## STEP 5 (Deep): Extract & Fetch Articles",
+        "+For each email processed in Step 3, extract article links from the email HTML body.",
+        "+**Exclude using the versioned block list:**",
+        "+adventures-in-ai/dhkondata/reading-db/blocked-domains.yaml"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "deep-mode-pipeline",
+        "blocked-domains-config",
+        "article-synthesis"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "blocked-domains-config",
+      "concept_label": "Blocked Domains Config",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+adventures-in-ai/dhkondata/reading-db/blocked-domains.yaml",
+        "+Load this file at the start of Step 5 and apply:",
+        "+Do not hardcode domain lists in this skill. The config file is the single source of truth."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "article-extraction"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "article-synthesis",
+      "concept_label": "Article Synthesis (Bullets)",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+## STEP 6 (Deep): Synthesize Articles",
+        "+Synthesis prompt (use exactly):",
+        "+Extract 3-5 key claims from this article.",
+        "+Only include claims that are directly and explicitly stated in the text.",
+        "+Do not infer, extrapolate, summarize themes, or editorialize."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "article-extraction",
+        "deep-mode-pipeline",
+        "infographic-generation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "infographic-generation",
+      "concept_label": "Infographic Generation",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+## STEP 7 (Deep): Generate Article Brief Infographics",
+        "+using the template at:",
+        "+adventures-in-ai/dhkondata/reading-db/templates/article-brief-template.html",
+        "+Output each infographic to:",
+        "+adventures-in-ai/dhkondata/reading-db/briefs/YYYY-MM-DD/<article_id>.html"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "article-synthesis",
+        "reading-db-yaml-write"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "reading-db-yaml-write",
+      "concept_label": "Reading DB YAML Write",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+## STEP 8 (Deep): Write YAML to reading-db",
+        "+Write one YAML file per run date to:",
+        "+adventures-in-ai/dhkondata/reading-db/runs/YYYY-MM-DD.yaml",
+        "+If a file for that date already exists, append new emails \u2014 do not overwrite."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "deep-mode-pipeline",
+        "article-synthesis",
+        "infographic-generation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "skill-version-frontmatter",
+      "concept_label": "Skill Version Frontmatter",
+      "lifecycle_state": "MORPHED",
+      "category": "REFINE",
+      "significance": 1,
+      "evidence": [
+        "-version: \"1.1\"",
+        "+version: \"2.1\""
+      ],
+      "certainty": 4,
+      "autonomy": 4,
+      "linked_concepts": [
+        "reading-db-yaml-write"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "model-tier-strategy",
+      "concept_label": "Model Tier Strategy",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+## Model",
+        "+- **Light mode**: Use **Haiku-class** (`claude-haiku-4-5`). Steps 0\u20136 are a deterministic pipeline",
+        "+- **Deep mode**: Use **Sonnet-class** (`claude-sonnet-4-6`). Steps 7\u201310 add URL extraction, full article fetch, Claude synthesis, and infographic generation \u2014 genuine reasoning required."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "deep-mode-pipeline",
+        "light-mode-pipeline"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "rwe-publish-delegation",
+      "concept_label": "rwe-publish Script Delegation",
+      "lifecycle_state": "MORPHED",
+      "category": "REPLACE",
+      "significance": 3,
+      "evidence": [
+        "-### Download",
+        "-Use `audio_dir` from feeds.json:",
+        "-nlm download audio <notebook_id> \\",
+        "-  --output \"<audio_dir>/YYYY-MM-DD-<slug>.m4a\"",
+        "-ffmpeg -i \"<audio_dir>/YYYY-MM-DD-<slug>.m4a\" \\",
+        "+### Download & Publish",
+        "+Once all artifacts are titled, hand off to `rwe-publish` for download, m4a\u2192mp3",
+        "+conversion, and Element.fm upload:",
+        "+rwe-publish --date YYYY-MM-DD --no-wait-for-studio-status --audio-format mp3",
+        "+Do not manually invoke `nlm download` or `ffmpeg` \u2014 `rwe-publish`",
+        "+handles both."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "audio-download",
+        "element-fm-publish",
+        "episode-titling"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "audio-download",
+      "concept_label": "Audio Download (nlm + ffmpeg)",
+      "lifecycle_state": "DIED",
+      "category": "REMOVE",
+      "significance": 2,
+      "evidence": [
+        "-nlm download audio <notebook_id> \\",
+        "-  --output \"<audio_dir>/YYYY-MM-DD-<slug>.m4a\"",
+        "-ffmpeg -i \"<audio_dir>/YYYY-MM-DD-<slug>.m4a\" \\",
+        "-  -codec:a libmp3lame -q:a 2 \\",
+        "-Skip download if `<audio_dir>/YYYY-MM-DD-<slug>.mp3` already exists.",
+        "-- ffmpeg unavailable: skip MP3 conversion, save m4a only, flag in report"
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "rwe-publish-delegation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "feeds-json-config",
+      "concept_label": "Feeds JSON Config",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "label-based-routing",
+        "per-feed-audio-prompt",
+        "rwe-publish-delegation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "label-based-routing",
+      "concept_label": "Label-Based Routing",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "feeds-json-config",
+        "notebook-creation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "notebook-creation",
+      "concept_label": "Notebook Creation & Sourcing",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "label-based-routing",
+        "audio-generation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "per-feed-audio-prompt",
+      "concept_label": "Per-Feed Audio Prompt",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "feeds-json-config",
+        "audio-generation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "audio-generation",
+      "concept_label": "Audio Overview Generation",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "notebook-creation",
+        "per-feed-audio-prompt",
+        "episode-titling",
+        "rwe-publish-delegation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "episode-titling",
+      "concept_label": "Episode Titling",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "audio-generation",
+        "rwe-publish-delegation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "catchup-date-bounds",
+      "concept_label": "Catch-Up Date Bounds",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "label-based-routing"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "deep-mode-pipeline",
+      "concept_label": "Deep Mode Pipeline",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "model-tier-strategy",
+        "article-extraction",
+        "rwe-publish-delegation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "light-mode-pipeline",
+      "concept_label": "Light Mode Pipeline",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "model-tier-strategy",
+        "rwe-publish-delegation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "article-extraction",
+      "concept_label": "Article Link Extraction",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "blocked-domains-config",
+        "article-synthesis"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "blocked-domains-config",
+      "concept_label": "Blocked Domains Config",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "article-extraction"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "article-synthesis",
+      "concept_label": "Article Synthesis (Bullets)",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "article-extraction",
+        "infographic-generation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "infographic-generation",
+      "concept_label": "Infographic Generation",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "article-synthesis",
+        "reading-db-yaml-write"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "reading-db-yaml-write",
+      "concept_label": "Reading DB YAML Write",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "deep-mode-pipeline",
+        "infographic-generation"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "model-tier-strategy",
+      "concept_label": "Model Tier Strategy",
+      "lifecycle_state": "STABLE",
+      "category": null,
+      "significance": 1,
+      "evidence": null,
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "deep-mode-pipeline",
+        "light-mode-pipeline"
+      ],
+      "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "git-push-ritual",
+      "concept_label": "Step-by-Step Push Ritual",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+ Your job is to walk through the push ritual one step at a time, offering to perform each action before proceeding. Do not chain steps together without confirmation.",
+        "+ ## Step 1: Orient",
+        "+ ## Step 2: Stage",
+        "+ ## Step 3: Commit",
+        "+ ## Step 4: Push"
+      ],
+      "certainty": 4,
+      "autonomy": 1,
+      "linked_concepts": [
+        "handoff-note-generation",
+        "git-confirmation-gate"
+      ],
+      "file": "skills/user/git-push-handoff/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "git-confirmation-gate",
+      "concept_label": "Per-Step Confirmation Gate",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+ Offer each step individually \u2014 never skip ahead without confirmation",
+        "+ Wait for confirmation. Then stage as directed.",
+        "+ Wait for the user to confirm or provide their own message."
+      ],
+      "certainty": 4,
+      "autonomy": 1,
+      "linked_concepts": [
+        "git-push-ritual"
+      ],
+      "file": "skills/user/git-push-handoff/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "handoff-note-generation",
+      "concept_label": "Structured Handoff Note",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 3,
+      "evidence": [
+        "+ ## Step 5: Handoff Note",
+        "+ **What was done**",
+        "+ **Key decisions**",
+        "+ **Loose ends**",
+        "+ **Gotchas**",
+        "+ **Next step**",
+        "+ The note should make the next session productive in under 60 seconds of reading"
+      ],
+      "certainty": 3,
+      "autonomy": 1,
+      "linked_concepts": [
+        "handoff-placement-choice",
+        "git-push-ritual"
+      ],
+      "file": "skills/user/git-push-handoff/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "handoff-placement-choice",
+      "concept_label": "Handoff Placement Options",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+ \"Where should this live? Options:",
+        "+ 1. **PR description**",
+        "+ 2. **Commit message body**",
+        "+ 3. **Todoist task note**",
+        "+ 4. **Local notes file**",
+        "+ 5. **Just here in chat**"
+      ],
+      "certainty": 3,
+      "autonomy": 1,
+      "linked_concepts": [
+        "handoff-note-generation",
+        "handoff-placement-tradeoffs"
+      ],
+      "file": "skills/user/git-push-handoff/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "handoff-placement-tradeoffs",
+      "concept_label": "Placement Tradeoff Guidance",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+ ## Handoff Placement Tradeoffs",
+        "+ Only share this if the user asks. Keep it conversational \u2014 don't dump the whole table unprompted.",
+        "+ **The hybrid that works best for most workflows:**",
+        "+ Commit message body for push-level micro-notes + PR description for the full phase-level handoff."
+      ],
+      "certainty": 2,
+      "autonomy": 1,
+      "linked_concepts": [
+        "handoff-placement-choice"
+      ],
+      "file": "skills/user/git-push-handoff/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "commit-message-suggestion",
+      "concept_label": "Commit Message Suggestion",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 2,
+      "evidence": [
+        "+ If suggesting, use this format:",
+        "+ - First line: imperative, max 72 chars (`Fix null handling in cohort join`)",
+        "+ - Optional second line blank",
+        "+ - Optional body: 1\u20132 lines of *why*, not what"
+      ],
+      "certainty": 3,
+      "autonomy": 1,
+      "linked_concepts": [
+        "git-push-ritual"
+      ],
+      "file": "skills/user/git-push-handoff/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "git-orient-step",
+      "concept_label": "Git Status Orientation",
+      "lifecycle_state": "BORN",
+      "category": "ADD",
+      "significance": 1,
+      "evidence": [
+        "+ Before doing anything, run:",
+        "+ git status",
+        "+ git diff --stat",
+        "+ Summarize what you see: which files are changed, staged, or untracked. Present this to the user before proceeding."
+      ],
+      "certainty": 4,
+      "autonomy": 3,
+      "linked_concepts": [
+        "git-push-ritual"
+      ],
+      "file": "skills/user/git-push-handoff/SKILL.md",
+      "era": "era-0"
+    },
+    {
+      "concept_id": "skill-version-frontmatter",
+      "concept_label": "Skill Frontmatter Metadata",
+      "lifecycle_state": "MORPHED",
+      "category": "REFINE",
+      "significance": 1,
+      "evidence": [
+        "-description: Run the end-of-phase git ritual: stage, commit, push, and generate a structured handoff note for the next session. Use this skill whenever the user says anything like \"commit and push\", \"wrap up this phase\", \"end of phase\", \"push my changes\", \"generate a handoff note\", \"write a handoff\", \"close out this session\", \"ready to push\", or \"/push\". Triggers any time a development phase is ending and work needs to be committed, pushed, and handed off cleanly.",
+        "+description: \"Run the end-of-phase git ritual: stage, commit, push, and generate a structured handoff note for the next session. Use this skill whenever the user says anything like 'commit and push', 'wrap up this phase', 'end of phase', 'push my changes', 'generate a handoff note', 'write a handoff', 'close out this session', 'ready to push', or '/push'. Triggers any time a development phase is ending and work needs to be committed, pushed, and handed off cleanly.\""
+      ],
+      "certainty": 3,
+      "autonomy": 1,
+      "linked_concepts": [],
+      "file": "skills/user/git-push-handoff/SKILL.md",
+      "era": "era-0"
+    }
+  ],
+  "sankey_snapshots": [
+    {
+      "commit_index": 0,
+      "hash": "66adc531c2d9738074ed4870516906e271b8ef08",
+      "hash_short": "66adc53",
+      "date": "2026-03-21",
+      "message": "podcast generator support scripts",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 1,
+      "hash": "631b5af6f8d99f6d624776c0a3f5fb0f6e7d60e6",
+      "hash_short": "631b5af",
+      "date": "2026-03-28",
+      "message": "fix ynml",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 2,
+      "hash": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+      "hash_short": "bafc0b1",
+      "date": "2026-03-28",
+      "message": "Skill for supporting handoff notes",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 3,
+      "hash": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+      "hash_short": "aba9c02",
+      "date": "2026-03-29",
+      "message": "improve model review",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 4,
+      "hash": "dd57c7e0276674aa86b206e2555b041382fd3417",
+      "hash_short": "dd57c7e",
+      "date": "2026-03-29",
+      "message": "feat: add multi-model-review skill (Claude + Codex via MCP)",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 5,
+      "hash": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+      "hash_short": "f7996b9",
+      "date": "2026-04-05",
+      "message": "sunday refactor",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 6,
+      "hash": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+      "hash_short": "754f6ab",
+      "date": "2026-04-08",
+      "message": "more updates",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 7,
+      "hash": "11c735e2071244a7cc8a152b6c72d0491eaa2e2a",
+      "hash_short": "11c735e",
+      "date": "2026-04-27",
+      "message": "Add reading-list-builder skill \u2014 deterministic unified pipeline",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 8,
+      "hash": "31cf926584a199eafd717f2ca791d9d0004accd0",
+      "hash_short": "31cf926",
+      "date": "2026-04-27",
+      "message": "Add skill version check to rwe-run and rwe-catchup",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 9,
+      "hash": "5085205188dc5d59720057829c7ddfb1ad3b3d00",
+      "hash_short": "5085205",
+      "date": "2026-04-27",
+      "message": "Simplify: skill handles build only, rwe-publish handles Element.fm",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 10,
+      "hash": "8f38f3bd6c175b03d4f7495bccbd1a9d32f9739b",
+      "hash_short": "8f38f3b",
+      "date": "2026-04-27",
+      "message": "Add catch-up mode for backfilling missed days",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 11,
+      "hash": "ade339796fe66418fe929d82444e0c843187db94",
+      "hash_short": "ade3397",
+      "date": "2026-04-27",
+      "message": "Add per-feed sentinel files to prevent duplicates on partial retry",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 12,
+      "hash": "b72c0603c2fa412c01447388542693c8f73636dc",
+      "hash_short": "b72c060",
+      "date": "2026-05-09",
+      "message": "feat(reading-list-builder): v2.1 \u2014 deep pipeline + reading-db",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 13,
+      "hash": "232c9f893709e4d4dfbeed3c91a42714fff46de8",
+      "hash_short": "232c9f8",
+      "date": "2026-05-13",
+      "message": "Add model tier guidance to reading-list-builder skill (v2.1)",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    },
+    {
+      "commit_index": 14,
+      "hash": "8997cfadf2454f439cbb269e348537fbb82e7ffa",
+      "hash_short": "8997cfa",
+      "date": "2026-05-20",
+      "message": "feat(rwe): wire reading-list-builder to rwe-publish for download/publish",
+      "era": "era-0",
+      "nodes": [],
+      "links": [],
+      "concept_summary": {}
+    }
+  ]
+};
+const SENTIMENT_DATA = [
+  {
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+    "commit": "",
+    "date": "",
+    "mean_certainty": 3.25,
+    "mean_autonomy": 2.88,
+    "concept_count": 15,
+    "negation_density": 10,
+    "vocab_diversity": 45
+  },
+  {
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+    "commit": "",
+    "date": "",
+    "mean_certainty": 3.07,
+    "mean_autonomy": 2.73,
+    "concept_count": 13,
+    "negation_density": 1,
+    "vocab_diversity": 56
+  },
+  {
+    "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+    "commit": "",
+    "date": "",
+    "mean_certainty": 4.0,
+    "mean_autonomy": 3.05,
+    "concept_count": 20,
+    "negation_density": 9,
+    "vocab_diversity": 50
+  },
+  {
+    "file": "skills/user/git-push-handoff/SKILL.md",
+    "commit": "",
+    "date": "",
+    "mean_certainty": 3.25,
+    "mean_autonomy": 1.25,
+    "concept_count": 8,
+    "negation_density": 4,
+    "vocab_diversity": 37
+  }
+];
+
+const LC_COLOR = { BORN:"#22c55e", STABLE:"#64748b", MORPHED:"#f59e0b", SPLIT:"#60a5fa", MERGED:"#60a5fa", DIED:"#ef4444" };
+const LC_CLASS = { BORN:"cell-born", STABLE:"cell-stable", MORPHED:"cell-morphed", DIED:"cell-died", SPLIT:"cell-split", MERGED:"cell-merged" };
+
+// ─── Concept Grid ────────────────────────────────────────────────────────
+function ConceptGrid() {
+  const records = CONCEPTS_DATA.records || [];
+  const commits = CONCEPTS_DATA.sankey_snapshots || [];
+  const conceptIds = CONCEPTS_DATA.concept_ids || [];
+
+  // Build lookup: conceptId → commitHash → record
+  const lookup = {};
+  for (const r of records) {
+    if (!lookup[r.concept_id]) lookup[r.concept_id] = {};
+    lookup[r.concept_id][r.commit] = r;
+  }
+
+  // Show max 12 commits for readability; always include first and last
+  const allHashes = commits.map(c => c.hash);
+  const shown = allHashes.length <= 12 ? allHashes : [
+    ...allHashes.slice(0, 5),
+    "...",
+    ...allHashes.slice(-5)
+  ].filter(h => h !== "...");
+
+  return (
+    <div className="grid-wrap">
+      <table className="concept-grid">
+        <thead>
+          <tr>
+            <th>concept</th>
+            {commits.filter(c => shown.includes(c.hash)).map(c => (
+              <th key={c.hash} className="ver" title={c.message}>
+                {c.hash_short}<br/>
+                <span style={{fontSize:"9px",color:"#4a5568"}}>{c.date}</span>
+              </th>
+            ))}
+            <th>first seen</th>
+            <th>last seen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {conceptIds.map(cid => {
+            const row = lookup[cid] || {};
+            const byCommit = commits.filter(c => shown.includes(c.hash)).map(c => {
+              const rec = row[c.hash];
+              if (!rec) return { hash: c.hash, state: null };
+              return { hash: c.hash, state: rec.lifecycle_state };
+            });
+            const allCommits = Object.values(row);
+            const firstDate = allCommits.map(r => r.date).sort()[0];
+            const lastDate  = allCommits.map(r => r.date).sort().reverse()[0];
+            return (
+              <tr key={cid}>
+                <td className="concept-id">{cid}</td>
+                {byCommit.map(cell => (
+                  <td key={cell.hash} className={cell.state ? LC_CLASS[cell.state]||"cell-stable" : "cell-absent"}>
+                    {cell.state && (
+                      <span className="cell-badge">{cell.state[0]}</span>
+                    )}
+                  </td>
+                ))}
+                <td style={{color:"#4a5568",fontSize:"10px"}}>{firstDate}</td>
+                <td style={{color:"#4a5568",fontSize:"10px"}}>{lastDate}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <div style={{marginTop:12,fontSize:10,color:"#4a5568"}}>
+        B=BORN &nbsp; S=STABLE &nbsp; M=MORPHED &nbsp; D=DIED &nbsp; ↕=SPLIT &nbsp; ∪=MERGED
+      </div>
+    </div>
+  );
+}
+
+// ─── Exact Language ──────────────────────────────────────────────────────
+function ExactLanguage() {
+  const records = (CONCEPTS_DATA.records || []).filter(r => r.evidence && r.lifecycle_state !== "STABLE");
+  const snapshots = CONCEPTS_DATA.sankey_snapshots || [];
+  const hashToSnap = Object.fromEntries(snapshots.map(s => [s.hash, s]));
+
+  // Group by commit (using full hash key)
+  const byCommit = {};
+  for (const r of records) {
+    if (!byCommit[r.commit]) byCommit[r.commit] = [];
+    byCommit[r.commit].push(r);
+  }
+
+  const hashes = Object.keys(byCommit).sort((a,b) => {
+    const da = hashToSnap[a]?.date || ""; const db = hashToSnap[b]?.date || "";
+    return da.localeCompare(db);
+  });
+
+  function renderEvidence(ev) {
+    if (!ev) return null;
+    const lines = ev.split("\n");
+    return lines.map((line, i) => {
+      if (line.startsWith("+")) return <div key={i} className="ev-add">{line}</div>;
+      if (line.startsWith("-")) return <div key={i} className="ev-del">{line}</div>;
+      return <div key={i} className="ev-note">{line}</div>;
+    });
+  }
+
+  return (
+    <div>
+      {hashes.map(hash => {
+        const snap = hashToSnap[hash];
+        const recs = byCommit[hash];
+        return (
+          <div key={hash} className="commit-block">
+            <div className="commit-label">
+              <span className="hash">{snap?.hash_short || hash.slice(0,7)}</span>
+              <span>{snap?.date}</span>
+              {snap?.era && <span className="era-tag">{snap.era}</span>}
+              <span style={{color:"#c9d1d9"}}>{snap?.message}</span>
+            </div>
+            {recs.map((r, i) => (
+              <div key={i} className="evidence-block">
+                <div className="concept-tag">
+                  {r.concept_id} &nbsp;→&nbsp;
+                  <span style={{color:LC_COLOR[r.lifecycle_state]||"#64748b"}}>{r.lifecycle_state}</span>
+                  {r.certainty && <span style={{color:"#4a5568"}}> &nbsp; certainty:{r.certainty} autonomy:{r.autonomy}</span>}
+                </div>
+                {renderEvidence(r.evidence)}
+              </div>
+            ))}
+          </div>
+        );
+      })}
+      {hashes.length === 0 && <div style={{color:"#4a5568"}}>No evidence quotes available — run Phase 2 with a real repo.</div>}
+    </div>
+  );
+}
+
+// ─── Sentiment Arc ───────────────────────────────────────────────────────
+function SentimentArc() {
+  const data = SENTIMENT_DATA || [];
+  if (!data.length) return <div style={{color:"#4a5568"}}>No sentiment data available.</div>;
+
+  const W = 600, H = 180, padL = 40, padR = 20, padT = 20, padB = 40;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const files = [...new Set(data.map(d => d.file))];
+  const colors = ["#58a6ff","#22c55e","#f59e0b","#60a5fa"];
+
+  // For each file, build certainty + autonomy series
+  function makePoints(series, key) {
+    const vals = series.filter(d => d[key] != null).map(d => d[key]);
+    if (!vals.length) return [];
+    const xStep = chartW / Math.max(series.length - 1, 1);
+    return series.map((d, i) => ({
+      x: padL + i * xStep,
+      y: padT + chartH - ((d[key] - 1) / 3) * chartH,
+      val: d[key],
+      date: d.date,
+    })).filter(p => p.val != null);
+  }
+
+  function toPath(pts) {
+    if (pts.length < 2) return "";
+    return pts.map((p,i) => `${i===0?"M":"L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  }
+
+  return (
+    <div className="sentiment-wrap">
+      <div className="chart-container">
+        <div className="chart-label">Certainty & Autonomy (1=hedged → 4=imperative)</div>
+        <svg className="sentiment-chart" viewBox={`0 0 ${W} ${H}`} style={{height:H}}>
+          {/* grid */}
+          {[1,2,3,4].map(v => {
+            const y = padT + chartH - ((v-1)/3)*chartH;
+            return <g key={v}>
+              <line x1={padL} y1={y} x2={W-padR} y2={y} stroke="#1e2a38" strokeWidth={1}/>
+              <text x={padL-6} y={y+4} textAnchor="end" fill="#4a5568" fontSize={9}>{v}</text>
+            </g>;
+          })}
+
+          {files.map((file, fi) => {
+            const series = data.filter(d => d.file === file);
+            const cPts = makePoints(series, "mean_certainty");
+            const aPts = makePoints(series, "mean_autonomy");
+            const col = colors[fi % colors.length];
+            return <g key={file}>
+              {cPts.length > 1 && <path d={toPath(cPts)} stroke={col} strokeWidth={1.5} fill="none"/>}
+              {aPts.length > 1 && <path d={toPath(aPts)} stroke={col} strokeWidth={1.5} fill="none" strokeDasharray="4 3"/>}
+              {cPts.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r={3} fill={col}/>)}
+            </g>;
+          })}
+
+          <text x={padL} y={H-8} fill="#4a5568" fontSize={9}>older →</text>
+          <text x={W-padR} y={H-8} textAnchor="end" fill="#4a5568" fontSize={9}>newer</text>
+        </svg>
+        <div style={{fontSize:10,color:"#4a5568",marginTop:6}}>
+          — solid: certainty &nbsp;&nbsp; - - dashed: autonomy &nbsp;&nbsp;
+          {files.map((f,i) => <span key={f} style={{color:colors[i%colors.length],marginRight:12}}>{f.split("/").pop()}</span>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── LOC Chart ───────────────────────────────────────────────────────────
+function LocChart() {
+  const snapshots = CONCEPTS_DATA.sankey_snapshots || [];
+  if (!snapshots.length) return <div style={{color:"#4a5568"}}>No LOC data.</div>;
+
+  // Compute total LOC per commit from node sizes
+  const rows = snapshots.map(s => ({
+    label: `${s.hash_short} ${s.date}`,
+    message: s.message,
+    loc: (s.nodes || []).reduce((sum, n) => sum + (n.loc||0), 0),
+    era: s.era,
+  }));
+  const maxLoc = Math.max(...rows.map(r => r.loc), 1);
+
+  return (
+    <div className="loc-bars">
+      {rows.map((row, i) => (
+        <div key={i} className="loc-row" title={row.message}>
+          <span className="loc-label">{row.label}</span>
+          <div className="loc-bar-wrap">
+            <div className="loc-bar" style={{
+              width: `${(row.loc/maxLoc)*100}%`,
+              background: row.era === "era-0" ? "#58a6ff44" : row.era === "era-1" ? "#22c55e44" : "#f59e0b44",
+              border: `1px solid ${row.era === "era-0" ? "#58a6ff" : row.era === "era-1" ? "#22c55e" : "#f59e0b"}`,
+            }}/>
+          </div>
+          <span className="loc-value">{row.loc}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── App ─────────────────────────────────────────────────────────────────
+function App() {
+  const [tab, setTab] = React.useState("grid");
+  const tabs = [
+    { id: "grid",  label: "Concept Grid" },
+    { id: "lang",  label: "Exact Language" },
+    { id: "sent",  label: "Sentiment Arc" },
+    { id: "loc",   label: "LOC Evolution" },
+  ];
+
+  return (
+    <div id="root">
+      <div className="header">
+        <h1>Fossil Record — Prompt Archaeology</h1>
+        <span style={{color:"#4a5568",fontSize:11}}>
+          {CONCEPTS_DATA.concept_ids?.length || 0} concepts · {CONCEPTS_DATA.sankey_snapshots?.length || 0} commits · {CONCEPTS_DATA.eras?.join(", ")}
+        </span>
+      </div>
+      <div className="tabs">
+        {tabs.map(t => (
+          <button key={t.id} className={`tab${tab===t.id?" active":""}`} onClick={()=>setTab(t.id)}>{t.label}</button>
+        ))}
+      </div>
+      <div className="panel">
+        {tab === "grid" && <ConceptGrid />}
+        {tab === "lang" && <ExactLanguage />}
+        {tab === "sent" && <SentimentArc />}
+        {tab === "loc"  && <LocChart />}
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>

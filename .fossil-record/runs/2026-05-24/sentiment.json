@@ -1,0 +1,42 @@
+[
+  {
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+    "commit": "",
+    "date": "",
+    "mean_certainty": 3.25,
+    "mean_autonomy": 2.88,
+    "concept_count": 15,
+    "negation_density": 10,
+    "vocab_diversity": 45
+  },
+  {
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+    "commit": "",
+    "date": "",
+    "mean_certainty": 3.07,
+    "mean_autonomy": 2.73,
+    "concept_count": 13,
+    "negation_density": 1,
+    "vocab_diversity": 56
+  },
+  {
+    "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+    "commit": "",
+    "date": "",
+    "mean_certainty": 4.0,
+    "mean_autonomy": 3.05,
+    "concept_count": 20,
+    "negation_density": 9,
+    "vocab_diversity": 50
+  },
+  {
+    "file": "skills/user/git-push-handoff/SKILL.md",
+    "commit": "",
+    "date": "",
+    "mean_certainty": 3.25,
+    "mean_autonomy": 1.25,
+    "concept_count": 8,
+    "negation_density": 4,
+    "vocab_diversity": 37
+  }
+]
