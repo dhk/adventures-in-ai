@@ -3,23 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <title>Fossil Record — 2026-05-24</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
-  body { background:#080c10; color:#c9d1d9; font-family:'IBM Plex Mono',monospace; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+  :root {
+    --bg: #f9f8f6; --bg2: #f2f1ee; --bg3: #eae9e5;
+    --border: #dddbd6; --text: #0a0a09; --text-dim: #5a5850;
+    --accent: #16a34a; --accent-blue: #2970d6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background:var(--bg); color:var(--text); font-family:'Barlow',sans-serif; font-weight:300;
+    display:flex; align-items:center; justify-content:center; height:100vh; }
   .card { text-align:center; }
-  h1 { font-size:14px; color:#58a6ff; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px; }
-  p { color:#4a5568; font-size:11px; margin-bottom:32px; }
-  .links { display:flex; gap:20px; justify-content:center; }
-  a { display:block; padding:12px 24px; background:#1e2a38; color:#c9d1d9; text-decoration:none; border:1px solid #2d3f55; border-radius:4px; font-size:12px; transition:background 0.15s; }
-  a:hover { background:#2d3f55; color:#e6edf3; }
+  h1 { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:600;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim); margin-bottom:6px; }
+  .date { font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim); margin-bottom:36px; }
+  .links { display:flex; gap:16px; justify-content:center; }
+  a { display:block; padding:14px 28px; background:var(--bg2); color:var(--text);
+    text-decoration:none; border:1px solid var(--border); border-radius:4px;
+    font-size:13px; transition:border-color 0.15s, background 0.15s;
+    border-left:3px solid transparent; }
+  a:hover { background:var(--bg3); border-left-color:var(--accent); }
+  a .sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim);
+    display:block; margin-top:4px; }
 </style>
 </head>
 <body>
 <div class="card">
   <h1>Fossil Record</h1>
-  <p>Run date: 2026-05-24</p>
+  <div class="date">2026-05-24</div>
   <div class="links">
-    <a href="sankey.html">⟳ Steppable Sankey<br><span style="font-size:10px;color:#4a5568">concept lifecycle flow</span></a>
-    <a href="prompt-diff.html">⌬ Prompt Archaeology<br><span style="font-size:10px;color:#4a5568">language mutations + sentiment</span></a>
+    <a href="sankey.html">Steppable Sankey<span class="sub">concept lifecycle flow</span></a>
+    <a href="prompt-diff.html">Prompt Archaeology<span class="sub">language mutations + sentiment</span></a>
   </div>
 </div>
 </body>

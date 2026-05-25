@@ -4,79 +4,271 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fossil Record — Sankey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500&family=Barlow+Condensed:wght@500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
+  :root {
+    --bg:           #f9f8f6;
+    --bg2:          #f2f1ee;
+    --bg3:          #eae9e5;
+    --border:       #dddbd6;
+    --border-light: #e8e6e1;
+    --text:         #0a0a09;
+    --text-muted:   #111110;
+    --text-dim:     #5a5850;
+    --accent:       #16a34a;
+    --accent-blue:  #2970d6;
+    --accent-purple:#7c5ce0;
+    --accent-orange:#d94f2a;
+    --font-sans:    'Barlow', sans-serif;
+    --font-cond:    'Barlow Condensed', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+    --radius:       4px;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    background: #080c10; color: #c9d1d9;
-    font-family: 'IBM Plex Mono', 'Fira Code', monospace;
-    font-size: 13px; height: 100vh; display: flex; flex-direction: column;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 300;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
+
   #root { display: flex; flex-direction: column; height: 100%; }
+
+  /* ── Header ── */
   .header {
-    padding: 12px 20px; border-bottom: 1px solid #1e2a38;
-    display: flex; align-items: center; gap: 16px; background: #0d1117;
+    height: 56px;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--bg);
+    flex-shrink: 0;
   }
-  .header h1 { font-size: 13px; color: #58a6ff; letter-spacing: 0.08em; text-transform: uppercase; }
-  .era-badge {
-    font-size: 10px; padding: 2px 8px; border-radius: 3px;
-    background: #1e2a38; color: #8b949e; letter-spacing: 0.05em; text-transform: uppercase;
+  .header-title {
+    font-family: var(--font-cond);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
   }
-  .era-badge.pivot { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .header-divider {
+    width: 1px;
+    height: 16px;
+    background: var(--border);
+  }
+  .era-chip {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: var(--radius);
+    background: var(--bg3);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .era-chip.pivot {
+    background: rgba(217,79,42,0.08);
+    color: var(--accent-orange);
+    border-color: rgba(217,79,42,0.2);
+  }
+  .state-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  /* ── Layout ── */
   .main { display: flex; flex: 1; overflow: hidden; }
-  .canvas-wrap { flex: 1; overflow: auto; position: relative; display: flex; align-items: center; justify-content: center; }
-  .sidebar {
-    width: 280px; border-left: 1px solid #1e2a38;
-    background: #0d1117; display: flex; flex-direction: column; overflow: hidden;
+
+  .canvas-wrap {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    padding: 32px;
   }
-  .commit-panel { padding: 16px; border-bottom: 1px solid #1e2a38; flex-shrink: 0; }
-  .commit-panel .chash { color: #58a6ff; font-size: 11px; margin-bottom: 4px; }
-  .commit-panel .cdate { color: #8b949e; font-size: 11px; margin-bottom: 8px; }
-  .commit-panel .cmsg  { color: #e6edf3; font-size: 12px; line-height: 1.5; }
-  .concept-list { padding: 12px 16px; overflow-y: auto; flex: 1; }
-  .concept-list h3 {
-    color: #8b949e; font-size: 10px; text-transform: uppercase;
-    letter-spacing: 0.1em; margin-bottom: 10px;
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 288px;
+    border-left: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .commit-panel {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .commit-hash {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-blue);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .commit-date {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .commit-msg {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .concept-list {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .concept-list-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
   }
   .concept-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 4px 0; border-bottom: 1px solid #1a2232; font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border-light);
+    gap: 8px;
   }
-  .concept-name { color: #c9d1d9; }
-  .state-badge {
-    font-size: 9px; padding: 1px 5px; border-radius: 2px;
-    font-weight: 600; letter-spacing: 0.05em;
+  .concept-name {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .stepper { padding: 12px 16px; border-top: 1px solid #1e2a38; background: #0d1117; flex-shrink: 0; }
-  .stepper-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .stepper-controls button {
-    background: #1e2a38; border: none; color: #c9d1d9;
-    padding: 4px 10px; border-radius: 3px; cursor: pointer;
-    font-family: inherit; font-size: 12px;
+  .state-pill {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: var(--radius);
+    flex-shrink: 0;
   }
-  .stepper-controls button:hover { background: #2d3f55; }
-  .stepper-controls button:disabled { opacity: 0.3; cursor: default; }
-  .stepper-label { flex: 1; text-align: center; color: #8b949e; font-size: 11px; }
-  input[type=range] { width: 100%; accent-color: #58a6ff; }
+
+  /* ── Stepper ── */
+  .stepper {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+  .stepper-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .stepper-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 4px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .stepper-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .stepper-btn:disabled { opacity: 0.35; cursor: default; }
+  .stepper-pos {
+    flex: 1;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+    height: 2px;
+  }
+
+  /* ── Presenter overlay ── */
   .presenter-overlay {
-    position: fixed; inset: 0; display: flex;
-    align-items: center; justify-content: center; pointer-events: none; z-index: 10;
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    pointer-events: none;
+    padding-bottom: 48px;
+    z-index: 10;
   }
   .presenter-card {
-    background: rgba(13,17,23,0.92); border: 1px solid #2d3f55; border-radius: 8px;
-    padding: 24px 32px; max-width: 520px; text-align: center; backdrop-filter: blur(4px);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 32px;
+    max-width: 560px;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(10,10,9,0.08);
   }
-  .presenter-card .phash { color: #58a6ff; font-size: 12px; margin-bottom: 6px; }
-  .presenter-card .pmsg  { color: #e6edf3; font-size: 18px; line-height: 1.5; font-family: sans-serif; }
-  .presenter-card .hint  { color: #4a5568; font-size: 11px; margin-top: 12px; }
+  .presenter-hash {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-blue);
+    margin-bottom: 6px;
+  }
+  .presenter-msg {
+    font-family: var(--font-cond);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .presenter-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 10px;
+  }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-/* DATA — injected by phase4a_sankey.py */
 const SNAPSHOTS = [
   {
     "commit_index": 0,
@@ -85,9 +277,115 @@ const SNAPSHOTS = [
     "date": "2026-03-21",
     "message": "podcast generator support scripts",
     "era": "era-0",
-    "nodes": [],
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "M4A\u2192MP3 Conversion",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "API Key Configuration",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Download",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "notebooklm-audio-pipeline": "BORN",
+      "elementfm-upload-script": "BORN",
+      "m4a-to-mp3-conversion": "BORN",
+      "elementfm-api-reference": "BORN",
+      "api-key-config": "BORN",
+      "filename-convention": "BORN",
+      "podcast-category-slugs": "BORN",
+      "batch-upload-loop": "BORN",
+      "nlm-cli-download": "BORN",
+      "skill-trigger-phrases": "BORN",
+      "rss-listening-setup": "BORN",
+      "single-show-target": "BORN",
+      "skill-file-location": "BORN"
+    }
   },
   {
     "commit_index": 1,
@@ -96,9 +394,111 @@ const SNAPSHOTS = [
     "date": "2026-03-28",
     "message": "fix ynml",
     "era": "era-0",
-    "nodes": [],
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "M4A\u2192MP3 Conversion",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "API Key Configuration",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Download",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-0",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-0",
+        "fate": "grey",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "git-push-ritual": "STABLE",
+      "skill-trigger-phrases": "MORPHED"
+    }
   },
   {
     "commit_index": 2,
@@ -107,9 +507,175 @@ const SNAPSHOTS = [
     "date": "2026-03-28",
     "message": "Skill for supporting handoff notes",
     "era": "era-0",
-    "nodes": [],
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "M4A\u2192MP3 Conversion",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "API Key Configuration",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Download",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-0",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "git-push-ritual": "BORN",
+      "step-by-step-confirmation": "BORN",
+      "git-orient-step": "BORN",
+      "git-stage-step": "BORN",
+      "git-commit-step": "BORN",
+      "git-push-step": "BORN",
+      "handoff-note-generation": "BORN",
+      "handoff-placement-options": "BORN",
+      "handoff-placement-tradeoffs": "BORN",
+      "skill-trigger-phrases": "BORN"
+    }
   },
   {
     "commit_index": 3,
@@ -117,10 +683,278 @@ const SNAPSHOTS = [
     "hash_short": "aba9c02",
     "date": "2026-03-29",
     "message": "improve model review",
-    "era": "era-0",
-    "nodes": [],
-    "links": [],
-    "concept_summary": {}
+    "era": "era-1",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "M4A\u2192MP3 Conversion",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "API Key Configuration",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Download",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-1",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-1",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-1",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-1",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-1",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-1",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-1",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-1",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-1",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-1",
+        "fate": "grey",
+        "loc": 0
+      }
+    ],
+    "links": [
+      {
+        "source": "sequential-review-order",
+        "target": "\u2205",
+        "value": 1,
+        "label": "deleted 2026-03-29"
+      }
+    ],
+    "concept_summary": {
+      "sequential-review-order": "DIED",
+      "parallel-review-execution": "BORN",
+      "raw-output-display": "BORN",
+      "synthesis-output": "MORPHED",
+      "codex-step-label": "BORN",
+      "claude-orchestrator": "STABLE",
+      "codex-mcp-reviewer": "STABLE",
+      "mcp-prerequisite-check": "STABLE",
+      "review-mode-selection": "STABLE",
+      "verbatim-content-passing": "STABLE",
+      "codex-followup-probe": "STABLE",
+      "divergence-signal": "STABLE",
+      "signal-vs-noise": "STABLE",
+      "edge-case-handling": "STABLE"
+    }
   },
   {
     "commit_index": 4,
@@ -128,10 +962,307 @@ const SNAPSHOTS = [
     "hash_short": "dd57c7e",
     "date": "2026-03-29",
     "message": "feat: add multi-model-review skill (Claude + Codex via MCP)",
-    "era": "era-0",
-    "nodes": [],
+    "era": "era-1",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "M4A\u2192MP3 Conversion",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "API Key Configuration",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Download",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-1",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "claude-orchestrator": "BORN",
+      "codex-mcp-reviewer": "BORN",
+      "mcp-prerequisite-check": "BORN",
+      "review-mode-selection": "BORN",
+      "redteam-mode": "BORN",
+      "steelman-mode": "BORN",
+      "debate-mode": "BORN",
+      "code-review-mode": "BORN",
+      "sequential-review-order": "BORN",
+      "verbatim-content-passing": "BORN",
+      "codex-followup-probe": "BORN",
+      "synthesis-output": "BORN",
+      "divergence-signal": "BORN",
+      "signal-vs-noise": "BORN",
+      "edge-case-handling": "BORN"
+    }
   },
   {
     "commit_index": 5,
@@ -139,10 +1270,306 @@ const SNAPSHOTS = [
     "hash_short": "f7996b9",
     "date": "2026-04-05",
     "message": "sunday refactor",
-    "era": "era-0",
-    "nodes": [],
+    "era": "era-2",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "M4A\u2192MP3 Conversion",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "API Key Configuration",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Download",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "skill-file-location": "MORPHED",
+      "claude-orchestrator": "STABLE",
+      "parallel-review-execution": "STABLE",
+      "raw-output-display": "STABLE",
+      "synthesis-output": "STABLE",
+      "divergence-signal": "STABLE",
+      "single-show-target": "MORPHED",
+      "rss-listening-setup": "MORPHED",
+      "notebooklm-audio-pipeline": "STABLE",
+      "elementfm-upload-script": "STABLE",
+      "batch-upload-loop": "STABLE",
+      "podcast-category-slugs": "STABLE",
+      "filename-convention": "STABLE",
+      "skill-trigger-phrases": "STABLE"
+    }
   },
   {
     "commit_index": 6,
@@ -150,10 +1577,302 @@ const SNAPSHOTS = [
     "hash_short": "754f6ab",
     "date": "2026-04-08",
     "message": "more updates",
-    "era": "era-0",
-    "nodes": [],
+    "era": "era-2",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "M4A\u2192MP3 Conversion",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "API Key Configuration",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Download",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "filename-convention": "MORPHED",
+      "podcast-category-slugs": "MORPHED",
+      "batch-upload-loop": "MORPHED",
+      "notebooklm-audio-pipeline": "STABLE",
+      "elementfm-upload-script": "STABLE",
+      "rss-listening-setup": "STABLE",
+      "skill-trigger-phrases": "STABLE",
+      "nlm-cli-download": "STABLE",
+      "m4a-to-mp3-conversion": "STABLE",
+      "api-key-config": "STABLE"
+    }
   },
   {
     "commit_index": 7,
@@ -161,10 +1880,367 @@ const SNAPSHOTS = [
     "hash_short": "11c735e",
     "date": "2026-04-27",
     "message": "Add reading-list-builder skill \u2014 deterministic unified pipeline",
-    "era": "era-0",
-    "nodes": [],
+    "era": "era-2",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "m4a to MP3 Conversion",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "Element.fm API Key",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Audio Download",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "label-based-routing",
+        "label": "Gmail Label Routing",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "feeds-config-loader",
+        "label": "Feeds.json Config Load",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "gmail-fetch-phase",
+        "label": "Gmail Bulk Fetch",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "html-only-email-skip",
+        "label": "HTML-Only Email Skip",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "notebook-naming-convention",
+        "label": "Notebook Naming Convention",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "per-feed-audio-prompt",
+        "label": "Per-Feed Audio Focus Prompt",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "episode-titling",
+        "label": "Episode Titling via notebook_describe",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-publish-phase",
+        "label": "Element.fm Publish Phase",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "tool-call-front-loading",
+        "label": "Tool Calls Front-Loaded",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "label-based-routing": "BORN",
+      "feeds-config-loader": "BORN",
+      "gmail-fetch-phase": "BORN",
+      "html-only-email-skip": "BORN",
+      "notebook-naming-convention": "BORN",
+      "per-feed-audio-prompt": "BORN",
+      "episode-titling": "BORN",
+      "nlm-cli-download": "BORN",
+      "m4a-to-mp3-conversion": "BORN",
+      "elementfm-publish-phase": "BORN",
+      "api-key-config": "BORN",
+      "tool-call-front-loading": "BORN"
+    }
   },
   {
     "commit_index": 8,
@@ -172,10 +2248,371 @@ const SNAPSHOTS = [
     "hash_short": "31cf926",
     "date": "2026-04-27",
     "message": "Add skill version check to rwe-run and rwe-catchup",
-    "era": "era-0",
-    "nodes": [],
+    "era": "era-2",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "m4a to MP3 Conversion",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "Element.fm API Key",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Audio Download",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-2",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-2",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "label-based-routing",
+        "label": "Gmail Label Routing",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "feeds-config-loader",
+        "label": "Feeds.json Config Load",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "gmail-fetch-phase",
+        "label": "Gmail Bulk Fetch",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "html-only-email-skip",
+        "label": "HTML-Only Email Skip",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "notebook-naming-convention",
+        "label": "Notebook Naming Convention",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "per-feed-audio-prompt",
+        "label": "Per-Feed Audio Focus Prompt",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "episode-titling",
+        "label": "Episode Titling via notebook_describe",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-publish-phase",
+        "label": "Element.fm Publish Phase",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "tool-call-front-loading",
+        "label": "Tool Calls Front-Loaded",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "catch-up-mode",
+        "label": "Catch-Up Date Scoping",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-version-frontmatter",
+        "label": "Skill Version Frontmatter",
+        "era": "era-2",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "catch-up-mode": "BORN",
+      "skill-version-frontmatter": "BORN"
+    }
   },
   {
     "commit_index": 9,
@@ -183,10 +2620,387 @@ const SNAPSHOTS = [
     "hash_short": "5085205",
     "date": "2026-04-27",
     "message": "Simplify: skill handles build only, rwe-publish handles Element.fm",
-    "era": "era-0",
-    "nodes": [],
-    "links": [],
-    "concept_summary": {}
+    "era": "era-3",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "m4a to MP3 Conversion",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "Element.fm API Key",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Audio Download",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "label-based-routing",
+        "label": "Gmail Label Routing",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "feeds-config-loader",
+        "label": "Feeds.json Config Load",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "gmail-fetch-phase",
+        "label": "Gmail Bulk Fetch",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "html-only-email-skip",
+        "label": "HTML-Only Email Skip",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "notebook-naming-convention",
+        "label": "Notebook Naming Convention",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "per-feed-audio-prompt",
+        "label": "Per-Feed Audio Focus Prompt",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "episode-titling",
+        "label": "Episode Titling via notebook_describe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "tool-call-front-loading",
+        "label": "Tool Calls Front-Loaded",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "catch-up-mode",
+        "label": "Catch-Up Date Scoping",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-version-frontmatter",
+        "label": "Skill Version Frontmatter",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "rwe-publish-delegation",
+        "label": "Delegate to rwe-publish",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
+    "links": [
+      {
+        "source": "elementfm-publish-phase",
+        "target": "\u2205",
+        "value": 1,
+        "label": "deleted 2026-04-27"
+      },
+      {
+        "source": "sentinel-files",
+        "target": "\u2205",
+        "value": 1,
+        "label": "deleted 2026-04-27"
+      }
+    ],
+    "concept_summary": {
+      "elementfm-publish-phase": "DIED",
+      "sentinel-files": "DIED",
+      "rwe-publish-delegation": "BORN",
+      "skill-version-frontmatter": "MORPHED",
+      "api-key-config": "MORPHED"
+    }
   },
   {
     "commit_index": 10,
@@ -194,8 +3008,366 @@ const SNAPSHOTS = [
     "hash_short": "8f38f3b",
     "date": "2026-04-27",
     "message": "Add catch-up mode for backfilling missed days",
-    "era": "era-0",
-    "nodes": [],
+    "era": "era-3",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "m4a to MP3 Conversion",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "Element.fm API Key",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Audio Download",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "label-based-routing",
+        "label": "Gmail Label Routing",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "feeds-config-loader",
+        "label": "Feeds.json Config Load",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "gmail-fetch-phase",
+        "label": "Gmail Bulk Fetch",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "html-only-email-skip",
+        "label": "HTML-Only Email Skip",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "notebook-naming-convention",
+        "label": "Notebook Naming Convention",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "per-feed-audio-prompt",
+        "label": "Per-Feed Audio Focus Prompt",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "episode-titling",
+        "label": "Episode Titling via notebook_describe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "tool-call-front-loading",
+        "label": "Tool Calls Front-Loaded",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "catch-up-mode",
+        "label": "Catch-Up Date Scoping",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-version-frontmatter",
+        "label": "Skill Version Frontmatter",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "rwe-publish-delegation",
+        "label": "Delegate to rwe-publish",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
     "concept_summary": {}
   },
@@ -205,10 +3377,378 @@ const SNAPSHOTS = [
     "hash_short": "ade3397",
     "date": "2026-04-27",
     "message": "Add per-feed sentinel files to prevent duplicates on partial retry",
-    "era": "era-0",
-    "nodes": [],
+    "era": "era-3",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "m4a to MP3 Conversion",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "Element.fm API Key",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Audio Download",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "label-based-routing",
+        "label": "Gmail Label Routing",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "feeds-config-loader",
+        "label": "Feeds.json Config Load",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "gmail-fetch-phase",
+        "label": "Gmail Bulk Fetch",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "html-only-email-skip",
+        "label": "HTML-Only Email Skip",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "notebook-naming-convention",
+        "label": "Notebook Naming Convention",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "per-feed-audio-prompt",
+        "label": "Per-Feed Audio Focus Prompt",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "episode-titling",
+        "label": "Episode Titling via notebook_describe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "tool-call-front-loading",
+        "label": "Tool Calls Front-Loaded",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "catch-up-mode",
+        "label": "Catch-Up Date Scoping",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-version-frontmatter",
+        "label": "Skill Version Frontmatter",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "rwe-publish-delegation",
+        "label": "Delegate to rwe-publish",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sentinel-files",
+        "label": "Per-Feed Sentinel Files",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "sentinel-files": "BORN",
+      "label-based-routing": "STABLE"
+    }
   },
   {
     "commit_index": 12,
@@ -216,10 +3756,442 @@ const SNAPSHOTS = [
     "hash_short": "b72c060",
     "date": "2026-05-09",
     "message": "feat(reading-list-builder): v2.1 \u2014 deep pipeline + reading-db",
-    "era": "era-0",
-    "nodes": [],
+    "era": "era-3",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "m4a to MP3 Conversion",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "Element.fm API Key",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Audio Download",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "label-based-routing",
+        "label": "Gmail Label Routing",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "feeds-config-loader",
+        "label": "Feeds.json Config Load",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "gmail-fetch-phase",
+        "label": "Gmail Bulk Fetch",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "html-only-email-skip",
+        "label": "HTML-Only Email Skip",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "notebook-naming-convention",
+        "label": "Notebook Naming Convention",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "per-feed-audio-prompt",
+        "label": "Per-Feed Audio Focus Prompt",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "episode-titling",
+        "label": "Episode Titling via notebook_describe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "tool-call-front-loading",
+        "label": "Tool Calls Front-Loaded",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "catch-up-mode",
+        "label": "Catch-Up Date Scoping",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-version-frontmatter",
+        "label": "Skill Version Frontmatter",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "rwe-publish-delegation",
+        "label": "Delegate to rwe-publish",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sentinel-files",
+        "label": "Per-Feed Sentinel Files",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "deep-mode-pipeline",
+        "label": "Deep Mode Article Pipeline",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "light-mode-pipeline",
+        "label": "Light Mode Opt-In",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "article-extraction",
+        "label": "Article URL Extraction",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "blocked-domains-config",
+        "label": "Blocked Domains Config",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-step",
+        "label": "Article Synthesis Bullets",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "infographic-generation",
+        "label": "Article Brief Infographic",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "reading-db-yaml-write",
+        "label": "Reading-DB YAML Write",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "audio-parallel-deep-mode",
+        "label": "Audio Parallel in Deep Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "deep-mode-pipeline": "BORN",
+      "light-mode-pipeline": "BORN",
+      "article-extraction": "BORN",
+      "blocked-domains-config": "BORN",
+      "synthesis-step": "BORN",
+      "infographic-generation": "BORN",
+      "reading-db-yaml-write": "BORN",
+      "skill-version-frontmatter": "MORPHED",
+      "html-only-email-skip": "MORPHED",
+      "audio-parallel-deep-mode": "BORN"
+    }
   },
   {
     "commit_index": 13,
@@ -227,10 +4199,440 @@ const SNAPSHOTS = [
     "hash_short": "232c9f8",
     "date": "2026-05-13",
     "message": "Add model tier guidance to reading-list-builder skill (v2.1)",
-    "era": "era-0",
-    "nodes": [],
+    "era": "era-3",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "m4a-to-mp3-conversion",
+        "label": "m4a to MP3 Conversion",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "Element.fm API Key",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "nlm-cli-download",
+        "label": "NLM CLI Audio Download",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "label-based-routing",
+        "label": "Gmail Label Routing",
+        "era": "era-3",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "feeds-config-loader",
+        "label": "Feeds.json Config Load",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "gmail-fetch-phase",
+        "label": "Gmail Bulk Fetch",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "html-only-email-skip",
+        "label": "HTML-Only Email Skip",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "notebook-naming-convention",
+        "label": "Notebook Naming Convention",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "per-feed-audio-prompt",
+        "label": "Per-Feed Audio Focus Prompt",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "episode-titling",
+        "label": "Episode Titling via notebook_describe",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "tool-call-front-loading",
+        "label": "Tool Calls Front-Loaded",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "catch-up-mode",
+        "label": "Catch-Up Date Scoping",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-version-frontmatter",
+        "label": "Skill Version Frontmatter",
+        "era": "era-3",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "rwe-publish-delegation",
+        "label": "Delegate to rwe-publish",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sentinel-files",
+        "label": "Per-Feed Sentinel Files",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "deep-mode-pipeline",
+        "label": "Deep Mode Article Pipeline",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "light-mode-pipeline",
+        "label": "Light Mode Opt-In",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "article-extraction",
+        "label": "Article URL Extraction",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "blocked-domains-config",
+        "label": "Blocked Domains Config",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-step",
+        "label": "Article Synthesis Bullets",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "infographic-generation",
+        "label": "Article Brief Infographic",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "reading-db-yaml-write",
+        "label": "Reading-DB YAML Write",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "audio-parallel-deep-mode",
+        "label": "Audio Parallel in Deep Mode",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "model-tier-strategy",
+        "label": "Model Tier Strategy",
+        "era": "era-3",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
     "links": [],
-    "concept_summary": {}
+    "concept_summary": {
+      "model-tier-strategy": "BORN"
+    }
   },
   {
     "commit_index": 14,
@@ -238,51 +4640,502 @@ const SNAPSHOTS = [
     "hash_short": "8997cfa",
     "date": "2026-05-20",
     "message": "feat(rwe): wire reading-list-builder to rwe-publish for download/publish",
-    "era": "era-0",
-    "nodes": [],
-    "links": [],
-    "concept_summary": {}
+    "era": "era-4",
+    "nodes": [
+      {
+        "id": "notebooklm-audio-pipeline",
+        "label": "NotebookLM Audio Pipeline",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-upload-script",
+        "label": "Element.fm Upload Script",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "elementfm-api-reference",
+        "label": "Element.fm API Reference",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "api-key-config",
+        "label": "Element.fm API Key",
+        "era": "era-4",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "filename-convention",
+        "label": "Audio Filename Convention",
+        "era": "era-4",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "podcast-category-slugs",
+        "label": "Podcast Category Slugs",
+        "era": "era-4",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "batch-upload-loop",
+        "label": "Batch Upload Loop",
+        "era": "era-4",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-trigger-phrases",
+        "label": "Skill Trigger Phrases",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rss-listening-setup",
+        "label": "RSS Listening Setup",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "single-show-target",
+        "label": "Single Show Target",
+        "era": "era-4",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "skill-file-location",
+        "label": "Skill File Location",
+        "era": "era-4",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "git-push-ritual",
+        "label": "Git Push Ritual",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "step-by-step-confirmation",
+        "label": "Step-by-Step Confirmation",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-orient-step",
+        "label": "Git Orient Step",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-stage-step",
+        "label": "Git Stage Step",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-commit-step",
+        "label": "Git Commit Step",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "git-push-step",
+        "label": "Git Push Step",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-note-generation",
+        "label": "Handoff Note Generation",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-options",
+        "label": "Handoff Placement Options",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "handoff-placement-tradeoffs",
+        "label": "Handoff Placement Tradeoffs",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "parallel-review-execution",
+        "label": "Parallel Review Execution",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "raw-output-display",
+        "label": "Raw Output Display",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-output",
+        "label": "Structured Synthesis Output",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-step-label",
+        "label": "Codex Step Label Reframe",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "claude-orchestrator",
+        "label": "Claude as Orchestrator",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "codex-mcp-reviewer",
+        "label": "Codex MCP Second Opinion",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "mcp-prerequisite-check",
+        "label": "MCP Registration Check",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "review-mode-selection",
+        "label": "Review Mode Selection",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "verbatim-content-passing",
+        "label": "Verbatim Content Passing",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "codex-followup-probe",
+        "label": "Codex Follow-up Probe",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "divergence-signal",
+        "label": "Divergence as Signal",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "signal-vs-noise",
+        "label": "Signal vs Noise Table",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "edge-case-handling",
+        "label": "Edge Case Fallbacks",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "redteam-mode",
+        "label": "Red Team Review Mode",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "steelman-mode",
+        "label": "Steelman Review Mode",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "debate-mode",
+        "label": "Debate Review Mode",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "code-review-mode",
+        "label": "Code Review Mode",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "sequential-review-order",
+        "label": "Sequential Review Order",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "label-based-routing",
+        "label": "Gmail Label Routing",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "feeds-config-loader",
+        "label": "Feeds.json Config Load",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "gmail-fetch-phase",
+        "label": "Gmail Bulk Fetch",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "html-only-email-skip",
+        "label": "HTML-Only Email Skip",
+        "era": "era-4",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "notebook-naming-convention",
+        "label": "Notebook Naming Convention",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "per-feed-audio-prompt",
+        "label": "Per-Feed Audio Focus Prompt",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "episode-titling",
+        "label": "Episode Titling via notebook_describe",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "tool-call-front-loading",
+        "label": "Tool Calls Front-Loaded",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "catch-up-mode",
+        "label": "Catch-Up Date Scoping",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "skill-version-frontmatter",
+        "label": "Skill Version Frontmatter",
+        "era": "era-4",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "rwe-publish-delegation",
+        "label": "Delegate to rwe-publish",
+        "era": "era-4",
+        "fate": "amber",
+        "loc": 0
+      },
+      {
+        "id": "sentinel-files",
+        "label": "Per-Feed Sentinel Files",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "deep-mode-pipeline",
+        "label": "Deep Mode Article Pipeline",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "light-mode-pipeline",
+        "label": "Light Mode Opt-In",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "article-extraction",
+        "label": "Article URL Extraction",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "blocked-domains-config",
+        "label": "Blocked Domains Config",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "synthesis-step",
+        "label": "Article Synthesis Bullets",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "infographic-generation",
+        "label": "Article Brief Infographic",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "reading-db-yaml-write",
+        "label": "Reading-DB YAML Write",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "audio-parallel-deep-mode",
+        "label": "Audio Parallel in Deep Mode",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      },
+      {
+        "id": "model-tier-strategy",
+        "label": "Model Tier Strategy",
+        "era": "era-4",
+        "fate": "grey",
+        "loc": 0
+      },
+      {
+        "id": "rwe-publish-idempotency",
+        "label": "rwe-publish Idempotency",
+        "era": "era-4",
+        "fate": "green",
+        "loc": 0
+      }
+    ],
+    "links": [
+      {
+        "source": "nlm-cli-download",
+        "target": "\u2205",
+        "value": 1,
+        "label": "deleted 2026-05-20"
+      },
+      {
+        "source": "m4a-to-mp3-conversion",
+        "target": "\u2205",
+        "value": 1,
+        "label": "deleted 2026-05-20"
+      }
+    ],
+    "concept_summary": {
+      "rwe-publish-delegation": "MORPHED",
+      "nlm-cli-download": "DIED",
+      "m4a-to-mp3-conversion": "DIED",
+      "rwe-publish-idempotency": "BORN",
+      "label-based-routing": "STABLE",
+      "model-tier-strategy": "STABLE"
+    }
   }
 ];
-const ERAS = ["era-0"];
-const PIVOT_COMMITS = [];
+const ERAS = ["era-0", "era-1", "era-2", "era-3", "era-4"];
+const PIVOT_COMMITS = ["aba9c02", "f7996b9", "5085205", "8997cfa"];
 
-const LC_COLOR = {
-  BORN:   "#22c55e",
-  STABLE: "#64748b",
-  MORPHED:"#f59e0b",
-  SPLIT:  "#60a5fa",
-  MERGED: "#60a5fa",
-  DIED:   "#ef4444",
+/* DHK design system lifecycle colors */
+const LC = {
+  BORN:   { bg: "rgba(22,163,74,0.10)",   text: "#16a34a", border: "rgba(22,163,74,0.25)"   },
+  STABLE: { bg: "rgba(90,88,80,0.07)",    text: "#5a5850", border: "rgba(90,88,80,0.18)"    },
+  MORPHED:{ bg: "rgba(124,92,224,0.10)",  text: "#7c5ce0", border: "rgba(124,92,224,0.25)"  },
+  SPLIT:  { bg: "rgba(41,112,214,0.10)",  text: "#2970d6", border: "rgba(41,112,214,0.25)"  },
+  MERGED: { bg: "rgba(41,112,214,0.10)",  text: "#2970d6", border: "rgba(41,112,214,0.25)"  },
+  DIED:   { bg: "rgba(217,79,42,0.10)",   text: "#d94f2a", border: "rgba(217,79,42,0.25)"   },
 };
+const lcColor = (state) => (LC[state] || LC.STABLE).text;
 
 function isDemoMode() {
   return new URLSearchParams(window.location.search).get("demo") === "1";
 }
 
-// ─── SVG Sankey layout ───────────────────────────────────────────────────
+// ── SVG Sankey ──────────────────────────────────────────────────────────────
 function SankeyCanvas({ snapshot }) {
-  if (!snapshot || !snapshot.nodes) return <svg width={600} height={300} />;
+  if (!snapshot || !snapshot.nodes || !snapshot.nodes.length) {
+    return (
+      <div style={{textAlign:"center", color:"var(--text-dim)", fontFamily:"var(--font-mono)", fontSize:11, padding:40}}>
+        No concepts changed this commit.
+      </div>
+    );
+  }
+
   const nodes = snapshot.nodes;
   const links = snapshot.links || [];
   const summary = snapshot.concept_summary || {};
 
-  const W = 640, nodeW = 130, nodeH = 34, padY = 14;
+  const W = 680, nodeW = 148, nodeH = 36, padY = 10;
   const dying = new Set(Object.entries(summary).filter(([,s]) => s === "DIED").map(([id]) => id));
   const alive = nodes.filter(n => !dying.has(n.id));
   const dead  = nodes.filter(n =>  dying.has(n.id));
-  const H = Math.max(220, (Math.max(alive.length, dead.length) * (nodeH + padY)) + 80);
+  const rowCount = Math.max(alive.length, dead.length, 1);
+  const H = Math.max(240, rowCount * (nodeH + padY) + 80);
+  const col0X = 32, col1X = W - nodeW - 32;
 
-  const col0X = 40, col1X = W - nodeW - 40;
   const layout = {};
   alive.forEach((n, i) => {
+    const state = summary[n.id] || "STABLE";
     layout[n.id] = { x: col1X, y: 40 + i * (nodeH + padY), w: nodeW, h: nodeH,
-      color: LC_COLOR[n.fate === "green" ? "BORN" : n.fate === "red" ? "DIED" : n.fate === "amber" ? "MORPHED" : "STABLE"],
-      label: n.label || n.id };
+      lc: LC[state] || LC.STABLE, label: n.label || n.id };
   });
   dead.forEach((n, i) => {
     layout[n.id] = { x: col0X, y: 40 + i * (nodeH + padY), w: nodeW, h: nodeH,
-      color: "#ef4444", label: n.label || n.id };
+      lc: LC.DIED, label: n.label || n.id };
   });
 
   const linkPaths = links.map((link, i) => {
@@ -290,46 +5143,61 @@ function SankeyCanvas({ snapshot }) {
     if (!src) return null;
     const sx = src.x + src.w, sy = src.y + src.h / 2;
     if (link.target === "∅" || !layout[link.target]) {
-      const ex = W - 16, ey = H / 2;
+      const ex = W - 8, ey = H / 2;
       const cx = (sx + ex) / 2;
-      return <path key={i}
-        d={`M${sx},${sy} C${cx},${sy} ${cx},${ey} ${ex},${ey}`}
-        stroke="#ef444466" strokeWidth="2" fill="none" strokeDasharray="4 3" />;
+      return <path key={i} d={`M${sx},${sy} C${cx},${sy} ${cx},${ey} ${ex},${ey}`}
+        stroke="rgba(217,79,42,0.3)" strokeWidth={1.5} fill="none" strokeDasharray="4 3" />;
     }
     const tgt = layout[link.target];
     const ex = tgt.x, ey = tgt.y + tgt.h / 2;
     const cx = (sx + ex) / 2;
-    return <path key={i}
-      d={`M${sx},${sy} C${cx},${sy} ${cx},${ey} ${ex},${ey}`}
-      stroke="#58a6ff44" strokeWidth="2" fill="none" />;
+    return <path key={i} d={`M${sx},${sy} C${cx},${sy} ${cx},${ey} ${ex},${ey}`}
+      stroke="rgba(41,112,214,0.25)" strokeWidth={1.5} fill="none" />;
   });
 
   return (
     <svg width={W} height={H} style={{display:"block"}}>
-      <line x1={col0X+nodeW} y1={0} x2={col0X+nodeW} y2={H} stroke="#1e2a38" strokeWidth={1}/>
-      <line x1={col1X} y1={0} x2={col1X} y2={H} stroke="#1e2a38" strokeWidth={1}/>
+      {/* column rule */}
+      <line x1={col0X+nodeW+16} y1={16} x2={col0X+nodeW+16} y2={H-16}
+        stroke="#dddbd6" strokeWidth={1} strokeDasharray="2 4" />
+      <line x1={col1X-16} y1={16} x2={col1X-16} y2={H-16}
+        stroke="#dddbd6" strokeWidth={1} strokeDasharray="2 4" />
+
       {linkPaths}
+
+      {/* nodes */}
       {Object.values(layout).map((n, i) => (
         <g key={i} transform={`translate(${n.x},${n.y})`}>
           <rect width={n.w} height={n.h} rx={4}
-            fill={n.color + "22"} stroke={n.color} strokeWidth={1.5}/>
+            fill={n.lc.bg} stroke={n.lc.border} strokeWidth={1} />
           <text x={n.w/2} y={n.h/2+4} textAnchor="middle"
-            fill={n.color} fontSize={10} fontFamily="monospace">{n.label}</text>
+            fill={n.lc.text} fontSize={10}
+            fontFamily="'DM Mono', monospace" fontWeight={500}>
+            {n.label.length > 18 ? n.label.slice(0,17) + "…" : n.label}
+          </text>
         </g>
       ))}
+
+      {/* ∅ sink */}
       {dying.size > 0 && (
-        <g transform={`translate(${W-22},${H/2-16})`}>
-          <rect width={22} height={32} rx={4} fill="#ef444422" stroke="#ef4444" strokeWidth={1.5}/>
-          <text x={11} y={20} textAnchor="middle" fill="#ef4444" fontSize={13}>∅</text>
+        <g transform={`translate(${W-20},${H/2-18})`}>
+          <rect width={20} height={36} rx={4}
+            fill="rgba(217,79,42,0.08)" stroke="rgba(217,79,42,0.25)" strokeWidth={1} />
+          <text x={10} y={22} textAnchor="middle" fill="#d94f2a" fontSize={13}
+            fontFamily="'Barlow Condensed', sans-serif" fontWeight={600}>∅</text>
         </g>
       )}
-      <text x={col0X} y={22} fill="#4a5568" fontSize={10}>dying</text>
-      <text x={col1X} y={22} fill="#4a5568" fontSize={10}>alive</text>
+
+      {/* column labels */}
+      <text x={col0X} y={20} fill="#5a5850" fontSize={9}
+        fontFamily="'DM Mono', monospace" letterSpacing={2} textTransform="uppercase">DYING</text>
+      <text x={col1X} y={20} fill="#5a5850" fontSize={9}
+        fontFamily="'DM Mono', monospace" letterSpacing={2} textTransform="uppercase">ALIVE</text>
     </svg>
   );
 }
 
-// ─── App ─────────────────────────────────────────────────────────────────
+// ── App ──────────────────────────────────────────────────────────────────────
 function App() {
   const demo = isDemoMode();
   const [idx, setIdx] = React.useState(0);
@@ -355,12 +5223,15 @@ function App() {
   return (
     <div id="root">
       <div className="header">
-        <h1>Fossil Record — Sankey</h1>
-        {snap && <span className={`era-badge${isPivot ? " pivot" : ""}`}>
-          {isPivot ? "⚡ pivot · " : ""}{snap.era}
-        </span>}
+        <span className="header-title">Fossil Record — Sankey</span>
+        <div className="header-divider" />
+        {snap && (
+          <span className={`era-chip${isPivot ? " pivot" : ""}`}>
+            {isPivot ? "⚡ " : ""}{snap.era}
+          </span>
+        )}
         {Object.entries(stateCounts).map(([s,n]) => (
-          <span key={s} style={{fontSize:"10px", color:LC_COLOR[s]||"#8b949e"}}>
+          <span key={s} className="state-count" style={{color: lcColor(s)}}>
             {n} {s.toLowerCase()}
           </span>
         ))}
@@ -374,34 +5245,34 @@ function App() {
         <div className="sidebar">
           <div className="commit-panel">
             {snap ? (<>
-              <div className="chash">{snap.hash_short} · {idx+1}/{SNAPSHOTS.length}</div>
-              <div className="cdate">{snap.date}</div>
-              <div className="cmsg">{snap.message}</div>
-            </>) : <div className="cmsg">No snapshots loaded.</div>}
+              <div className="commit-hash">{snap.hash_short} · {idx+1}/{SNAPSHOTS.length}</div>
+              <div className="commit-date">{snap.date}</div>
+              <div className="commit-msg">{snap.message}</div>
+            </>) : <div className="commit-msg" style={{color:"var(--text-dim)"}}>No snapshots.</div>}
           </div>
 
           <div className="concept-list">
-            <h3>This commit</h3>
-            {snap && Object.entries(snap.concept_summary || {}).map(([id, state]) => (
-              <div key={id} className="concept-row">
-                <span className="concept-name">{id}</span>
-                <span className="state-badge" style={{
-                  background: (LC_COLOR[state]||"#64748b")+"22",
-                  color: LC_COLOR[state]||"#64748b"
-                }}>{state}</span>
-              </div>
-            ))}
+            <div className="concept-list-label">This commit</div>
+            {snap && Object.entries(snap.concept_summary || {}).map(([id, state]) => {
+              const lc = LC[state] || LC.STABLE;
+              return (
+                <div key={id} className="concept-row">
+                  <span className="concept-name">{id}</span>
+                  <span className="state-pill" style={{background:lc.bg, color:lc.text}}>{state}</span>
+                </div>
+              );
+            })}
           </div>
 
           {!demo && (
             <div className="stepper">
               <div className="stepper-controls">
-                <button onClick={()=>setIdx(i=>Math.max(i-1,0))} disabled={idx===0}>‹ prev</button>
-                <span className="stepper-label">{idx+1} / {SNAPSHOTS.length}</span>
-                <button onClick={()=>setIdx(i=>Math.min(i+1,SNAPSHOTS.length-1))} disabled={idx===SNAPSHOTS.length-1}>next ›</button>
+                <button className="stepper-btn" onClick={()=>setIdx(i=>Math.max(i-1,0))} disabled={idx===0}>‹ prev</button>
+                <span className="stepper-pos">{idx+1} / {SNAPSHOTS.length}</span>
+                <button className="stepper-btn" onClick={()=>setIdx(i=>Math.min(i+1,SNAPSHOTS.length-1))} disabled={idx===SNAPSHOTS.length-1}>next ›</button>
               </div>
               <input type="range" min={0} max={SNAPSHOTS.length-1} value={idx}
-                onChange={e=>setIdx(Number(e.target.value))}/>
+                onChange={e=>setIdx(Number(e.target.value))} />
             </div>
           )}
         </div>
@@ -410,9 +5281,9 @@ function App() {
       {demo && snap && (
         <div className="presenter-overlay">
           <div className="presenter-card">
-            <div className="phash">{snap.hash_short} · {snap.date} · {snap.era}</div>
-            <div className="pmsg">{snap.message}</div>
-            <div className="hint">← → to navigate · {idx+1}/{SNAPSHOTS.length}</div>
+            <div className="presenter-hash">{snap.hash_short} · {snap.date} · {snap.era}</div>
+            <div className="presenter-msg">{snap.message}</div>
+            <div className="presenter-hint">← → to navigate · {idx+1}/{SNAPSHOTS.length}</div>
           </div>
         </div>
       )}

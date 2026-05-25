@@ -1,155 +1,142 @@
 [
   {
-    "concept_id": "skill-trigger-phrases",
-    "concept_label": "Skill Trigger Phrases",
-    "lifecycle_state": "BORN",
-    "category": "ADD",
-    "significance": 2,
-    "evidence": [
-      "+  Upload NotebookLM audio overviews to element.fm as podcast episodes. Use when",
-      "+  the user says anything like \"upload my podcasts\", \"publish to element.fm\",",
-      "+  \"upload the audio to my podcast\", \"push the reading list audio to element.fm\",",
-      "+  or \"publish today's episodes\"."
-    ],
-    "certainty": 3,
-    "autonomy": 1,
-    "linked_concepts": [
-      "podcast-pipeline",
-      "element-fm-upload"
-    ],
-    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
-  },
-  {
-    "concept_id": "podcast-pipeline",
-    "concept_label": "Personal Podcast Pipeline",
+    "concept_id": "notebooklm-audio-pipeline",
+    "concept_label": "NotebookLM Audio Pipeline",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 3,
-    "evidence": [
-      "+# Personal Podcast Pipeline",
-      "+Uploads NotebookLM audio overviews to element.fm and publishes them as episodes",
-      "+on the \"DHK Daily Brief \u2014 From Inbox to Earbuds\" show.",
-      "+Starred Gmail",
-      "+     \u2193",
-      "+NotebookLM notebooks (per category)",
-      "+     \u2193",
-      "+Audio Overview generated",
-      "+     \u2193",
-      "+nlm CLI download \u2192 ~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/",
-      "+     \u2193",
-      "+upload_to_elementfm.py \u2192 element.fm \"Daily Thinking\" show",
-      "+     \u2193",
-      "+Overcast / Apple Podcasts (via RSS feed)"
-    ],
+    "evidence": "+# Personal Podcast Pipeline\n+\n+Uploads NotebookLM audio overviews to element.fm and publishes them as episodes\n+on the \"DHK Daily Brief \u2014 From Inbox to Earbuds\" show.",
     "certainty": 3,
     "autonomy": 3,
     "linked_concepts": [
-      "element-fm-upload",
+      "elementfm-upload-script",
       "nlm-cli-download",
-      "audio-conversion",
-      "file-naming-convention"
+      "m4a-to-mp3-conversion",
+      "filename-convention"
     ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
-    "concept_id": "element-fm-upload",
+    "concept_id": "elementfm-upload-script",
     "concept_label": "Element.fm Upload Script",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 3,
-    "evidence": [
-      "+| Upload script | `~/scripts/upload_to_elementfm.py` |",
-      "+python3 ~/scripts/upload_to_elementfm.py \\",
-      "+  \"/Users/dhk/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/YYYY-MM-DD-news.m4a\"",
-      "+1. Convert `.m4a` \u2192 `.mp3` via ffmpeg",
-      "+2. POST to `/episodes` to create the episode",
-      "+3. POST audio file to `/episodes/{id}/audio`",
-      "+4. POST to `/episodes/{id}/publish`"
-    ],
+    "evidence": "+ Upload script | `~/scripts/upload_to_elementfm.py` |\n+\n+The script will:\n+1. Convert `.m4a` \u2192 `.mp3` via ffmpeg\n+2. POST to `/episodes` to create the episode\n+3. POST audio file to `/episodes/{id}/audio`\n+4. POST to `/episodes/{id}/publish`",
     "certainty": 3,
     "autonomy": 3,
     "linked_concepts": [
-      "podcast-pipeline",
-      "audio-conversion",
-      "element-fm-api"
+      "notebooklm-audio-pipeline",
+      "m4a-to-mp3-conversion",
+      "elementfm-api-reference",
+      "batch-upload-loop"
     ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
-    "concept_id": "element-fm-api",
+    "concept_id": "m4a-to-mp3-conversion",
+    "concept_label": "M4A\u2192MP3 Conversion",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+ **MP3 only**: element.fm rejects non-MP3 files. The upload script handles conversion automatically via ffmpeg (`/opt/homebrew/bin/ffmpeg`)",
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "elementfm-upload-script",
+      "elementfm-api-reference"
+    ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "elementfm-api-reference",
     "concept_label": "Element.fm API Reference",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 2,
-    "evidence": [
-      "+All endpoints require `Authorization: Token $CLAUDE_ELEMENT_FM_KEY`.",
-      "+GET    /episodes                          \u2192 list episodes",
-      "+POST   /episodes                          \u2192 create episode {title, season_number, episode_number}",
-      "+POST   /episodes/{id}/audio              \u2192 upload audio (multipart, field: \"audio\", MP3 only)",
-      "+POST   /episodes/{id}/publish            \u2192 publish episode"
-    ],
+    "evidence": "+## element.fm API Reference\n+\n+All endpoints require `Authorization: Token $CLAUDE_ELEMENT_FM_KEY`.\n+\n+```\n+GET    /episodes\n+POST   /episodes\n+POST   /episodes/{id}/audio\n+POST   /episodes/{id}/publish\n+```",
     "certainty": 3,
     "autonomy": 3,
     "linked_concepts": [
-      "element-fm-upload",
-      "podcast-pipeline"
+      "elementfm-upload-script",
+      "api-key-config"
     ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
-    "concept_id": "audio-conversion",
-    "concept_label": "M4A to MP3 Conversion",
+    "concept_id": "api-key-config",
+    "concept_label": "API Key Configuration",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 2,
-    "evidence": [
-      "+Audio files are converted from .m4a to .mp3 via ffmpeg before upload.",
-      "+- **MP3 only**: element.fm rejects non-MP3 files. The upload script handles conversion automatically via ffmpeg (`/opt/homebrew/bin/ffmpeg`)"
-    ],
-    "certainty": 4,
-    "autonomy": 3,
-    "linked_concepts": [
-      "element-fm-upload",
-      "podcast-pipeline"
-    ],
-    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
-  },
-  {
-    "concept_id": "file-naming-convention",
-    "concept_label": "Audio File Naming Convention",
-    "lifecycle_state": "BORN",
-    "category": "ADD",
-    "significance": 2,
-    "evidence": [
-      "+| `YYYY-MM-DD-news.m4a` | \ud83d\udcf0 News & Current Affairs | \"\ud83d\udcf0 News & Current Affairs \u2014 Mon DD, YYYY\" |",
-      "+| `YYYY-MM-DD-think.m4a` | \ud83e\udde0 Things to Think About | \"\ud83e\udde0 Things to Think About \u2014 Mon DD, YYYY\" |",
-      "+| `YYYY-MM-DD-professional.m4a` | \ud83d\udcbc Professional Reading | \"\ud83d\udcbc Professional Reading \u2014 Mon DD, YYYY\" |"
-    ],
+    "evidence": "+ API Auth | `Authorization: Token $CLAUDE_ELEMENT_FM_KEY` |\n+...\n+ **Key not set**: Ensure `export CLAUDE_ELEMENT_FM_KEY='...'` is in `~/.zshrc` with no leading space, then `source ~/.zshrc`",
     "certainty": 3,
     "autonomy": 3,
     "linked_concepts": [
-      "podcast-pipeline",
-      "episode-category-slugs"
+      "elementfm-api-reference",
+      "elementfm-upload-script"
     ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
-    "concept_id": "episode-category-slugs",
-    "concept_label": "Episode Category Slugs",
+    "concept_id": "filename-convention",
+    "concept_label": "Audio Filename Convention",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 2,
-    "evidence": [
-      "+for cat in news think professional; do",
-      "+  python3 ~/scripts/upload_to_elementfm.py \"$BASE/${DATE}-${cat}.m4a\"",
-      "+done"
-    ],
+    "evidence": "+ Filename | Category | Episode Title |\n+ `YYYY-MM-DD-news.m4a` | \ud83d\udcf0 News & Current Affairs | ...\n+ `YYYY-MM-DD-think.m4a` | \ud83e\udde0 Things to Think About | ...\n+ `YYYY-MM-DD-professional.m4a` | \ud83d\udcbc Professional Reading | ...",
     "certainty": 3,
     "autonomy": 3,
     "linked_concepts": [
-      "file-naming-convention",
-      "full-day-upload"
+      "batch-upload-loop",
+      "podcast-category-slugs"
     ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "podcast-category-slugs",
+    "concept_label": "Podcast Category Slugs",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+for cat in news think professional; do",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "filename-convention",
+      "batch-upload-loop"
+    ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "batch-upload-loop",
+    "concept_label": "Batch Upload Loop",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+for cat in news think professional; do\n+  python3 ~/scripts/upload_to_elementfm.py \"$BASE/${DATE}-${cat}.m4a\"\n+done",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "podcast-category-slugs",
+      "elementfm-upload-script"
+    ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
@@ -158,98 +145,108 @@
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 2,
-    "evidence": [
-      "+nlm CLI download \u2192 ~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/",
-      "+nlm download audio \"<notebook-id>\" \\",
-      "+  --output \"/Users/dhk/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/YYYY-MM-DD-news.m4a\"",
-      "+Note: The MCP `download_artifact` tool currently fails due to Google auth cookie",
-      "+requirements. Use the `nlm` CLI directly from Terminal instead."
-    ],
-    "certainty": 3,
+    "evidence": "+nlm download audio \"<notebook-id>\" \\\n+  --output \"/Users/dhk/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/YYYY-MM-DD-news.m4a\"\n+\n+Note: The MCP `download_artifact` tool currently fails due to Google auth cookie\n+requirements. Use the `nlm` CLI directly from Terminal instead.",
+    "certainty": 4,
     "autonomy": 3,
     "linked_concepts": [
-      "podcast-pipeline"
+      "notebooklm-audio-pipeline"
     ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
-    "concept_id": "full-day-upload",
-    "concept_label": "Full Day Batch Upload",
+    "concept_id": "skill-trigger-phrases",
+    "concept_label": "Skill Trigger Phrases",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 2,
-    "evidence": [
-      "+## Full Day Upload (all three categories)",
-      "+for cat in news think professional; do",
-      "+  python3 ~/scripts/upload_to_elementfm.py \"$BASE/${DATE}-${cat}.m4a\"",
-      "+done"
-    ],
+    "evidence": "+  Upload NotebookLM audio overviews to element.fm as podcast episodes. Use when\n+  the user says anything like \"upload my podcasts\", \"publish to element.fm\",\n+  \"upload the audio to my podcast\", \"push the reading list audio to element.fm\",\n+  or \"publish today's episodes\".",
     "certainty": 3,
-    "autonomy": 3,
+    "autonomy": 1,
     "linked_concepts": [
-      "episode-category-slugs",
-      "element-fm-upload"
+      "notebooklm-audio-pipeline"
     ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
-    "concept_id": "edge-case-handling",
-    "concept_label": "Upload Edge Cases",
+    "concept_id": "rss-listening-setup",
+    "concept_label": "RSS Listening Setup",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 1,
-    "evidence": [
-      "+- **MP3 only**: element.fm rejects non-MP3 files.",
-      "+- **Episode numbering**: Script auto-increments by fetching current episode count",
-      "+- **Publish fails**: Usually means show author name is missing \u2014 add in element.fm show settings",
-      "+- **Key not set**: Ensure `export CLAUDE_ELEMENT_FM_KEY='...'` is in `~/.zshrc` with no leading space",
-      "+- **Path spaces**: Always wrap the audio file path in double quotes"
-    ],
+    "evidence": "+ **Overcast**: Subscribe via the element.fm RSS feed URL (find in show settings)\n+ **Apple Podcasts**: Submit the RSS feed at podcasters.apple.com (one-time setup)\n+ Once subscribed, new episodes appear automatically after publishing",
     "certainty": 3,
-    "autonomy": 3,
+    "autonomy": 1,
     "linked_concepts": [
-      "element-fm-upload",
-      "audio-conversion"
+      "notebooklm-audio-pipeline"
     ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
-    "concept_id": "file-location",
-    "concept_label": "Audio File Location",
+    "concept_id": "single-show-target",
+    "concept_label": "Single Show Target",
     "lifecycle_state": "BORN",
     "category": "ADD",
-    "significance": 1,
-    "evidence": [
-      "+| Audio folder | `~/Library/Mobile Documents/com~apple~CloudDocs/Personal Podcast/` |"
-    ],
+    "significance": 2,
+    "evidence": "+ Show | DHK Daily Brief \u2014 From Inbox to Earbuds |\n+...upload_to_elementfm.py \u2192 element.fm \"Daily Thinking\" show",
     "certainty": 3,
     "autonomy": 3,
     "linked_concepts": [
-      "podcast-pipeline",
-      "nlm-cli-download"
+      "elementfm-upload-script",
+      "elementfm-api-reference"
     ],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
-    "concept_id": "podcast-pipeline",
-    "concept_label": "Personal Podcast Pipeline",
+    "concept_id": "skill-file-location",
+    "concept_label": "Skill File Location",
+    "lifecycle_state": "BORN",
+    "category": "INFRA",
+    "significance": 1,
+    "evidence": "+++ b/dhk-daily-brief/skills/user/personal-podcast/SKILL.md",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [],
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "skill-file-location",
+    "concept_label": "Skill File Location",
     "lifecycle_state": "MORPHED",
-    "category": "REFINE",
+    "category": "REPLACE",
     "significance": 2,
-    "evidence": [
-      "-upload_to_elementfm.py \u2192 element.fm \"Daily Thinking\" show",
-      "+upload_to_elementfm.py \u2192 element.fm show(s)",
-      "-Overcast / Apple Podcasts (via RSS feed)",
-      "+Apple Podcasts / any client using Element.fm RSS"
-    ],
+    "evidence": "--- a/dhk-daily-brief/skills/user/personal-podcast/SKILL.md\n+++ b/reading-with-ears/skills/user/personal-podcast/SKILL.md\n similarity index 92%\n rename from dhk-daily-brief/skills/user/personal-podcast/SKILL.md\n rename to reading-with-ears/skills/user/personal-podcast/SKILL.md",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [],
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "single-show-target",
+    "concept_label": "Single Show Target",
+    "lifecycle_state": "MORPHED",
+    "category": "REPLACE",
+    "significance": 2,
+    "evidence": "-upload_to_elementfm.py \u2192 element.fm \"Daily Thinking\" show\n+upload_to_elementfm.py \u2192 element.fm show(s)",
     "certainty": 3,
     "autonomy": 3,
     "linked_concepts": [
-      "element-fm-upload",
-      "nlm-cli-download",
-      "audio-conversion",
-      "file-naming-convention"
+      "elementfm-upload-script",
+      "elementfm-api-reference"
     ],
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
@@ -258,60 +255,290 @@
     "lifecycle_state": "MORPHED",
     "category": "REFINE",
     "significance": 1,
-    "evidence": [
-      "-- **Overcast**: Subscribe via the element.fm RSS feed URL (find in show settings)",
-      "-- **Apple Podcasts**: Submit the RSS feed at podcasters.apple.com (one-time setup)",
-      "-- Once subscribed, new episodes appear automatically after publishing",
-      "+- **Apple Podcasts / other clients**: Use each show's Element.fm RSS URL (show settings \u2192 distribution).",
-      "+- Submit feeds at [podcasters.apple.com](https://podcasters.apple.com) where needed (one-time per show).",
-      "+- New episodes appear in the feed after publishing from this pipeline."
-    ],
+    "evidence": "- **Overcast**: Subscribe via the element.fm RSS feed URL (find in show settings)\n- **Apple Podcasts**: Submit the RSS feed at podcasters.apple.com (one-time setup)\n- Once subscribed, new episodes appear automatically after publishing\n+ **Apple Podcasts / other clients**: Use each show's Element.fm RSS URL (show settings \u2192 distribution).\n+ Submit feeds at [podcasters.apple.com](https://podcasters.apple.com) where needed (one-time per show).\n+ New episodes appear in the feed after publishing from this pipeline.",
     "certainty": 3,
     "autonomy": 1,
     "linked_concepts": [
-      "podcast-pipeline"
+      "notebooklm-audio-pipeline"
     ],
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
-    "concept_id": "vital-signs-category",
-    "concept_label": "Vital Signs Category Slug",
-    "lifecycle_state": "BORN",
+    "concept_id": "notebooklm-audio-pipeline",
+    "concept_label": "NotebookLM Audio Pipeline",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "elementfm-upload-script",
+      "nlm-cli-download",
+      "m4a-to-mp3-conversion",
+      "filename-convention"
+    ],
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "elementfm-upload-script",
+    "concept_label": "Element.fm Upload Script",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "notebooklm-audio-pipeline",
+      "m4a-to-mp3-conversion",
+      "elementfm-api-reference",
+      "batch-upload-loop"
+    ],
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "batch-upload-loop",
+    "concept_label": "Batch Upload Loop",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "podcast-category-slugs",
+      "elementfm-upload-script"
+    ],
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "podcast-category-slugs",
+    "concept_label": "Podcast Category Slugs",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "filename-convention",
+      "batch-upload-loop"
+    ],
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "filename-convention",
+    "concept_label": "Audio Filename Convention",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "batch-upload-loop",
+      "podcast-category-slugs"
+    ],
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "skill-trigger-phrases",
+    "concept_label": "Skill Trigger Phrases",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 1,
+    "linked_concepts": [
+      "notebooklm-audio-pipeline"
+    ],
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "filename-convention",
+    "concept_label": "Audio Filename Convention",
+    "lifecycle_state": "MORPHED",
     "category": "ADD",
     "significance": 2,
-    "evidence": [
-      "+| `YYYY-MM-DD-vital-signs.m4a` | \ud83c\udfe5 Healthcare Reading | \"\ud83c\udfe5 Healthcare Reading \u2014 Mon DD, YYYY\" |",
-      "-for cat in news think professional; do",
-      "+for cat in news think professional vital-signs; do"
-    ],
+    "evidence": "+| `YYYY-MM-DD-vital-signs.m4a` | \ud83c\udfe5 Healthcare Reading | \"\ud83c\udfe5 Healthcare Reading \u2014 Mon DD, YYYY\" |",
     "certainty": 3,
     "autonomy": 3,
     "linked_concepts": [
-      "episode-category-slugs",
-      "file-naming-convention",
-      "full-day-upload"
+      "podcast-category-slugs",
+      "batch-upload-loop"
     ],
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   },
   {
-    "concept_id": "full-day-upload",
-    "concept_label": "Full Day Batch Upload",
+    "concept_id": "podcast-category-slugs",
+    "concept_label": "Podcast Category Slugs",
     "lifecycle_state": "MORPHED",
-    "category": "REFINE",
+    "category": "ADD",
     "significance": 2,
-    "evidence": [
-      "-## Full Day Upload (all three categories)",
-      "+## Full Day Upload (all enabled category slugs)",
-      "-for cat in news think professional; do",
-      "+for cat in news think professional vital-signs; do"
-    ],
+    "evidence": "-for cat in news think professional; do\n+for cat in news think professional vital-signs; do",
     "certainty": 3,
     "autonomy": 3,
     "linked_concepts": [
-      "episode-category-slugs",
-      "vital-signs-category",
-      "element-fm-upload"
+      "filename-convention",
+      "batch-upload-loop"
     ],
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "batch-upload-loop",
+    "concept_label": "Batch Upload Loop",
+    "lifecycle_state": "MORPHED",
+    "category": "REFINE",
+    "significance": 1,
+    "evidence": "-## Full Day Upload (all three categories)\n+## Full Day Upload (all enabled category slugs)",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "podcast-category-slugs",
+      "elementfm-upload-script"
+    ],
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "notebooklm-audio-pipeline",
+    "concept_label": "NotebookLM Audio Pipeline",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "elementfm-upload-script",
+      "nlm-cli-download",
+      "m4a-to-mp3-conversion",
+      "filename-convention"
+    ],
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "elementfm-upload-script",
+    "concept_label": "Element.fm Upload Script",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "notebooklm-audio-pipeline",
+      "m4a-to-mp3-conversion",
+      "elementfm-api-reference",
+      "batch-upload-loop"
+    ],
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "rss-listening-setup",
+    "concept_label": "RSS Listening Setup",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 1,
+    "linked_concepts": [
+      "notebooklm-audio-pipeline"
+    ],
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "skill-trigger-phrases",
+    "concept_label": "Skill Trigger Phrases",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 1,
+    "linked_concepts": [
+      "notebooklm-audio-pipeline"
+    ],
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "nlm-cli-download",
+    "concept_label": "NLM CLI Download",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "notebooklm-audio-pipeline"
+    ],
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "m4a-to-mp3-conversion",
+    "concept_label": "M4A\u2192MP3 Conversion",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "elementfm-upload-script",
+      "elementfm-api-reference"
+    ],
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
+  },
+  {
+    "concept_id": "api-key-config",
+    "concept_label": "API Key Configuration",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "elementfm-api-reference",
+      "elementfm-upload-script"
+    ],
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
     "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md"
   }
 ]

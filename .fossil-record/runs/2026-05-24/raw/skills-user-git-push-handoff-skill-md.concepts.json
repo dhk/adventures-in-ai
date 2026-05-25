@@ -1,80 +1,138 @@
 [
   {
     "concept_id": "git-push-ritual",
-    "concept_label": "Step-by-Step Push Ritual",
+    "concept_label": "Git Push Ritual",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 3,
-    "evidence": [
-      "+ Your job is to walk through the push ritual one step at a time, offering to perform each action before proceeding. Do not chain steps together without confirmation.",
-      "+ ## Step 1: Orient",
-      "+ ## Step 2: Stage",
-      "+ ## Step 3: Commit",
-      "+ ## Step 4: Push"
-    ],
+    "evidence": "+You are acting as the end-of-phase operator for a development session.\n+Your job is to walk through the push ritual one step at a time, offering to perform each action before proceeding. Do not chain steps together without confirmation.",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
     "certainty": 4,
     "autonomy": 1,
     "linked_concepts": [
-      "handoff-note-generation",
-      "git-confirmation-gate"
+      "step-by-step-confirmation",
+      "git-orient-step",
+      "git-stage-step",
+      "git-commit-step",
+      "git-push-step",
+      "handoff-note-generation"
     ],
     "file": "skills/user/git-push-handoff/SKILL.md"
   },
   {
-    "concept_id": "git-confirmation-gate",
-    "concept_label": "Per-Step Confirmation Gate",
+    "concept_id": "step-by-step-confirmation",
+    "concept_label": "Step-by-Step Confirmation",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 3,
-    "evidence": [
-      "+ Offer each step individually \u2014 never skip ahead without confirmation",
-      "+ Wait for confirmation. Then stage as directed.",
-      "+ Wait for the user to confirm or provide their own message."
-    ],
+    "evidence": "+Offer each step individually \u2014 never skip ahead without confirmation",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
     "certainty": 4,
     "autonomy": 1,
     "linked_concepts": [
       "git-push-ritual"
+    ],
+    "file": "skills/user/git-push-handoff/SKILL.md"
+  },
+  {
+    "concept_id": "git-orient-step",
+    "concept_label": "Git Orient Step",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+## Step 1: Orient\n+Before doing anything, run:\n+```bash\n+git status\n+git diff --stat\n+```\n+Summarize what you see: which files are changed, staged, or untracked. Present this to the user before proceeding.",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "git-push-ritual",
+      "git-stage-step"
+    ],
+    "file": "skills/user/git-push-handoff/SKILL.md"
+  },
+  {
+    "concept_id": "git-stage-step",
+    "concept_label": "Git Stage Step",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+## Step 2: Stage\n+Ask:\n+> \"Ready to stage all changes (`git add -A`)? Or would you like to stage selectively?\"\n+Wait for confirmation. Then stage as directed.",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
+    "certainty": 3,
+    "autonomy": 1,
+    "linked_concepts": [
+      "git-push-ritual",
+      "step-by-step-confirmation",
+      "git-commit-step"
+    ],
+    "file": "skills/user/git-push-handoff/SKILL.md"
+  },
+  {
+    "concept_id": "git-commit-step",
+    "concept_label": "Git Commit Step",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+## Step 3: Commit\n+Ask the user:\n+> \"What's the commit message? I'll suggest one if you'd like.\"\n+If suggesting, use this format:\n+- First line: imperative, max 72 chars",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
+    "certainty": 3,
+    "autonomy": 1,
+    "linked_concepts": [
+      "git-push-ritual",
+      "step-by-step-confirmation",
+      "git-push-step"
+    ],
+    "file": "skills/user/git-push-handoff/SKILL.md"
+  },
+  {
+    "concept_id": "git-push-step",
+    "concept_label": "Git Push Step",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+## Step 4: Push\n+Ask:\n+> \"Ready to push to `<current branch>` on `<remote>`?\"\n+Run `git branch --show-current` and `git remote -v` first so you can name them accurately.\n+Wait for confirmation. Then:\n+```bash\n+git push\n+```\n+Report the result. If the push fails (e.g. upstream not set, auth issue), surface the error clearly and suggest the fix.",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
+    "certainty": 3,
+    "autonomy": 1,
+    "linked_concepts": [
+      "git-push-ritual",
+      "step-by-step-confirmation",
+      "handoff-note-generation"
     ],
     "file": "skills/user/git-push-handoff/SKILL.md"
   },
   {
     "concept_id": "handoff-note-generation",
-    "concept_label": "Structured Handoff Note",
+    "concept_label": "Handoff Note Generation",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 3,
-    "evidence": [
-      "+ ## Step 5: Handoff Note",
-      "+ **What was done**",
-      "+ **Key decisions**",
-      "+ **Loose ends**",
-      "+ **Gotchas**",
-      "+ **Next step**",
-      "+ The note should make the next session productive in under 60 seconds of reading"
-    ],
+    "evidence": "+## Step 5: Handoff Note\n+**What was done**\n+[Functional summary of what changed and why \u2014 2\u20134 sentences. Not a file list \u2014 meaning and intent.]\n+**Key decisions**\n+**Loose ends**\n+**Gotchas**\n+**Next step**",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
     "certainty": 3,
     "autonomy": 1,
     "linked_concepts": [
-      "handoff-placement-choice",
-      "git-push-ritual"
+      "git-push-ritual",
+      "handoff-placement-options"
     ],
     "file": "skills/user/git-push-handoff/SKILL.md"
   },
   {
-    "concept_id": "handoff-placement-choice",
+    "concept_id": "handoff-placement-options",
     "concept_label": "Handoff Placement Options",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 2,
-    "evidence": [
-      "+ \"Where should this live? Options:",
-      "+ 1. **PR description**",
-      "+ 2. **Commit message body**",
-      "+ 3. **Todoist task note**",
-      "+ 4. **Local notes file**",
-      "+ 5. **Just here in chat**"
-    ],
+    "evidence": "+> \"Where should this live? Options:\n+> 1. **PR description** \u2014 paste it as the body of your pull request\n+> 2. **Commit message body** \u2014 append it to the commit you just made\n+> 3. **Todoist task note** \u2014 attach it to the next-step task\n+> 4. **Local notes file** \u2014 save outside the repo\n+> 5. **Just here in chat** \u2014 use it to open the next session manually\"\n+If they ask for tradeoffs, use the guidance in the **Handoff Placement Tradeoffs** section below.",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
     "certainty": 3,
     "autonomy": 1,
     "linked_concepts": [
@@ -85,35 +143,29 @@
   },
   {
     "concept_id": "handoff-placement-tradeoffs",
-    "concept_label": "Placement Tradeoff Guidance",
+    "concept_label": "Handoff Placement Tradeoffs",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 2,
-    "evidence": [
-      "+ ## Handoff Placement Tradeoffs",
-      "+ Only share this if the user asks. Keep it conversational \u2014 don't dump the whole table unprompted.",
-      "+ **The hybrid that works best for most workflows:**",
-      "+ Commit message body for push-level micro-notes + PR description for the full phase-level handoff."
-    ],
+    "evidence": "+## Handoff Placement Tradeoffs\n+Only share this if the user asks. Keep it conversational \u2014 don't dump the whole table unprompted.\n+**The hybrid that works best for most workflows:**\n+Commit message body for push-level micro-notes + PR description for the full phase-level handoff.",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
     "certainty": 2,
     "autonomy": 1,
     "linked_concepts": [
-      "handoff-placement-choice"
+      "handoff-placement-options"
     ],
     "file": "skills/user/git-push-handoff/SKILL.md"
   },
   {
-    "concept_id": "commit-message-suggestion",
-    "concept_label": "Commit Message Suggestion",
+    "concept_id": "skill-trigger-phrases",
+    "concept_label": "Skill Trigger Phrases",
     "lifecycle_state": "BORN",
     "category": "ADD",
     "significance": 2,
-    "evidence": [
-      "+ If suggesting, use this format:",
-      "+ - First line: imperative, max 72 chars (`Fix null handling in cohort join`)",
-      "+ - Optional second line blank",
-      "+ - Optional body: 1\u20132 lines of *why*, not what"
-    ],
+    "evidence": "+description: Run the end-of-phase git ritual: stage, commit, push, and generate a structured handoff note for the next session. Use this skill whenever the user says anything like \"commit and push\", \"wrap up this phase\", \"end of phase\", \"push my changes\", \"generate a handoff note\", \"write a handoff\", \"close out this session\", \"ready to push\", or \"/push\".",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
     "certainty": 3,
     "autonomy": 1,
     "linked_concepts": [
@@ -122,37 +174,40 @@
     "file": "skills/user/git-push-handoff/SKILL.md"
   },
   {
-    "concept_id": "git-orient-step",
-    "concept_label": "Git Status Orientation",
-    "lifecycle_state": "BORN",
-    "category": "ADD",
+    "concept_id": "git-push-ritual",
+    "concept_label": "Git Push Ritual",
+    "lifecycle_state": "STABLE",
+    "category": null,
     "significance": 1,
-    "evidence": [
-      "+ Before doing anything, run:",
-      "+ git status",
-      "+ git diff --stat",
-      "+ Summarize what you see: which files are changed, staged, or untracked. Present this to the user before proceeding."
-    ],
+    "evidence": null,
+    "commit": "631b5af6f8d99f6d624776c0a3f5fb0f6e7d60e6",
+    "date": "2026-03-28",
     "certainty": 4,
-    "autonomy": 3,
+    "autonomy": 1,
     "linked_concepts": [
-      "git-push-ritual"
+      "step-by-step-confirmation",
+      "git-orient-step",
+      "git-stage-step",
+      "git-commit-step",
+      "git-push-step",
+      "handoff-note-generation"
     ],
     "file": "skills/user/git-push-handoff/SKILL.md"
   },
   {
-    "concept_id": "skill-version-frontmatter",
-    "concept_label": "Skill Frontmatter Metadata",
+    "concept_id": "skill-trigger-phrases",
+    "concept_label": "Skill Trigger Phrases",
     "lifecycle_state": "MORPHED",
     "category": "REFINE",
     "significance": 1,
-    "evidence": [
-      "-description: Run the end-of-phase git ritual: stage, commit, push, and generate a structured handoff note for the next session. Use this skill whenever the user says anything like \"commit and push\", \"wrap up this phase\", \"end of phase\", \"push my changes\", \"generate a handoff note\", \"write a handoff\", \"close out this session\", \"ready to push\", or \"/push\". Triggers any time a development phase is ending and work needs to be committed, pushed, and handed off cleanly.",
-      "+description: \"Run the end-of-phase git ritual: stage, commit, push, and generate a structured handoff note for the next session. Use this skill whenever the user says anything like 'commit and push', 'wrap up this phase', 'end of phase', 'push my changes', 'generate a handoff note', 'write a handoff', 'close out this session', 'ready to push', or '/push'. Triggers any time a development phase is ending and work needs to be committed, pushed, and handed off cleanly.\""
-    ],
+    "evidence": "-description: Run the end-of-phase git ritual: stage, commit, push, and generate a structured handoff note for the next session. Use this skill whenever the user says anything like \"commit and push\", \"wrap up this phase\", \"end of phase\", \"push my changes\", \"generate a handoff note\", \"write a handoff\", \"close out this session\", \"ready to push\", or \"/push\". Triggers any time a development phase is ending and work needs to be committed, pushed, and handed off cleanly.\n+description: \"Run the end-of-phase git ritual: stage, commit, push, and generate a structured handoff note for the next session. Use this skill whenever the user says anything like 'commit and push', 'wrap up this phase', 'end of phase', 'push my changes', 'generate a handoff note', 'write a handoff', 'close out this session', 'ready to push', or '/push'. Triggers any time a development phase is ending and work needs to be committed, pushed, and handed off cleanly.\"",
+    "commit": "631b5af6f8d99f6d624776c0a3f5fb0f6e7d60e6",
+    "date": "2026-03-28",
     "certainty": 3,
     "autonomy": 1,
-    "linked_concepts": [],
+    "linked_concepts": [
+      "git-push-ritual"
+    ],
     "file": "skills/user/git-push-handoff/SKILL.md"
   }
 ]

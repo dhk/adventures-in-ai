@@ -1,10 +1,10 @@
 {
   "phase": 2,
   "completed_files": [
-    "reading-with-ears/skills/user/personal-podcast/SKILL.md",
     "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
-    "skills/user/git-push-handoff/SKILL.md",
-    "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+    "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+    "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+    "skills/user/git-push-handoff/SKILL.md"
   ],
   "processed_hashes": []
 }
