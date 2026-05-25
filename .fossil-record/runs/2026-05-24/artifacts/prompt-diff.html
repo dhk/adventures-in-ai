@@ -56,6 +56,22 @@
     font-family: var(--font-mono);
     font-size: 10px; color: var(--text-dim);
   }
+  .header-nav {
+    display: flex; align-items: center; gap: 4px; margin-left: auto;
+  }
+  .nav-link {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: var(--radius);
+    text-decoration: none; color: var(--text-dim);
+    border: 1px solid transparent;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .nav-link:hover { color: var(--text); background: var(--bg3); }
+  .nav-link.active {
+    color: var(--accent); border-color: rgba(22,163,74,0.3);
+    background: rgba(22,163,74,0.06);
+  }
 
   .tabs {
     display: flex; gap: 0; padding: 0 24px;
@@ -7571,10 +7587,14 @@ function App() {
   return (
     <div id="root">
       <div className="header">
-        <span className="header-title">Fossil Record — Prompt Archaeology</span>
+        <span className="header-title">Fossil Record</span>
         <span className="header-meta">
           {CONCEPTS_DATA.concept_ids?.length || 0} concepts · {CONCEPTS_DATA.sankey_snapshots?.length || 0} commits · {CONCEPTS_DATA.eras?.join(", ")}
         </span>
+        <nav className="header-nav">
+          <a href="sankey.html" className="nav-link">Sankey</a>
+          <a href="prompt-diff.html" className="nav-link active">Archaeology</a>
+        </nav>
       </div>
       <div className="tabs">
         {tabs.map(t => (
