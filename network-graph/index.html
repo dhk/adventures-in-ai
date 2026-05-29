@@ -442,9 +442,10 @@
   <svg id="graph-svg"></svg>
 
   <div class="graph-controls">
-    <button class="ctrl-btn" id="zoom-in"  title="Zoom in">+</button>
-    <button class="ctrl-btn" id="zoom-out" title="Zoom out">−</button>
-    <button class="ctrl-btn" id="zoom-fit" title="Fit to screen">⊡</button>
+    <button class="ctrl-btn" id="zoom-in"   title="Zoom in">+</button>
+    <button class="ctrl-btn" id="zoom-out"  title="Zoom out">−</button>
+    <button class="ctrl-btn" id="zoom-fit"  title="Fit to screen">⊡</button>
+    <button class="ctrl-btn" id="reveal-btn" title="Reveal full names" style="display:none">🔒</button>
   </div>
 
   <div class="perf-warning" id="perf-warning">
@@ -488,6 +489,8 @@ const OWNER_COLORS = ['#F4A261','#E76F51','#2A9D8F','#E9C46A','#8338EC','#FB5607
 // ── Injected by Export Seeded Page (do not rename these) ──────────
 const SEED_DATA = null;
 const PASSWORD_HASH = ''; // SHA-256 hex of access password, '' = no auth
+const REVEAL_HASH = '';   // SHA-256 hex of reveal password; '' = names always visible
+const CONFIG = null;      // null = networking defaults; set by exportSeededPage()
 
 // Metadata for each recognised LinkedIn export type
 const FILE_META = {
@@ -508,6 +511,7 @@ let fileOwners = [];          // [{ id, name, color }]
 let loadedFiles = [];         // [{ file, content, type, ownerName/associatedId, color?, rowCount, matchCount }]
 let primaryUserId = null;
 let graphBuilt = false;
+let namesRevealed = false;
 
 let svg, zoomBehavior, svgGroup, nodeSelection, linkSelection, simulation;
 
@@ -1048,7 +1052,7 @@ function renderD3Graph() {
   nodeSelection
     .on('mouseover', (e, d) => {
       tip.classList.add('visible');
-      document.getElementById('tip-name').textContent     = d.name;
+      document.getElementById('tip-name').textContent     = displayName(d.name);
       document.getElementById('tip-company').textContent  = d.company || '';
       document.getElementById('tip-position').textContent = d.position || '';
       const degTxt = d.degree === 0 ? 'You' : d.degree === 1 ? '1st degree' : d.degree === 2 ? '2nd degree' : d.degree !== null ? `${d.degree} hops away` : '';
@@ -1232,7 +1236,7 @@ function renderResults(rows) {
 
     item.innerHTML = `
       <div class="result-name">
-        ${escHtml(node.name)} <span class="badge ${badgeCls}">${hopLabel}</span>
+        ${escHtml(displayName(node.name))} <span class="badge ${badgeCls}">${hopLabel}</span>
       </div>
       <div class="result-meta">${node.position ? escHtml(node.position) + ' · ' : ''}${escHtml(node.company)}</div>
       ${intro ? `<div class="result-intro">${escHtml(intro)}</div>` : ''}
@@ -1334,6 +1338,58 @@ function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 // ═══════════════════════════════════════════════════════
 //  PASSWORD GATE
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  NAME OBFUSCATION
+// ═══════════════════════════════════════════════════════
+function displayName(fullName) {
+  if (!REVEAL_HASH || namesRevealed) return fullName;
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length < 2) return fullName;
+  return parts[0] + ' ' + parts[parts.length - 1][0] + '.';
+}
+
+async function initRevealGate() {
+  const btn = document.getElementById('reveal-btn');
+  if (!REVEAL_HASH) return;
+
+  if (sessionStorage.getItem('ng_reveal') === REVEAL_HASH) {
+    namesRevealed = true;
+    btn.textContent = '🔓';
+  }
+  btn.style.display = '';
+
+  btn.addEventListener('click', async () => {
+    if (namesRevealed) {
+      namesRevealed = false;
+      sessionStorage.removeItem('ng_reveal');
+      btn.textContent = '🔒';
+      refreshAfterRevealToggle();
+      return;
+    }
+    const pw = prompt('Enter the reveal password to show full names:');
+    if (pw === null) return;
+    const hash = await sha256(pw.trim());
+    if (hash === REVEAL_HASH) {
+      namesRevealed = true;
+      sessionStorage.setItem('ng_reveal', REVEAL_HASH);
+      btn.textContent = '🔓';
+      refreshAfterRevealToggle();
+    } else {
+      alert('Incorrect password — full names remain hidden');
+    }
+  });
+}
+
+function refreshAfterRevealToggle() {
+  // Re-trigger search results if a query is active
+  const q = document.getElementById('company-search').value.trim();
+  if (q.length >= 2) {
+    document.getElementById('company-search').dispatchEvent(new Event('input'));
+  }
+  // Hide tooltip (stale name will refresh on next hover)
+  document.getElementById('tooltip').classList.remove('visible');
+}
+
 async function sha256(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
@@ -1415,9 +1471,21 @@ function loadSeedData(data) {
 //  PASSWORD_HASH, and triggers a download of index.html.
 // ═══════════════════════════════════════════════════════
 async function exportSeededPage() {
-  const pw   = prompt('Set a password for the published page\n(leave blank to publish without a password):');
-  if (pw === null) return; // user cancelled
+  const pw = prompt('Set a password for the published page\n(leave blank to publish without a password):');
+  if (pw === null) return;
   const hash = pw.trim() ? await sha256(pw.trim()) : '';
+
+  const revealPw = prompt('Set a reveal password to unlock full names\n(leave blank — names always visible):');
+  if (revealPw === null) return;
+  const revealHash = revealPw.trim() ? await sha256(revealPw.trim()) : '';
+
+  const exportedConfig = {
+    mode:              'networking',
+    title:             'Woven',
+    searchField:       'company',
+    searchLabel:       'Find Your Path to a Company',
+    searchPlaceholder: 'Type a company name…',
+  };
 
   const seedData = {
     exportedAt:    new Date().toISOString(),
@@ -1444,7 +1512,7 @@ async function exportSeededPage() {
     html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
   }
 
-  // Inject the two sentinel constants
+  // Inject all four sentinel constants
   html = html.replace(
     /const SEED_DATA\s*=\s*null;/,
     `const SEED_DATA = ${JSON.stringify(seedData)};`
@@ -1452,6 +1520,14 @@ async function exportSeededPage() {
   html = html.replace(
     /const PASSWORD_HASH\s*=\s*'[^']*';/,
     `const PASSWORD_HASH = '${hash}';`
+  );
+  html = html.replace(
+    /const REVEAL_HASH\s*=\s*'[^']*';/,
+    `const REVEAL_HASH = '${revealHash}';`
+  );
+  html = html.replace(
+    /const CONFIG\s*=\s*null;/,
+    `const CONFIG = ${JSON.stringify(exportedConfig)};`
   );
 
   const blob = new Blob([html], { type: 'text/html' });
@@ -1467,6 +1543,7 @@ async function exportSeededPage() {
 // ═══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
   await initPasswordGate();
+  await initRevealGate();
   if (SEED_DATA) loadSeedData(SEED_DATA);
   document.getElementById('export-btn').addEventListener('click', exportSeededPage);
 });
