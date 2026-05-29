@@ -5,186 +5,177 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Twine — Hire out of the networks your clients already trust.</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:         #f7f5f0;
-    --surface:    #ffffff;
-    --ink:        #111110;
-    --ink-mid:    #555550;
-    --ink-light:  #999990;
-    --accent:     #1a1a18;
-    --warm:       #c8b89a;
-    --rule:       #e2dfd8;
-    --tag-bg:     #eeece6;
-    --radius:     4px;
-    --mono:       'DM Mono', 'Courier New', monospace;
-    --sans:       system-ui, -apple-system, sans-serif;
-    --max:        1180px;
+    --bg:  #f9f8f6;
+    --bg2: #f2f1ee;
+    --bg3: #eae9e5;
+    --border:       #dddbd6;
+    --border-light: #e8e6e1;
+    --text:       #0a0a09;
+    --text-head:  #0a0a09;
+    --text-muted: #111110;
+    --text-dim:   #5a5850;
+    --accent:        #16a34a;
+    --accent-blue:   #2970d6;
+    --accent-purple: #7c5ce0;
+    --accent-orange: #d94f2a;
+    --max-width:     1100px;
+    --header-height: 56px;
+    --border-radius: 4px;
+    --font-sans: 'Barlow', system-ui, sans-serif;
+    --font-cond: 'Barlow Condensed', system-ui, sans-serif;
+    --font-mono: 'DM Mono', 'Courier New', monospace;
+    --space-1: 4px;  --space-2: 8px;   --space-3: 12px; --space-4: 16px;
+    --space-5: 24px; --space-6: 32px;  --space-7: 48px; --space-8: 64px;
+    --space-9: 80px; --space-10: 120px;
   }
 
-  html { background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  html { background: var(--bg); color: var(--text); font-family: var(--font-sans); font-weight: 300; -webkit-font-smoothing: antialiased; }
   body { min-height: 100vh; }
 
-  /* ── LAYOUT ── */
-  .container { max-width: var(--max); margin: 0 auto; padding: 0 40px; }
-  section { padding: 96px 0; border-bottom: 1px solid var(--rule); }
+  .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
 
-  /* ── TYPE ── */
-  h1 { font-size: clamp(2.4rem, 4.6vw, 3.5rem); font-weight: 600; letter-spacing: -0.025em; line-height: 1.06; }
-  h2 { font-size: clamp(1.5rem, 2.8vw, 2.15rem); font-weight: 600; letter-spacing: -0.018em; line-height: 1.18; }
-  h3 { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
-  p  { font-size: 1rem; line-height: 1.7; color: var(--ink-mid); text-wrap: pretty; }
-  p + p { margin-top: 1em; }
+  h1 { font-family: var(--font-cond); font-size: clamp(42px, 5vw, 68px); font-weight: 700; letter-spacing: -0.01em; line-height: 1.04; color: var(--text-head); }
+  h2 { font-family: var(--font-cond); font-size: 28px; font-weight: 600; letter-spacing: 0.01em; line-height: 1.2; color: var(--text-head); }
+  h3 { font-family: var(--font-cond); font-size: 20px; font-weight: 600; color: var(--text-head); }
+  p  { font-size: 1rem; font-weight: 300; line-height: 1.75; color: var(--text-muted); }
+  p + p { margin-top: var(--space-5); }
 
-  .mono { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-light); }
-  .tag {
-    display: inline-block; background: var(--tag-bg); border: 1px solid var(--rule);
-    border-radius: var(--radius); padding: 4px 11px; font-family: var(--mono);
-    font-size: 0.7rem; letter-spacing: 0.05em; color: var(--ink-mid); text-transform: uppercase;
+  .meta { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--text-dim); }
+  .tag-label {
+    display: inline-block; font-family: var(--font-mono); font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 10px;
+    border-radius: var(--border-radius); background: rgba(124,92,224,0.10); color: var(--accent-purple);
   }
 
-  /* ── NAV ── */
+  /* NAV */
   .nav {
-    position: sticky; top: 0; z-index: 50;
-    background: rgba(247,245,240,0.82); backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--rule);
+    position: sticky; top: 0; z-index: 50; height: var(--header-height);
+    background: rgba(249,248,246,0.88); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border); display: flex; align-items: center;
   }
-  .nav-inner {
-    max-width: var(--max); margin: 0 auto; padding: 18px 40px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .wordmark { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.02em; display: flex; align-items: center; gap: 9px; }
-  .wordmark .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warm); }
-  .nav-actions { display: flex; align-items: center; gap: 24px; }
-  .nav-link { font-size: 0.85rem; color: var(--ink-mid); text-decoration: none; }
-  .nav-link:hover { color: var(--ink); }
+  .nav-inner { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; width: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .wordmark { font-family: var(--font-cond); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .wordmark .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-purple); flex-shrink: 0; }
+  .nav-links { display: flex; align-items: center; gap: var(--space-7); }
+  .nav-link { font-family: var(--font-sans); font-size: 14px; font-weight: 400; color: var(--text-dim); text-decoration: none; transition: color 0.15s; }
+  .nav-link:hover { color: var(--text); }
+  .nav-cta { font-family: var(--font-sans); font-size: 14px; font-weight: 500; background: var(--accent); color: white; padding: 8px 18px; border-radius: var(--border-radius); text-decoration: none; transition: background 0.15s; }
+  .nav-cta:hover { background: #15803d; }
 
-  /* ── BUTTONS ── */
-  .btn-primary {
-    display: inline-block; background: var(--ink); color: white;
-    padding: 12px 24px; border-radius: var(--radius); font-size: 0.875rem;
-    font-weight: 500; text-decoration: none; letter-spacing: -0.01em;
-    transition: transform 0.15s ease, background 0.15s ease;
-  }
-  .btn-primary:hover { background: #000; transform: translateY(-1px); }
-  .btn-ghost {
-    display: inline-block; color: var(--ink-mid); font-size: 0.875rem;
-    text-decoration: none; border-bottom: 1px solid var(--rule); padding-bottom: 2px;
-    transition: color 0.15s ease, border-color 0.15s ease;
-  }
-  .btn-ghost:hover { color: var(--ink); border-color: var(--ink-light); }
-  .cta-row { display: flex; align-items: center; gap: 22px; }
+  /* SECTION DIVIDER */
+  .section-divider { display: flex; align-items: center; gap: 20px; padding: var(--space-7) 0 var(--space-6); border-top: 1px solid var(--border); }
+  .section-divider span { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); white-space: nowrap; }
+  .section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  /* ── HERO ── */
-  .hero { padding: 104px 0 96px; border-bottom: 1px solid var(--rule); }
-  .hero-grid { display: grid; grid-template-columns: 1fr 440px; gap: 72px; align-items: center; }
-  .hero-eyebrow { margin-bottom: 26px; }
-  .hero h1 { margin-bottom: 26px; }
-  .hero-sub { font-size: 1.18rem; line-height: 1.62; color: var(--ink-mid); max-width: 490px; margin-bottom: 38px; }
+  /* BUTTONS */
+  .btn-primary { font-family: var(--font-sans); font-size: 15px; font-weight: 500; background: var(--accent); color: white; padding: 12px 26px; border-radius: var(--border-radius); text-decoration: none; display: inline-block; transition: background 0.15s, transform 0.15s; }
+  .btn-primary:hover { background: #15803d; transform: translateY(-1px); }
+  .btn-ghost { font-family: var(--font-sans); font-size: 15px; font-weight: 400; color: var(--text-dim); text-decoration: none; border-bottom: 1px solid var(--border); padding-bottom: 2px; display: inline-block; transition: color 0.15s, border-color 0.15s; }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-dim); }
+  .cta-row { display: flex; align-items: center; gap: var(--space-5); }
 
-  .graph-hero { width: 100%; aspect-ratio: 1 / 0.92; position: relative; }
+  /* HERO */
+  .hero { padding: var(--space-10) 0 var(--space-9); }
+  .hero-grid { display: grid; grid-template-columns: 1fr 420px; gap: var(--space-9); align-items: center; }
+  .hero-eyebrow { margin-bottom: var(--space-5); }
+  .hero h1 { margin-bottom: var(--space-5); }
+  .hero-sub { font-size: 18px; font-weight: 300; line-height: 1.65; color: var(--text-dim); max-width: 500px; margin-bottom: var(--space-7); }
+
+  /* GRAPH ANIMATION */
+  .graph-hero { width: 100%; aspect-ratio: 1 / 0.9; }
   .graph-hero svg { width: 100%; height: 100%; overflow: visible; }
-
-  /* graph animation */
   .warm-edge { stroke-dasharray: 200; stroke-dashoffset: 200; animation: draw 1.1s ease forwards; }
   .warm-edge.e2 { animation-delay: 0.9s; }
   @keyframes draw { to { stroke-dashoffset: 0; } }
   .node-pop { opacity: 0; animation: pop 0.5s ease forwards; }
   .node-pop.n2 { animation-delay: 0.7s; }
   .node-pop.n3 { animation-delay: 1.5s; }
-  @keyframes pop { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+  @keyframes pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
   .lbl { opacity: 0; animation: fade 0.6s ease forwards; }
   .lbl.l1 { animation-delay: 0.3s; } .lbl.l2 { animation-delay: 1s; } .lbl.l3 { animation-delay: 1.8s; }
   @keyframes fade { to { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) {
-    .warm-edge, .node-pop, .lbl { animation: none; stroke-dashoffset: 0; opacity: 1; }
-  }
+  @media (prefers-reduced-motion: reduce) { .warm-edge, .node-pop, .lbl { animation: none; stroke-dashoffset: 0; opacity: 1; } }
 
-  /* ── DARK PANEL ── */
-  .dark-panel { background: var(--accent); color: white; border-bottom: none; }
-  .dark-panel p { color: rgba(255,255,255,0.66); }
-  .dark-panel h2 { color: white; }
-  .dark-panel .mono { color: rgba(255,255,255,0.36); }
-  .dark-panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  /* SECTIONS */
+  .section-elevated { background: var(--bg2); }
+  .section-inner { padding: var(--space-2) 0 var(--space-9); }
+  .section-pad { padding: var(--space-2) 0 var(--space-9); }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-9); align-items: start; }
 
-  /* ── HOW IT WORKS ── */
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 60px; }
-  .step { padding: 32px 36px 32px 0; border-top: 2px solid var(--ink); position: relative; }
-  .step:not(:last-child) { padding-right: 48px; }
-  .step-num { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; color: var(--ink-light); margin-bottom: 18px; }
-  .step h3 { margin-bottom: 12px; }
+  /* STEPS */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); margin-top: var(--space-7); }
+  .step { padding: var(--space-6) var(--space-6) var(--space-6) var(--space-4); border-top: 2px solid var(--text); border-left: 3px solid transparent; border-radius: 0 var(--border-radius) var(--border-radius) 0; transition: border-left-color 0.15s, background 0.15s; }
+  .step:hover { background: var(--bg3); border-left-color: var(--accent); }
+  .step-num { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: var(--space-4); }
+  .step h3 { margin-bottom: var(--space-3); }
+  .step p { font-size: 15px; }
 
-  /* ── TWO-PANEL ── */
-  .two-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  /* WARMTH BARS */
+  .warmth-demo { margin-top: var(--space-6); display: flex; flex-direction: column; gap: var(--space-5); }
+  .warmth-row { display: flex; align-items: center; gap: var(--space-4); }
+  .warmth-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em; color: var(--text-dim); width: 210px; flex-shrink: 0; }
+  .warmth-track { flex: 1; height: 5px; border-radius: 3px; background: var(--border); overflow: hidden; }
+  .warmth-fill { height: 100%; border-radius: 3px; background: var(--accent-orange); width: 0; transition: width 1s cubic-bezier(0.22,1,0.36,1); }
+  .warmth-score { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--text); width: 36px; text-align: right; flex-shrink: 0; }
 
-  /* ── WARMTH BAR ── */
-  .warmth-demo { margin-top: 36px; display: flex; flex-direction: column; gap: 18px; }
-  .warmth-row { display: flex; align-items: center; gap: 16px; }
-  .warmth-label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.03em; color: var(--ink-mid); width: 200px; flex-shrink: 0; }
-  .warmth-track { flex: 1; height: 5px; border-radius: 3px; background: var(--rule); overflow: hidden; }
-  .warmth-fill { height: 100%; border-radius: 3px; background: var(--warm); width: 0; transition: width 1s cubic-bezier(0.22,1,0.36,1); }
-  .warmth-score { font-family: var(--mono); font-size: 0.72rem; color: var(--ink); width: 34px; text-align: right; flex-shrink: 0; font-weight: 500; }
+  /* PULL QUOTE */
+  .pull-quote { border-left: 3px solid var(--accent); padding-left: var(--space-5); margin-top: var(--space-7); }
+  .pull-quote p { font-size: 17px; line-height: 1.6; font-style: italic; color: var(--text-muted); font-weight: 300; }
 
-  .pull-quote { border-left: 2px solid var(--warm); padding-left: 28px; margin: 44px 0 0; }
-  .pull-quote p { font-size: 1.28rem; line-height: 1.5; color: var(--ink); }
+  /* PRIVACY PILLS */
+  .privacy-pills { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-5); }
+  .pill { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; padding: 5px 11px; border-radius: var(--border-radius); background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border); }
 
-  .privacy-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 30px; }
-
-  /* ── FOOTER CTA ── */
-  .footer-cta { background: var(--accent); color: white; text-align: center; padding: 116px 40px; }
-  .footer-cta h2 { color: white; margin-bottom: 18px; }
-  .footer-cta p { color: rgba(255,255,255,0.58); margin-bottom: 42px; font-size: 1.05rem; }
+  /* FOOTER CTA */
+  .footer-cta { background: var(--text); color: white; padding: var(--space-10) var(--space-5); text-align: center; }
+  .footer-cta h2 { font-family: var(--font-cond); font-size: clamp(32px, 4vw, 52px); font-weight: 700; letter-spacing: -0.01em; color: white; margin-bottom: var(--space-4); }
+  .footer-cta .sub { font-size: 16px; font-weight: 300; color: rgba(255,255,255,0.55); margin-bottom: var(--space-7); }
   .footer-cta .cta-row { justify-content: center; }
-  .footer-cta .btn-primary { background: white; color: var(--ink); }
-  .footer-cta .btn-primary:hover { background: var(--warm); }
-  .footer-cta .btn-ghost { color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.22); }
+  .footer-cta .btn-primary { background: var(--accent); }
+  .footer-cta .btn-primary:hover { background: #15803d; }
+  .footer-cta .btn-ghost { color: rgba(255,255,255,0.45); border-color: rgba(255,255,255,0.2); }
   .footer-cta .btn-ghost:hover { color: white; border-color: rgba(255,255,255,0.5); }
 
-  /* ── SITE FOOTER ── */
-  .site-footer { background: var(--bg); padding: 40px 0; }
-  .site-footer-inner { max-width: var(--max); margin: 0 auto; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-  .site-footer .mono { font-size: 0.68rem; }
+  /* SITE FOOTER */
+  .site-footer { background: var(--bg); border-top: 1px solid var(--border); padding: var(--space-6) 0; }
+  .site-footer-inner { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
 
-  .section-label { margin-bottom: 18px; }
-  .lead { font-size: 1.1rem; color: var(--ink-mid); max-width: 540px; margin-top: 18px; }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 880px) {
-    .hero-grid, .two-panel, .dark-panel-grid { grid-template-columns: 1fr; gap: 48px; }
-    .steps { grid-template-columns: 1fr; gap: 0; }
-    .step { padding: 28px 0; }
-    .graph-hero { order: -1; max-width: 380px; margin: 0 auto; }
-    .container { padding: 0 24px; }
-    .nav-inner { padding: 16px 24px; }
-    section { padding: 72px 0; }
-    .nav-actions .nav-link { display: none; }
+  /* RESPONSIVE */
+  @media (max-width: 860px) {
+    .hero-grid, .two-col { grid-template-columns: 1fr; gap: var(--space-7); }
+    .steps { grid-template-columns: 1fr; }
+    .graph-hero { order: -1; max-width: 360px; margin: 0 auto; }
+    .nav-links .nav-link { display: none; }
+    .warmth-label { width: 150px; }
   }
 </style>
 </head>
 <body>
 
-<!-- ── NAV ── -->
+<!-- NAV -->
 <nav class="nav">
   <div class="nav-inner">
-    <span class="wordmark"><span class="dot"></span>Twine</span>
-    <div class="nav-actions">
+    <a href="#" class="wordmark"><span class="dot"></span>Twine</a>
+    <div class="nav-links">
       <a href="#how" class="nav-link">How it works</a>
       <a href="#warmth" class="nav-link">Warmth</a>
       <a href="#privacy" class="nav-link">Privacy</a>
-      <a href="#access" class="btn-primary">Request early access</a>
+      <a href="#access" class="nav-cta">Request early access</a>
     </div>
   </div>
 </nav>
 
-<!-- ── HERO ── -->
-<section class="hero" data-screen-label="Hero">
+<!-- HERO -->
+<section class="hero">
   <div class="container">
     <div class="hero-grid">
       <div>
-        <div class="hero-eyebrow"><span class="tag">Twine — Early Access</span></div>
+        <div class="hero-eyebrow"><span class="tag-label">Early Access</span></div>
         <h1>Hire out of the networks your clients already trust.</h1>
         <p class="hero-sub">Twine turns your client's LinkedIn into a searchable map of warm paths. Before you make a single call, you know who knows who — and how warm the connection is.</p>
         <div class="cta-row">
@@ -192,57 +183,42 @@
           <a href="#" class="btn-ghost">See a demo graph</a>
         </div>
       </div>
-
-      <!-- NETWORK GRAPH ILLUSTRATION -->
       <div class="graph-hero">
         <svg viewBox="0 0 380 340" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Cold connections — faint background mesh -->
-          <line x1="85" y1="70" x2="190" y2="165" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="85" y1="70" x2="310" y2="100" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="310" y1="100" x2="260" y2="240" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="40" y1="210" x2="140" y2="290" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="40" y1="210" x2="85" y2="70" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="140" y1="290" x2="260" y2="240" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="310" y1="100" x2="340" y2="200" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="190" y1="165" x2="140" y2="290" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="190" y1="165" x2="260" y2="240" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="50" y1="130" x2="85" y2="70" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="50" y1="130" x2="40" y2="210" stroke="#e2dfd8" stroke-width="1"/>
-          <line x1="230" y1="50" x2="310" y2="100" stroke="#e2dfd8" stroke-width="1"/>
-
-          <!-- WARM PATH — highlighted route -->
-          <line class="warm-edge" x1="190" y1="165" x2="85" y2="70" stroke="#c8b89a" stroke-width="2.5" stroke-linecap="round"/>
-          <line class="warm-edge e2" x1="85" y1="70" x2="230" y2="50" stroke="#c8b89a" stroke-width="2.5" stroke-linecap="round"/>
-
-          <!-- Cold nodes -->
-          <circle cx="310" cy="100" r="5.5" fill="#e2dfd8"/>
-          <circle cx="260" cy="240" r="5.5" fill="#e2dfd8"/>
-          <circle cx="40" cy="210" r="5.5" fill="#e2dfd8"/>
-          <circle cx="140" cy="290" r="5.5" fill="#e2dfd8"/>
-          <circle cx="340" cy="200" r="5.5" fill="#e2dfd8"/>
-          <circle cx="50" cy="130" r="4" fill="#e2dfd8"/>
-
-          <!-- Warmth dots on path -->
-          <circle cx="138" cy="118" r="4" fill="#c8b89a"/>
-          <circle cx="157" cy="60" r="4" fill="#c8b89a" opacity="0.7"/>
-
-          <!-- PATH NODES -->
+          <line x1="85" y1="70" x2="190" y2="165" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="85" y1="70" x2="310" y2="100" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="310" y1="100" x2="260" y2="240" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="40" y1="210" x2="140" y2="290" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="40" y1="210" x2="85" y2="70" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="140" y1="290" x2="260" y2="240" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="310" y1="100" x2="340" y2="200" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="190" y1="165" x2="140" y2="290" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="190" y1="165" x2="260" y2="240" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="50" y1="130" x2="85" y2="70" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="50" y1="130" x2="40" y2="210" stroke="#dddbd6" stroke-width="1"/>
+          <line x1="230" y1="50" x2="310" y2="100" stroke="#dddbd6" stroke-width="1"/>
+          <line class="warm-edge" x1="190" y1="165" x2="85" y2="70" stroke="#d94f2a" stroke-width="2.5" stroke-linecap="round"/>
+          <line class="warm-edge e2" x1="85" y1="70" x2="230" y2="50" stroke="#d94f2a" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="310" cy="100" r="5" fill="#dddbd6"/>
+          <circle cx="260" cy="240" r="5" fill="#dddbd6"/>
+          <circle cx="40" cy="210" r="5" fill="#dddbd6"/>
+          <circle cx="140" cy="290" r="5" fill="#dddbd6"/>
+          <circle cx="340" cy="200" r="5" fill="#dddbd6"/>
+          <circle cx="50" cy="130" r="3.5" fill="#dddbd6"/>
+          <circle cx="138" cy="118" r="4" fill="#d94f2a"/>
+          <circle cx="157" cy="60" r="4" fill="#d94f2a" opacity="0.6"/>
           <g class="node-pop" style="transform-origin:190px 165px;">
-            <circle cx="190" cy="165" r="11" fill="#111110"/>
-            <circle cx="190" cy="165" r="15" fill="none" stroke="#111110" stroke-width="1.5" stroke-dasharray="2 3"/>
+            <circle cx="190" cy="165" r="11" fill="#0a0a09"/>
+            <circle cx="190" cy="165" r="15" fill="none" stroke="#0a0a09" stroke-width="1.5" stroke-dasharray="2 3"/>
           </g>
-          <circle class="node-pop n2" style="transform-origin:85px 70px;" cx="85" cy="70" r="9" fill="#555550"/>
-          <circle class="node-pop n3" style="transform-origin:230px 50px;" cx="230" cy="50" r="9" fill="#111110"/>
-
-          <!-- Labels -->
-          <text class="lbl l1" x="190" y="190" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#999990" letter-spacing="0.04em">YOU</text>
-          <text class="lbl l2" x="85" y="56" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#999990" letter-spacing="0.04em">SARAH</text>
-          <text class="lbl l3" x="230" y="36" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#999990" letter-spacing="0.04em">TARGET</text>
-
-          <!-- Company badge on target -->
+          <circle class="node-pop n2" style="transform-origin:85px 70px;" cx="85" cy="70" r="9" fill="#5a5850"/>
+          <circle class="node-pop n3" style="transform-origin:230px 50px;" cx="230" cy="50" r="9" fill="#16a34a"/>
+          <text class="lbl l1" x="190" y="190" text-anchor="middle" font-family="'DM Mono', monospace" font-size="8.5" fill="#5a5850" letter-spacing="0.06em">YOU</text>
+          <text class="lbl l2" x="85" y="56" text-anchor="middle" font-family="'DM Mono', monospace" font-size="8.5" fill="#5a5850" letter-spacing="0.06em">SARAH</text>
+          <text class="lbl l3" x="230" y="36" text-anchor="middle" font-family="'DM Mono', monospace" font-size="8.5" fill="#5a5850" letter-spacing="0.06em">TARGET</text>
           <g class="lbl l3">
-            <rect x="195" y="20" width="70" height="16" rx="2" fill="#eeece6"/>
-            <text x="230" y="31" text-anchor="middle" font-family="'DM Mono', monospace" font-size="7" fill="#555550" letter-spacing="0.05em">STRIPE ENG</text>
+            <rect x="193" y="20" width="74" height="16" rx="2" fill="rgba(22,163,74,0.10)"/>
+            <text x="230" y="31" text-anchor="middle" font-family="'DM Mono', monospace" font-size="7" fill="#15803d" letter-spacing="0.06em">STRIPE ENG</text>
           </g>
         </svg>
       </div>
@@ -250,157 +226,159 @@
   </div>
 </section>
 
-<!-- ── THE PROBLEM ── -->
-<section class="dark-panel" data-screen-label="Problem">
+<!-- THE PROBLEM -->
+<div class="section-elevated">
   <div class="container">
-    <div class="dark-panel-grid">
-      <div>
-        <div class="mono" style="margin-bottom: 24px;">The problem</div>
-        <h2>You're hired. You have a brief.<br>And you're starting cold.</h2>
-      </div>
-      <div>
-        <p>Your client knows exactly who they want. They've worked with these people. They've seen them present. They've hired them before. That knowledge lives in their LinkedIn — and right now it's invisible to you.</p>
-        <p>Cold outreach on a warm network is waste. You're not looking for strangers. You're looking for people your client already trusts — you just can't see them yet.</p>
-        <p style="color: white;">Twine closes the gap.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── HOW IT WORKS ── -->
-<section id="how" data-screen-label="How it works">
-  <div class="container">
-    <div class="section-label"><span class="mono">How it works</span></div>
-    <h2>Three steps from brief to warm path.</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">01 — Upload</div>
-        <h3>One file from your client.</h3>
-        <p>Your client exports their LinkedIn data — one CSV, five minutes. You upload it to Twine. Their entire network is now a searchable graph.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">02 — Map</div>
-        <h3>Warmth, not just connections.</h3>
-        <p>Twine builds a live network — nodes for every connection, edges weighted by warmth. Messages, recommendations, shared history. Who they actually know, not just who they're linked to.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">03 — Hire</div>
-        <h3>The shortest warm path.</h3>
-        <p>Search by role or company. Twine shows you every candidate and who should make the introduction — ranked by relationship strength before you pick up the phone.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── WARMTH DIFFERENCE ── -->
-<section id="warmth" data-screen-label="Warmth difference">
-  <div class="container">
-    <div class="two-panel">
-      <div class="left">
-        <span class="mono" style="display:block; margin-bottom: 24px;">The warmth difference</span>
-        <h2>Not all connections are equal.</h2>
-        <div class="warmth-demo">
-          <div class="warmth-row">
-            <span class="warmth-label">Connected, no interaction</span>
-            <div class="warmth-track"><div class="warmth-fill" data-w="10"></div></div>
-            <span class="warmth-score">1.0</span>
-          </div>
-          <div class="warmth-row">
-            <span class="warmth-label">Invitation accepted</span>
-            <div class="warmth-track"><div class="warmth-fill" data-w="25"></div></div>
-            <span class="warmth-score">2.5</span>
-          </div>
-          <div class="warmth-row">
-            <span class="warmth-label">Regular messages, recent</span>
-            <div class="warmth-track"><div class="warmth-fill" data-w="65"></div></div>
-            <span class="warmth-score">6.5</span>
-          </div>
-          <div class="warmth-row">
-            <span class="warmth-label">Written recommendation</span>
-            <div class="warmth-track"><div class="warmth-fill" data-w="95"></div></div>
-            <span class="warmth-score">9.5</span>
-          </div>
+    <div class="section-inner">
+      <div class="section-divider"><span>The problem</span></div>
+      <div class="two-col">
+        <div><h2>You're hired. You have a brief.<br>And you're starting cold.</h2></div>
+        <div>
+          <p>Your client knows exactly who they want. They've worked with these people. They've seen them present. They've hired them before. That knowledge lives in their LinkedIn — and right now it's invisible to you.</p>
+          <p>Cold outreach on a warm network is waste. You're not looking for strangers. You're looking for people your client already trusts — you just can't see them yet.</p>
+          <p>Twine closes the gap.</p>
         </div>
       </div>
-      <div class="right">
-        <p style="margin-top: 56px;">A 1st-degree connection who exchanged three messages three years ago is not the same as someone who left a written recommendation. Twine knows the difference.</p>
-        <p>Every edge in the graph carries a warmth score — built from message frequency, recency, recommendations, and who reached out first.</p>
-        <p>Your intro strategy is ranked before you make the first call. You lead with the warmest path. Every time.</p>
-        <div class="pull-quote">
-          <p>"The best candidates are already in your client's network. Twine just makes them findable."</p>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="section-pad">
+      <div class="section-divider"><span>How it works</span></div>
+      <h2>Three steps from brief to warm path.</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01 — Upload</div>
+          <h3>One file from your client.</h3>
+          <p>Your client exports their LinkedIn data — one CSV, five minutes. You upload it to Twine. Their entire network is now a searchable graph.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">02 — Map</div>
+          <h3>Warmth, not just connections.</h3>
+          <p>Twine builds a live network — nodes for every connection, edges weighted by warmth. Messages, recommendations, shared history. Who they actually know, not just who they're linked to.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">03 — Hire</div>
+          <h3>The shortest warm path.</h3>
+          <p>Search by role or company. Twine shows you every candidate and who should make the introduction — ranked by relationship strength before you pick up the phone.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── THE WORKFLOW ── -->
-<section class="dark-panel" data-screen-label="Workflow">
+<!-- WARMTH DIFFERENCE -->
+<div class="section-elevated" id="warmth">
   <div class="container">
-    <div class="dark-panel-grid">
-      <div>
-        <div class="mono" style="margin-bottom: 24px;">The recruiter workflow</div>
-        <h2>One upload.<br>Total alignment.</h2>
-      </div>
-      <div>
-        <p>When the founder hands you their export, Twine becomes your shared map. When the Head of Engineering asks "who do we know at Stripe?" — you have the same answer they do, before the meeting ends.</p>
-        <p>No guessing. No "let me check your LinkedIn." The network is already in front of you — organised, weighted, and searchable by the people who matter most.</p>
-        <p style="color: white;">Every client brief becomes a rich map you can navigate from day one. Not better networking. Richer hiring.</p>
+    <div class="section-inner">
+      <div class="section-divider"><span>The warmth difference</span></div>
+      <div class="two-col">
+        <div>
+          <h2>Not all connections are equal.</h2>
+          <div class="warmth-demo">
+            <div class="warmth-row">
+              <span class="warmth-label">Connected, no interaction</span>
+              <div class="warmth-track"><div class="warmth-fill" data-w="10"></div></div>
+              <span class="warmth-score">1.0</span>
+            </div>
+            <div class="warmth-row">
+              <span class="warmth-label">Invitation accepted</span>
+              <div class="warmth-track"><div class="warmth-fill" data-w="25"></div></div>
+              <span class="warmth-score">2.5</span>
+            </div>
+            <div class="warmth-row">
+              <span class="warmth-label">Regular messages, recent</span>
+              <div class="warmth-track"><div class="warmth-fill" data-w="65"></div></div>
+              <span class="warmth-score">6.5</span>
+            </div>
+            <div class="warmth-row">
+              <span class="warmth-label">Written recommendation</span>
+              <div class="warmth-track"><div class="warmth-fill" data-w="95"></div></div>
+              <span class="warmth-score">9.5</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="margin-top:8px;">A 1st-degree connection who exchanged three messages three years ago is not the same as someone who left a written recommendation. Twine knows the difference.</p>
+          <p>Every edge in the graph carries a warmth score — built from message frequency, recency, recommendations, and who reached out first.</p>
+          <p>Your intro strategy is ranked before you make the first call. You lead with the warmest path. Every time.</p>
+          <div class="pull-quote">
+            <p>"The best candidates are already in your client's network. Twine just makes them findable."</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</section>
+</div>
 
-<!-- ── PRIVACY ── -->
-<section id="privacy" data-screen-label="Privacy">
+<!-- THE WORKFLOW -->
+<section>
   <div class="container">
-    <div class="two-panel">
-      <div class="left">
-        <span class="mono" style="display:block; margin-bottom: 24px;">Privacy by design</span>
-        <h2>The data stays yours.</h2>
-      </div>
-      <div class="right">
-        <p style="margin-top: 4px;">Twine runs entirely in the browser. No server ever touches your client's connections file. The graph is built locally and shared only as a password-protected page you control.</p>
-        <p>You decide who sees it. You decide when it expires.</p>
-        <div class="privacy-pills">
-          <span class="tag">No server upload</span>
-          <span class="tag">Password protected</span>
-          <span class="tag">Browser only</span>
-          <span class="tag">SHA-256 encrypted</span>
-          <span class="tag">You control access</span>
+    <div class="section-pad">
+      <div class="section-divider"><span>The recruiter workflow</span></div>
+      <div class="two-col">
+        <div><h2>One upload.<br>Total alignment.</h2></div>
+        <div>
+          <p>When the founder hands you their export, Twine becomes your shared map. When the Head of Engineering asks "who do we know at Stripe?" — you have the same answer they do, before the meeting ends.</p>
+          <p>No guessing. No "let me check your LinkedIn." The network is already in front of you — organised, weighted, and searchable by the people who matter most.</p>
+          <p>Every client brief becomes a rich map you can navigate from day one. Not better networking. Richer hiring.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── FOOTER CTA ── -->
-<footer class="footer-cta" id="access" data-screen-label="Footer CTA">
+<!-- PRIVACY -->
+<div class="section-elevated" id="privacy">
+  <div class="container">
+    <div class="section-inner">
+      <div class="section-divider"><span>Privacy by design</span></div>
+      <div class="two-col">
+        <div><h2>The data stays yours.</h2></div>
+        <div>
+          <p>Twine runs entirely in the browser. No server ever touches your client's connections file. The graph is built locally and shared only as a password-protected page you control.</p>
+          <p>You decide who sees it. You decide when it expires.</p>
+          <div class="privacy-pills">
+            <span class="pill">No server upload</span>
+            <span class="pill">Password protected</span>
+            <span class="pill">Browser only</span>
+            <span class="pill">SHA-256 encrypted</span>
+            <span class="pill">You control access</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER CTA -->
+<footer class="footer-cta" id="access">
   <h2>Start with one client's network.</h2>
-  <p>Early access. No credit card. Works today.</p>
+  <p class="sub">Early access. No credit card. Works today.</p>
   <div class="cta-row">
     <a href="#" class="btn-primary">Request access</a>
     <a href="#" class="btn-ghost">See a demo graph</a>
   </div>
 </footer>
 
-<!-- ── SITE FOOTER ── -->
+<!-- SITE FOOTER -->
 <div class="site-footer">
   <div class="site-footer-inner">
-    <span class="wordmark"><span class="dot"></span>Twine</span>
-    <span class="mono">Graph math, in your browser. © 2026</span>
+    <a href="#" class="wordmark" style="font-size:18px;"><span class="dot"></span>Twine</a>
+    <span class="meta">Graph math, in your browser. © 2026</span>
   </div>
 </div>
 
 <script>
-  // Animate warmth bars when they scroll into view
   const fills = document.querySelectorAll('.warmth-fill');
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
         const el = e.target;
-        const w = el.getAttribute('data-w');
-        setTimeout(() => { el.style.width = w + '%'; }, 120);
+        setTimeout(() => { el.style.width = el.getAttribute('data-w') + '%'; }, 120);
         io.unobserve(el);
       }
     });
