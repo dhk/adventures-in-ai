@@ -1,8 +1,8 @@
-# Woven — Project Context for Claude Code
+# Twine — Project Context for Claude Code
 
-## What is Woven?
+## What is Twine?
 
-Woven is a browser-based tool that combines multiple people's LinkedIn connection exports into a single unified network graph. The core value proposition: **find your warmest path to anyone at any company**.
+Twine is a browser-based tool that combines multiple people's LinkedIn connection exports into a single unified network graph. The core value proposition: **find your warmest path to anyone at any company**.
 
 When you pool Dave's connections with Sarah's connections, you can answer questions that neither could answer alone — "who in our combined network knows someone at Stripe, and who should make the introduction?"
 
