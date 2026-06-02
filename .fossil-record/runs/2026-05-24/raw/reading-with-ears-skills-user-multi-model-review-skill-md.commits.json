@@ -1,0 +1,37 @@
+{
+  "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+  "tier": 1,
+  "patch_size_chars": 9031,
+  "commits": [
+    {
+      "hash": "dd57c7e0276674aa86b206e2555b041382fd3417",
+      "date": "2026-03-29",
+      "message": "feat: add multi-model-review skill (Claude + Codex via MCP)",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 0,
+      "deletions": 0,
+      "net_loc_delta": 0,
+      "absolute_loc": 0
+    },
+    {
+      "hash": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+      "date": "2026-03-29",
+      "message": "improve model review",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 0,
+      "deletions": 0,
+      "net_loc_delta": 0,
+      "absolute_loc": 0
+    },
+    {
+      "hash": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+      "date": "2026-04-05",
+      "message": "sunday refactor",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 199,
+      "deletions": 0,
+      "net_loc_delta": 199,
+      "absolute_loc": 199
+    }
+  ]
+}

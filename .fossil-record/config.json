@@ -1,0 +1,14 @@
+{
+  "repo": "/Users/dhk/Documents/dev/adventures-in-ai",
+  "default_subtree": "",
+  "discovered_skill_files": [
+    "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+    "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+    "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+    "skills/user/git-push-handoff/SKILL.md"
+  ],
+  "concept_vocabulary": [],
+  "concept_mode": "auto",
+  "from_date": null,
+  "confirmed_at": "2026-05-24"
+}
