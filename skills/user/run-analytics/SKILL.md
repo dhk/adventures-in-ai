@@ -1,11 +1,12 @@
 ---
 name: run-analytics
 description: >
-  Analytics study meta-skill. Interviews the user to define the problem statement,
-  identifies the tool stack required, does a dry run of every tool category to
-  surface and pre-approve permission prompts, then curates an allow-list so the
-  actual analysis runs uninterrupted. Use when starting any analytics investigation:
-  "run analytics", "let's do an analysis", "I want to study X", "/run-analytics".
+  Analytics study meta-skill. Two modes: standard (interview → tool stack → dry runs
+  → allow-list → handoff) and discovery (crawl past sessions, skill definitions, and
+  context snapshots to infer a default allow-list without a live study). Use when
+  starting any analytics investigation or calibrating the project allow-list.
+  Triggers: "run analytics", "let's do an analysis", "I want to study X",
+  "/run-analytics", "/run-analytics --discover [timeframe]".
 ---
 
 # Run Analytics
@@ -15,8 +16,349 @@ before a single line of real analysis is executed. By the time you hand off, eve
 permission has been pre-approved, the problem statement is crisp, and the tool stack
 is warm.
 
-Work through the four phases below in order. Do not skip to Phase 2 without completing
-Phase 1.
+---
+
+## MODE DETECTION
+
+Check the invocation args before doing anything else.
+
+**Discovery mode** — triggered by any of:
+- `/run-analytics --discover`
+- `/run-analytics discover`
+- `/run-analytics --discover 7d` (or `30d`, `90d`, `all`)
+- "discover my tools", "calibrate my allow-list", "what tools do I use"
+
+→ Skip to **DISCOVERY MODE** below. Do not run the intake interview.
+
+**Standard mode** — all other invocations:
+→ Work through Phases 1–5 in order. Do not skip to Phase 2 without completing Phase 1.
+
+---
+
+## DISCOVERY MODE
+
+> Goal: crawl the historical record — session transcripts, skill definitions, and
+> context snapshots — to build a data-driven default allow-list without requiring
+> the user to describe a specific study upfront.
+
+### Parse the timeframe
+
+Default: `30d` (last 30 days). Accept: `7d`, `14d`, `30d`, `90d`, `180d`, `all`.
+
+Convert to a cutoff date:
+```
+30d  → today minus 30 days
+all  → epoch (no filter)
+```
+
+Tell the user what you're about to do:
+> "Scanning the last [N] days of session transcripts, [N] skill definitions,
+>  and project context files to infer your tool usage patterns.
+>  No data leaves your machine — this reads local files only."
+
+---
+
+### DISCOVERY PHASE A — Session Transcript Crawl
+
+Claude Code stores session transcripts as JSONL files under `~/.claude/projects/`.
+Each project directory is named after a hash of the project path.
+Each file is one session; each line is a conversation turn.
+
+**Step A1 — Find the project directory**
+
+The current repo path is the working directory. Encode it to find the matching
+`~/.claude/projects/` subdirectory:
+
+```bash
+# List all project dirs and their sizes to help identify the active one
+ls -lt ~/.claude/projects/ 2>/dev/null | head -20
+```
+
+If multiple directories exist, the correct one is the most-recently-modified directory
+whose name, when decoded, matches the current working directory path. If you cannot
+determine which is correct, list all project directories and ask the user to confirm
+which one to crawl, or crawl all of them.
+
+**Step A2 — Filter by timeframe**
+
+```bash
+# Find JSONL files modified within the timeframe
+find ~/.claude/projects -name "*.jsonl" -newer <(date -d "-<N> days" +%Y-%m-%d) 2>/dev/null \
+  | sort -t/ -k6 -r \
+  | head -200
+```
+
+For `all` timeframe, omit the `-newer` filter. Cap at 200 files to avoid runaway
+reads.
+
+**Step A3 — Extract tool usage**
+
+Parse tool_use entries from the filtered session files. Tool calls appear as JSON
+objects with `"type":"tool_use"` and a `"name"` field, either at the top level or
+nested inside an assistant message's `content` array.
+
+```bash
+# Count tool calls across sessions, grouped by tool name
+find ~/.claude/projects -name "*.jsonl" -newer <(date -d "-<N> days" +%Y-%m-%d) \
+  2>/dev/null -exec cat {} \; \
+  | python3 - <<'EOF'
+import sys, json
+from collections import defaultdict
+
+tool_sessions = defaultdict(set)   # tool -> set of session filenames
+tool_calls    = defaultdict(int)   # tool -> total call count
+current_file  = None
+
+for line in sys.stdin:
+    line = line.strip()
+    if not line:
+        continue
+    try:
+        obj = json.loads(line)
+    except json.JSONDecodeError:
+        continue
+
+    def extract_tools(o, session):
+        if isinstance(o, dict):
+            if o.get("type") == "tool_use" and "name" in o:
+                name = o["name"]
+                tool_calls[name] += 1
+                tool_sessions[name].add(session)
+            for v in o.values():
+                extract_tools(v, session)
+        elif isinstance(o, list):
+            for item in o:
+                extract_tools(item, session)
+
+    extract_tools(obj, id(obj))   # session approximated by line group
+
+for tool, count in sorted(tool_calls.items(), key=lambda x: -x[1]):
+    sessions = len(tool_sessions[tool])
+    print(f"{count:5d} calls  {sessions:3d} sessions  {tool}")
+EOF
+```
+
+Capture the output as the **transcript signal**.
+
+**Step A4 — Extract Bash command patterns**
+
+For `Bash` tool calls, the raw count is not enough — we need what commands were run.
+Extract the leading token of each Bash `command` input:
+
+```bash
+find ~/.claude/projects -name "*.jsonl" -newer <(date -d "-<N> days" +%Y-%m-%d) \
+  2>/dev/null -exec cat {} \; \
+  | python3 - <<'EOF'
+import sys, json, re
+from collections import Counter
+
+cmd_counter = Counter()
+
+for line in sys.stdin:
+    try:
+        obj = json.loads(line.strip())
+    except:
+        continue
+
+    def find_bash(o):
+        if isinstance(o, dict):
+            if o.get("type") == "tool_use" and o.get("name") == "Bash":
+                cmd = o.get("input", {}).get("command", "")
+                # Extract the leading binary (first word, ignoring env vars)
+                tokens = cmd.strip().split()
+                for tok in tokens:
+                    if not tok.startswith(("-", "export", "set", "unset")):
+                        binary = tok.split("/")[-1]
+                        cmd_counter[binary] += 1
+                        break
+            for v in o.values():
+                find_bash(v)
+        elif isinstance(o, list):
+            for item in o:
+                find_bash(item)
+
+    find_bash(obj)
+
+for cmd, count in cmd_counter.most_common(30):
+    print(f"{count:5d}  {cmd}")
+EOF
+```
+
+Capture as the **bash command signal**.
+
+---
+
+### DISCOVERY PHASE B — Skill Definition Crawl
+
+Read all `SKILL.md` files in the repository to extract declared tool dependencies.
+
+**Step B1 — Find skill files**
+
+```bash
+find . -name "SKILL.md" 2>/dev/null
+```
+
+**Step B2 — Extract tool references from each skill**
+
+For each SKILL.md found, scan for:
+- `compatibility:` frontmatter line — lists MCP dependencies
+- `Bash(` patterns — explicit allow-rule syntax
+- `mcp__` prefixes — MCP tool references
+- Known binary names: `bq`, `python3`, `pip3`, `jq`, `ffmpeg`, `rwe-publish`, `nlm`, `gh`, `git`, `curl`
+- `WebFetch`, `WebSearch`, `Read`, `Write`, `Edit`, `Glob`, `Grep` — built-in Claude Code tools
+
+```bash
+# Extract tool signals from all skill files
+find . -name "SKILL.md" -exec grep -Hn \
+  -E "(compatibility:|Bash\(|mcp__|bq |python3|jq |ffmpeg|WebFetch|WebSearch|rwe-publish|nlm )" \
+  {} \;
+```
+
+Build a skill → tools map from the output.
+
+**Step B3 — Check existing allow-list**
+
+```bash
+cat .claude/settings.json 2>/dev/null || echo "none"
+```
+
+Record any rules already in `permissions.allow` — these are excluded from the
+new candidates (no duplicates).
+
+---
+
+### DISCOVERY PHASE C — Context Snapshot Crawl
+
+**Step C1 — CLAUDE.md files**
+
+```bash
+find . -name "CLAUDE.md" -exec grep -Hn \
+  -E "(bq|python3|BigQuery|pandas|MCP|mcp__|tool|allow|permission)" \
+  {} \;
+```
+
+Note any tool references or permission guidance.
+
+**Step C2 — .claude directory**
+
+```bash
+ls -la .claude/ 2>/dev/null
+```
+
+Check for hooks, custom commands, or additional settings files. Note anything that
+implies a tool dependency (e.g. a SessionStart hook that installs packages implies
+`pip3 install`).
+
+---
+
+### DISCOVERY PHASE D — Analysis and Ranking
+
+Merge the three signals into a single ranked candidate list.
+
+**Scoring formula (per tool/command):**
+
+| Signal | Weight |
+|---|---|
+| Session transcript calls | 3 pts per 10 calls (capped at 30 pts) |
+| Session breadth (distinct sessions) | 2 pts per session (capped at 20 pts) |
+| Referenced in a skill definition | 10 pts flat |
+| Referenced in CLAUDE.md or context | 5 pts flat |
+| Already in allow-list | subtract 100 (exclude from candidates) |
+
+**Recency decay**: multiply the transcript signal by:
+- Last 7 days: 1.0
+- Last 8–30 days: 0.8
+- Last 31–90 days: 0.6
+- Older: 0.4
+
+**Map raw tool/command names to allow-rule syntax:**
+
+| Observed | Allow rule | Tier |
+|---|---|---|
+| `bq` (ls/show commands) | `Bash(bq ls*)`, `Bash(bq show*)` | 1 |
+| `bq` (query commands) | `Bash(bq query*)` | 2 |
+| `python3` | `Bash(python3*)` | 1 |
+| `pip3` | `Bash(pip3*)` | 1 |
+| `jq` | `Bash(jq*)` | 1 |
+| `ls` | `Bash(ls*)` | 1 |
+| `cat` | `Bash(cat*)` | 1 |
+| `grep` | `Bash(grep*)` | 1 |
+| `head`/`tail` | `Bash(head*)`, `Bash(tail*)` | 1 |
+| `wc` | `Bash(wc*)` | 1 |
+| `git` | `Bash(git*)` | 1 |
+| `gh` | `Bash(gh*)` | 2 |
+| `curl` | `Bash(curl*)` | 2 |
+| `ffmpeg` | `Bash(ffmpeg*)` | 1 |
+| `rwe-publish` | `Bash(rwe-publish*)` | 1 |
+| `nlm` | `Bash(nlm*)` | 1 |
+| `WebFetch` | `WebFetch(*)` | 2 |
+| `WebSearch` | `WebSearch(*)` | 2 |
+| `mcp__github__*_read` | `mcp__github__*_read` | 2 |
+| `mcp__github__*_write` | `mcp__github__*_write` | 3 |
+| `mcp__*gmail*__search*` | `mcp__*gmail*__search_threads` | 2 |
+| `mcp__*gmail*__get*` | `mcp__*gmail*__get_thread` | 2 |
+| `mcp__*gmail*__label*` | (Tier 3, skip unless high score) | 3 |
+| `mcp__*calendar*__list*` | `mcp__*calendar*__list_events` | 2 |
+| `mcp__*todoist*__find*` | `mcp__*todoist*__find-tasks` | 1 |
+| `mcp__*todoist*__add*` | (Tier 3) | 3 |
+
+Built-in tools (`Read`, `Glob`, `Grep`, `Edit`, `Write`) are always available and
+do not require allow-list entries. Skip them.
+
+**Present the discovery results:**
+
+```
+Discovery results — last [N] days
+  Sessions crawled:  47
+  Skill files found:  5
+  Context files found:  1
+
+Top tool signals (ranked by score):
+
+  Score  Rule                           Sources
+  ─────────────────────────────────────────────────────────────
+  82     Bash(ls*)                      transcripts (203 calls, 47 sessions)
+  74     Bash(python3*)                 transcripts (84 calls, 19 sessions) + 2 skills
+  71     Bash(bq ls*), Bash(bq show*)   transcripts (67 calls, 23 sessions) + 1 skill
+  68     Bash(bq query*)                transcripts (60 calls, 23 sessions)
+  55     mcp__github__*_read            transcripts (61 calls, 31 sessions)
+  42     WebFetch(*)                    transcripts (44 calls, 12 sessions) + 1 skill
+  38     mcp__*gmail*__search_threads   transcripts (29 calls, 8 sessions) + 2 skills
+  31     Bash(jq*)                      transcripts (55 calls, 22 sessions)
+  18     mcp__*todoist*__find-tasks     1 skill + CLAUDE.md
+   8     Bash(ffmpeg*)                  1 skill
+   4     mcp__*calendar*__list_events   1 skill
+
+Already in allow-list (skipped):
+  — none
+
+Tier 3 (write/mutation — excluded from auto-recommend):
+  mcp__github__*_write    — 12 calls, 7 sessions
+  mcp__*gmail*__label*    — 8 calls, 3 sessions
+  mcp__*todoist*__add*    — 5 calls, 2 sessions
+```
+
+---
+
+### DISCOVERY PHASE E — Curation and Write
+
+Proceed to **Phase 4 — Allow-List Curation** below, using the discovery results
+as the pre-populated candidate list instead of the study-derived stack.
+
+Key differences in discovery mode:
+- Tier 1 and 2 candidates come from the ranked table above (score > 20 → include).
+- Tier 3 items are shown with their call counts so the user can decide whether
+  any of them should be promoted.
+- The written rules are intended as **permanent project defaults**, not just for
+  one session. State this clearly before writing.
+- After writing, also offer to add a note to `CLAUDE.md` documenting what was
+  added and why, so future sessions have context.
+
+Skip Phase 5 (handoff brief) — discovery mode does not produce a study brief.
+
+---
+
+## STANDARD MODE
 
 ---
 
