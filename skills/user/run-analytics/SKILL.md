@@ -1,20 +1,20 @@
 ---
 name: run-analytics
 description: >
-  Analytics study meta-skill. Two modes: standard (interview → tool stack → dry runs
-  → allow-list → handoff) and discovery (crawl past sessions, skill definitions, and
-  context snapshots to infer a default allow-list without a live study). Use when
-  starting any analytics investigation or calibrating the project allow-list.
+  Analytics study meta-skill. Two modes: standard (interview → tool stack →
+  connection verification → allow-list → analysis) and discovery (crawl past
+  sessions, skill definitions, and context snapshots to build a default
+  allow-list). Use when starting any analytics investigation or calibrating
+  the project allow-list.
   Triggers: "run analytics", "let's do an analysis", "I want to study X",
   "/run-analytics", "/run-analytics --discover [timeframe]".
 ---
 
 # Run Analytics
 
-You are running **Run Analytics** — a meta-skill that prepares a frictionless environment
-before a single line of real analysis is executed. By the time you hand off, every
-permission has been pre-approved, the problem statement is crisp, and the tool stack
-is warm.
+You are running **Run Analytics** — a meta-skill that resolves the setup friction
+(permissions, tool connections, problem clarity) before a single line of real
+analysis runs.
 
 ---
 
@@ -25,334 +25,262 @@ Check the invocation args before doing anything else.
 **Discovery mode** — triggered by any of:
 - `/run-analytics --discover`
 - `/run-analytics discover`
-- `/run-analytics --discover 7d` (or `30d`, `90d`, `all`)
+- `/run-analytics --discover 7d` (or `14d`, `30d`, `90d`, `180d`, `all`)
 - "discover my tools", "calibrate my allow-list", "what tools do I use"
 
-→ Skip to **DISCOVERY MODE** below. Do not run the intake interview.
+→ Jump to **DISCOVERY MODE**. Do not run the intake interview.
 
 **Standard mode** — all other invocations:
-→ Work through Phases 1–5 in order. Do not skip to Phase 2 without completing Phase 1.
+→ Work through Phases 1–5 below in order.
 
 ---
 
 ## DISCOVERY MODE
 
-> Goal: crawl the historical record — session transcripts, skill definitions, and
-> context snapshots — to build a data-driven default allow-list without requiring
-> the user to describe a specific study upfront.
+Goal: crawl the historical record to build a data-driven default allow-list
+without requiring the user to describe a specific study upfront.
 
-### Parse the timeframe
+### Step 0 — Environment check
 
-Default: `30d` (last 30 days). Accept: `7d`, `14d`, `30d`, `90d`, `180d`, `all`.
+Before crawling transcripts, check whether local session history exists:
 
-Convert to a cutoff date:
-```
-30d  → today minus 30 days
-all  → epoch (no filter)
+```bash
+ls ~/.claude/projects/ 2>/dev/null | head -5
 ```
 
-Tell the user what you're about to do:
-> "Scanning the last [N] days of session transcripts, [N] skill definitions,
->  and project context files to infer your tool usage patterns.
->  No data leaves your machine — this reads local files only."
+**If the directory is absent or empty**, the session is likely ephemeral
+(cloud-hosted, CI, or a fresh machine). State this clearly:
+> "No local session history found — this appears to be a cloud or fresh
+>  environment. Skipping transcript crawl. Proceeding with skill definitions
+>  and context files only."
+
+Skip Steps 2–3 and go directly to Step 4.
+
+**If history exists**, continue.
 
 ---
 
-### DISCOVERY PHASE A — Session Transcript Crawl
+### Step 1 — Parse the timeframe
 
-Claude Code stores session transcripts as JSONL files under `~/.claude/projects/`.
-Each project directory is named after a hash of the project path.
-Each file is one session; each line is a conversation turn.
+Default: `30d`. Accept: `7d`, `14d`, `30d`, `90d`, `180d`, `all`.
 
-**Step A1 — Find the project directory**
+Convert to days for `find -mtime`: `30d → -mtime -30`, `all → no -mtime filter`.
 
-The current repo path is the working directory. Encode it to find the matching
-`~/.claude/projects/` subdirectory:
+Tell the user what you're scanning:
+> "Scanning the last [N] days of session transcripts, skill definitions, and
+>  project context files to infer your tool usage patterns.
+>  No data leaves your machine — reads local files only."
+
+---
+
+### Step 2 — Session Transcript Crawl
+
+**Find matching session files:**
 
 ```bash
-# List all project dirs and their sizes to help identify the active one
-ls -lt ~/.claude/projects/ 2>/dev/null | head -20
+# List the project dirs to orient
+ls -lt ~/.claude/projects/ 2>/dev/null | head -10
+
+# Find JSONL session files within the timeframe
+# Use -mtime (integer days) rather than -newer to avoid process-substitution fragility
+find ~/.claude/projects -name "*.jsonl" -mtime -<N> 2>/dev/null | head -200
 ```
 
-If multiple directories exist, the correct one is the most-recently-modified directory
-whose name, when decoded, matches the current working directory path. If you cannot
-determine which is correct, list all project directories and ask the user to confirm
-which one to crawl, or crawl all of them.
+For `all` timeframe omit `-mtime`. Cap file list at 200.
 
-**Step A2 — Filter by timeframe**
+**Extract tool usage — pass filenames as arguments so session identity is tracked:**
 
 ```bash
-# Find JSONL files modified within the timeframe
-find ~/.claude/projects -name "*.jsonl" -newer <(date -d "-<N> days" +%Y-%m-%d) 2>/dev/null \
-  | sort -t/ -k6 -r \
-  | head -200
-```
-
-For `all` timeframe, omit the `-newer` filter. Cap at 200 files to avoid runaway
-reads.
-
-**Step A3 — Extract tool usage**
-
-Parse tool_use entries from the filtered session files. Tool calls appear as JSON
-objects with `"type":"tool_use"` and a `"name"` field, either at the top level or
-nested inside an assistant message's `content` array.
-
-```bash
-# Count tool calls across sessions, grouped by tool name
-find ~/.claude/projects -name "*.jsonl" -newer <(date -d "-<N> days" +%Y-%m-%d) \
-  2>/dev/null -exec cat {} \; \
-  | python3 - <<'EOF'
+find ~/.claude/projects -name "*.jsonl" -mtime -<N> 2>/dev/null \
+  | head -200 \
+  | xargs python3 -c "
 import sys, json
 from collections import defaultdict
 
-tool_sessions = defaultdict(set)   # tool -> set of session filenames
-tool_calls    = defaultdict(int)   # tool -> total call count
-current_file  = None
+tool_sessions = defaultdict(set)   # tool_name -> set of filenames
+tool_calls    = defaultdict(int)   # tool_name -> total call count
 
-for line in sys.stdin:
-    line = line.strip()
-    if not line:
-        continue
+def extract_tools(obj, fname):
+    if isinstance(obj, dict):
+        if obj.get('type') == 'tool_use' and 'name' in obj:
+            name = obj['name']
+            tool_calls[name] += 1
+            tool_sessions[name].add(fname)
+        for v in obj.values():
+            extract_tools(v, fname)
+    elif isinstance(obj, list):
+        for item in obj:
+            extract_tools(item, fname)
+
+for fname in sys.argv[1:]:
     try:
-        obj = json.loads(line)
-    except json.JSONDecodeError:
-        continue
-
-    def extract_tools(o, session):
-        if isinstance(o, dict):
-            if o.get("type") == "tool_use" and "name" in o:
-                name = o["name"]
-                tool_calls[name] += 1
-                tool_sessions[name].add(session)
-            for v in o.values():
-                extract_tools(v, session)
-        elif isinstance(o, list):
-            for item in o:
-                extract_tools(item, session)
-
-    extract_tools(obj, id(obj))   # session approximated by line group
+        with open(fname) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        extract_tools(json.loads(line), fname)
+                    except json.JSONDecodeError:
+                        pass
+    except OSError:
+        pass
 
 for tool, count in sorted(tool_calls.items(), key=lambda x: -x[1]):
-    sessions = len(tool_sessions[tool])
-    print(f"{count:5d} calls  {sessions:3d} sessions  {tool}")
-EOF
+    print(f'{count:5d} calls  {len(tool_sessions[tool]):3d} sessions  {tool}')
+"
 ```
 
-Capture the output as the **transcript signal**.
-
-**Step A4 — Extract Bash command patterns**
-
-For `Bash` tool calls, the raw count is not enough — we need what commands were run.
-Extract the leading token of each Bash `command` input:
+**Extract Bash command patterns (what binaries were actually run):**
 
 ```bash
-find ~/.claude/projects -name "*.jsonl" -newer <(date -d "-<N> days" +%Y-%m-%d) \
-  2>/dev/null -exec cat {} \; \
-  | python3 - <<'EOF'
-import sys, json, re
-from collections import Counter
+find ~/.claude/projects -name "*.jsonl" -mtime -<N> 2>/dev/null \
+  | head -200 \
+  | xargs python3 -c "
+import sys, json
+from collections import defaultdict
 
-cmd_counter = Counter()
+cmd_sessions = defaultdict(set)
+cmd_calls    = defaultdict(int)
 
-for line in sys.stdin:
+def find_bash(obj, fname):
+    if isinstance(obj, dict):
+        if obj.get('type') == 'tool_use' and obj.get('name') == 'Bash':
+            cmd = obj.get('input', {}).get('command', '')
+            tokens = cmd.strip().split()
+            for tok in tokens:
+                if not tok.startswith(('-', 'export ', 'set ', 'unset ', 'VAR=')):
+                    binary = tok.split('/')[-1]
+                    cmd_calls[binary] += 1
+                    cmd_sessions[binary].add(fname)
+                    break
+        for v in obj.values():
+            find_bash(v, fname)
+    elif isinstance(obj, list):
+        for item in obj:
+            find_bash(item, fname)
+
+for fname in sys.argv[1:]:
     try:
-        obj = json.loads(line.strip())
-    except:
-        continue
+        with open(fname) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        find_bash(json.loads(line), fname)
+                    except json.JSONDecodeError:
+                        pass
+    except OSError:
+        pass
 
-    def find_bash(o):
-        if isinstance(o, dict):
-            if o.get("type") == "tool_use" and o.get("name") == "Bash":
-                cmd = o.get("input", {}).get("command", "")
-                # Extract the leading binary (first word, ignoring env vars)
-                tokens = cmd.strip().split()
-                for tok in tokens:
-                    if not tok.startswith(("-", "export", "set", "unset")):
-                        binary = tok.split("/")[-1]
-                        cmd_counter[binary] += 1
-                        break
-            for v in o.values():
-                find_bash(v)
-        elif isinstance(o, list):
-            for item in o:
-                find_bash(item)
-
-    find_bash(obj)
-
-for cmd, count in cmd_counter.most_common(30):
-    print(f"{count:5d}  {cmd}")
-EOF
+for cmd, count in sorted(cmd_calls.items(), key=lambda x: -x[1])[:30]:
+    print(f'{count:5d} calls  {len(cmd_sessions[cmd]):3d} sessions  {cmd}')
+"
 ```
 
-Capture as the **bash command signal**.
+If either script returns no output, note it and continue.
 
 ---
 
-### DISCOVERY PHASE B — Skill Definition Crawl
+### Step 3 — Skill Definition Crawl
 
-Read all `SKILL.md` files in the repository to extract declared tool dependencies.
-
-**Step B1 — Find skill files**
+Find all `SKILL.md` files in the repository:
 
 ```bash
 find . -name "SKILL.md" 2>/dev/null
 ```
 
-**Step B2 — Extract tool references from each skill**
-
-For each SKILL.md found, scan for:
-- `compatibility:` frontmatter line — lists MCP dependencies
-- `Bash(` patterns — explicit allow-rule syntax
-- `mcp__` prefixes — MCP tool references
-- Known binary names: `bq`, `python3`, `pip3`, `jq`, `ffmpeg`, `rwe-publish`, `nlm`, `gh`, `git`, `curl`
-- `WebFetch`, `WebSearch`, `Read`, `Write`, `Edit`, `Glob`, `Grep` — built-in Claude Code tools
+For each file found, extract tool references:
 
 ```bash
-# Extract tool signals from all skill files
 find . -name "SKILL.md" -exec grep -Hn \
-  -E "(compatibility:|Bash\(|mcp__|bq |python3|jq |ffmpeg|WebFetch|WebSearch|rwe-publish|nlm )" \
+  -E "(compatibility:|Bash\(|mcp__|bq |python3|pip3|jq |ffmpeg|nlm |rwe-publish|gh |curl |WebFetch|WebSearch)" \
   {} \;
 ```
 
-Build a skill → tools map from the output.
+Build a map: `skill_name → [tool references]`. Read the `compatibility:` frontmatter
+line for declared MCP dependencies.
 
-**Step B3 — Check existing allow-list**
+Check the existing project allow-list so candidates already there are excluded:
 
 ```bash
 cat .claude/settings.json 2>/dev/null || echo "none"
 ```
 
-Record any rules already in `permissions.allow` — these are excluded from the
-new candidates (no duplicates).
-
 ---
 
-### DISCOVERY PHASE C — Context Snapshot Crawl
-
-**Step C1 — CLAUDE.md files**
+### Step 4 — Context Snapshot Crawl
 
 ```bash
+# CLAUDE.md tool references
 find . -name "CLAUDE.md" -exec grep -Hn \
-  -E "(bq|python3|BigQuery|pandas|MCP|mcp__|tool|allow|permission)" \
+  -E "(bq|python3|BigQuery|pandas|MCP|mcp__|tool|allow|permission|ffmpeg|nlm)" \
   {} \;
-```
 
-Note any tool references or permission guidance.
-
-**Step C2 — .claude directory**
-
-```bash
+# .claude directory structure
 ls -la .claude/ 2>/dev/null
+
+# SessionStart hooks imply install commands
+find .claude -name "*.sh" -o -name "*.json" 2>/dev/null | xargs grep -l "install\|pip\|npm\|apt" 2>/dev/null
 ```
 
-Check for hooks, custom commands, or additional settings files. Note anything that
-implies a tool dependency (e.g. a SessionStart hook that installs packages implies
-`pip3 install`).
+Note anything that implies a tool dependency.
 
 ---
 
-### DISCOVERY PHASE D — Analysis and Ranking
+### Step 5 — Merge, Deduplicate, and Present
 
-Merge the three signals into a single ranked candidate list.
+Combine the signals from Steps 2–4. For each unique allow-rule candidate:
 
-**Scoring formula (per tool/command):**
+1. **Normalize** raw tool/binary names to allow-rule syntax using the mapping table
+   in the Allow-List Curation section below.
+2. **Deduplicate**: if the same rule appears in multiple sources, merge into one row
+   and list all sources.
+3. **Assign tier** (see Allow-List Curation for tier definitions).
+4. **Sort**: Tier 1 first, then Tier 2, then Tier 3. Within each tier, sort by
+   transcript call count descending (tools with no transcript signal sort last).
+5. **Exclude** anything already in the existing allow-list.
 
-| Signal | Weight |
-|---|---|
-| Session transcript calls | 3 pts per 10 calls (capped at 30 pts) |
-| Session breadth (distinct sessions) | 2 pts per session (capped at 20 pts) |
-| Referenced in a skill definition | 10 pts flat |
-| Referenced in CLAUDE.md or context | 5 pts flat |
-| Already in allow-list | subtract 100 (exclude from candidates) |
-
-**Recency decay**: multiply the transcript signal by:
-- Last 7 days: 1.0
-- Last 8–30 days: 0.8
-- Last 31–90 days: 0.6
-- Older: 0.4
-
-**Map raw tool/command names to allow-rule syntax:**
-
-| Observed | Allow rule | Tier |
-|---|---|---|
-| `bq` (ls/show commands) | `Bash(bq ls*)`, `Bash(bq show*)` | 1 |
-| `bq` (query commands) | `Bash(bq query*)` | 2 |
-| `python3` | `Bash(python3*)` | 1 |
-| `pip3` | `Bash(pip3*)` | 1 |
-| `jq` | `Bash(jq*)` | 1 |
-| `ls` | `Bash(ls*)` | 1 |
-| `cat` | `Bash(cat*)` | 1 |
-| `grep` | `Bash(grep*)` | 1 |
-| `head`/`tail` | `Bash(head*)`, `Bash(tail*)` | 1 |
-| `wc` | `Bash(wc*)` | 1 |
-| `git` | `Bash(git*)` | 1 |
-| `gh` | `Bash(gh*)` | 2 |
-| `curl` | `Bash(curl*)` | 2 |
-| `ffmpeg` | `Bash(ffmpeg*)` | 1 |
-| `rwe-publish` | `Bash(rwe-publish*)` | 1 |
-| `nlm` | `Bash(nlm*)` | 1 |
-| `WebFetch` | `WebFetch(*)` | 2 |
-| `WebSearch` | `WebSearch(*)` | 2 |
-| `mcp__github__*_read` | `mcp__github__*_read` | 2 |
-| `mcp__github__*_write` | `mcp__github__*_write` | 3 |
-| `mcp__*gmail*__search*` | `mcp__*gmail*__search_threads` | 2 |
-| `mcp__*gmail*__get*` | `mcp__*gmail*__get_thread` | 2 |
-| `mcp__*gmail*__label*` | (Tier 3, skip unless high score) | 3 |
-| `mcp__*calendar*__list*` | `mcp__*calendar*__list_events` | 2 |
-| `mcp__*todoist*__find*` | `mcp__*todoist*__find-tasks` | 1 |
-| `mcp__*todoist*__add*` | (Tier 3) | 3 |
-
-Built-in tools (`Read`, `Glob`, `Grep`, `Edit`, `Write`) are always available and
-do not require allow-list entries. Skip them.
-
-**Present the discovery results:**
+Present the results:
 
 ```
 Discovery results — last [N] days
-  Sessions crawled:  47
-  Skill files found:  5
-  Context files found:  1
+  Sessions crawled:  [N] files across [N] project dirs
+  Skill files found: [N]
+  Context files:     [N]
+  (Note: transcript crawl skipped — no local session history found)
 
-Top tool signals (ranked by score):
+Candidate allow-list rules:
 
-  Score  Rule                           Sources
+Tier 1 — Safe reads
+  Rule                      Calls  Sessions  Sources
   ─────────────────────────────────────────────────────────────
-  82     Bash(ls*)                      transcripts (203 calls, 47 sessions)
-  74     Bash(python3*)                 transcripts (84 calls, 19 sessions) + 2 skills
-  71     Bash(bq ls*), Bash(bq show*)   transcripts (67 calls, 23 sessions) + 1 skill
-  68     Bash(bq query*)                transcripts (60 calls, 23 sessions)
-  55     mcp__github__*_read            transcripts (61 calls, 31 sessions)
-  42     WebFetch(*)                    transcripts (44 calls, 12 sessions) + 1 skill
-  38     mcp__*gmail*__search_threads   transcripts (29 calls, 8 sessions) + 2 skills
-  31     Bash(jq*)                      transcripts (55 calls, 22 sessions)
-  18     mcp__*todoist*__find-tasks     1 skill + CLAUDE.md
-   8     Bash(ffmpeg*)                  1 skill
-   4     mcp__*calendar*__list_events   1 skill
+  Bash(ls*)                  203      47     transcripts
+  Bash(python3*)              84      19     transcripts + reading-list-builder
+  Bash(jq*)                   55      22     transcripts
+  Bash(git*)                  48      31     transcripts
+  Bash(bq ls*,bq show*)       67      23     transcripts + redpen
 
-Already in allow-list (skipped):
+Tier 2 — Consequential reads
+  Rule                            Calls  Sessions  Sources
+  ─────────────────────────────────────────────────────────────
+  Bash(bq query*)                  60      23     transcripts
+  mcp__github__*_read              61      31     transcripts
+  WebFetch(*)                      44      12     transcripts + reading-list-builder
+  mcp__gmail__search_threads       29       8     transcripts + reading-list-builder
+
+Tier 3 — Writes / mutations (shown for awareness; not auto-recommended)
+  Rule                        Calls  Sessions  Sources
+  ─────────────────────────────────────────────────────────────
+  mcp__github__*_write          12       7     transcripts
+  mcp__gmail__label*             8       3     transcripts
+  mcp__todoist__add-tasks        5       2     transcripts
+
+Already in allow-list (excluded):
   — none
-
-Tier 3 (write/mutation — excluded from auto-recommend):
-  mcp__github__*_write    — 12 calls, 7 sessions
-  mcp__*gmail*__label*    — 8 calls, 3 sessions
-  mcp__*todoist*__add*    — 5 calls, 2 sessions
 ```
 
----
-
-### DISCOVERY PHASE E — Curation and Write
-
-Proceed to **Phase 4 — Allow-List Curation** below, using the discovery results
-as the pre-populated candidate list instead of the study-derived stack.
-
-Key differences in discovery mode:
-- Tier 1 and 2 candidates come from the ranked table above (score > 20 → include).
-- Tier 3 items are shown with their call counts so the user can decide whether
-  any of them should be promoted.
-- The written rules are intended as **permanent project defaults**, not just for
-  one session. State this clearly before writing.
-- After writing, also offer to add a note to `CLAUDE.md` documenting what was
-  added and why, so future sessions have context.
+Then proceed to **ALLOW-LIST CURATION** below. Note to user that these rules
+are intended as permanent project defaults, not session-specific approvals.
 
 Skip Phase 5 (handoff brief) — discovery mode does not produce a study brief.
 
@@ -360,82 +288,67 @@ Skip Phase 5 (handoff brief) — discovery mode does not produce a study brief.
 
 ## STANDARD MODE
 
----
+### Phase 1 — Intake Interview
 
-## PHASE 1 — INTAKE INTERVIEW
-
-Your goal is a precise, unambiguous problem statement. Ask all questions in one message
-to minimise round-trips. Do not ask more than six questions in a single pass.
-
-Present these questions grouped and numbered:
+Goal: a precise, unambiguous problem statement. Ask all questions in one message.
 
 ---
 
 **1. What question are you trying to answer?**
-Describe the outcome you want: a number, a ranked list, a trend, a comparison,
-an anomaly, a forecast. Be specific — "understand engagement" is not a question,
-"which cohort has the highest 30-day retention and why is it different from the
-others?" is.
+Specific outcome: a number, a trend, a comparison, an anomaly, a forecast.
+"Understand engagement" is not a question. "Which cohort has the highest 30-day
+retention and why is it different from the others?" is.
 
 **2. What data sources are involved?**
-Name them as concretely as you can. Examples:
 - BigQuery project/dataset/table names (or "I don't know yet")
-- Local files (CSV, JSON, parquet, logs) — include their paths or locations
-- External APIs (names, not URLs)
-- MCPs or tools you know are connected (Gmail, Calendar, Todoist, Twilio…)
-- Databases (Postgres, Snowflake, etc.) and how they're accessed
+- Local files (CSV, JSON, parquet, logs) — paths or locations
+- External APIs — names
+- MCPs connected to this session (Gmail, Calendar, Todoist, Twilio, Drive…)
+- Databases (Postgres, Snowflake…) and how they're accessed
 - GitHub repos or issues
 
 **3. What is the scope?**
-- Time range (last 30 days, Q1 2026, a specific event window)
-- Filters or segments (user type, geography, product line, experiment arm)
-- Granularity (daily totals, per-user events, hourly aggregations)
+- Time range, filters or segments, granularity
 
 **4. What does "done" look like?**
-- A number in chat? A markdown table? A CSV file? A chart description? A YAML or JSON
-  data blob? A summary paragraph? A Todoist task created?
+A number in chat? A markdown table? A CSV? A YAML blob? A Todoist task created?
 
-**5. Are there any known constraints or sensitivities?**
-Examples: PII that must not leave BigQuery, rate limits on an API, tables that cost
-a lot to scan (billing concern), data that requires a specific service account.
+**5. Known constraints or sensitivities?**
+PII that must not leave BigQuery, billing-sensitive tables, required service
+accounts, rate-limited APIs.
 
-**6. How much autonomy do you want during the analysis?**
-- **Full auto**: Run everything, show me results at the end. Ask only if something
-  is genuinely ambiguous.
-- **Checkpoint**: Pause and show me the query / plan before executing each major step.
-- **Supervised**: Confirm every tool call before it runs.
+**6. How much autonomy during the analysis?**
+- **Full auto** — run everything, show results at the end
+- **Checkpoint** — show query/plan before each major step
+- **Supervised** — confirm every tool call
 
 ---
 
-Wait for the user's answers. Do not proceed to Phase 2 until you have enough to fill
-in the Tool Stack table below. If answers are vague, ask one focused follow-up question
-before moving on.
+Wait for answers. If vague, ask one focused follow-up before proceeding.
 
 ---
 
-## PHASE 2 — TOOL STACK IDENTIFICATION
+### Phase 2 — Tool Stack Identification
 
-From the intake answers, populate this table (fill it in mentally; you will reference
-it in Phase 3 and 4):
+Map intake answers to the needed tool categories. Only include rows where the tool
+is actually needed. Drop the rest.
 
-| Tool Category | Trigger | Example Operation | Dry-Run Call |
-|---|---|---|---|
-| BigQuery CLI | `bq` tables, project/dataset named | Full table scan query | `bq ls` |
-| BigQuery MCP | BigQuery MCP connected | Table query via MCP | list datasets |
-| Python / pandas | CSV, parquet, complex aggregation | `python3 script.py` | `python3 --version` |
-| Bash / shell | Log files, grep, awk, wc, jq | `grep pattern file` | `ls -la` of relevant directory |
-| Web fetch | External URL, API docs, redirect resolve | `web_fetch(url)` | Fetch a public status URL |
-| GitHub MCP | Repos, PRs, issues named | `issue_read` | `get_me` |
-| Gmail MCP | Email data mentioned | `search_threads` | `list_labels` |
-| Calendar MCP | Meeting or scheduling data | `list_events` | `list_calendars` |
-| Todoist MCP | Task or project data | `find-tasks` | `get-overview` |
-| Twilio MCP | SMS/call data | `twilio__retrieve` | `twilio__search` with minimal query |
-| Google Drive MCP | Spreadsheets, Docs, shared files | `read_file_content` | `list_recent_files` |
-| File read/write | Local CSV, YAML, JSON output | `Read`, `Write` | Read a known-safe file |
+| Tool Category | Trigger | Verification call |
+|---|---|---|
+| BigQuery CLI | `bq` tables / project named | `bq ls` |
+| BigQuery MCP | BigQuery MCP connected | lightest list tool |
+| Python / pandas | CSV, parquet, complex aggregation | `python3 --version` |
+| Bash / shell | Logs, grep, awk, wc, jq | `ls` of relevant dir |
+| Web fetch | External URL, API, redirect | `WebFetch` on a safe URL |
+| GitHub MCP | Repos, PRs, issues | lightest read tool |
+| Gmail MCP | Email data | `list_labels` equivalent |
+| Calendar MCP | Scheduling data | `list_calendars` equivalent |
+| Todoist MCP | Task / project data | `get-overview` equivalent |
+| Twilio MCP | SMS / call data | lightest search |
+| Drive / filesystem MCP | Spreadsheets, Docs | `list_recent_files` (limit 5) |
+| File read/write | Local CSV, YAML, JSON output | Read a known config file |
 
-Only include rows where the tool is actually needed for this study. Drop the rest.
-
-State the finalized tool stack to the user before proceeding:
+State the stack to the user before proceeding:
 
 ```
 Tool stack for this study:
@@ -443,190 +356,156 @@ Tool stack for this study:
   ✓ Python / pandas       — cohort calculations
   ✓ File write            — output results/cohort-analysis.csv
 
-Skipping: GitHub MCP, Gmail MCP, Calendar MCP, Todoist MCP, Twilio MCP
+Not needed: GitHub MCP, Gmail MCP, Calendar MCP, Todoist MCP, Twilio MCP
 ```
 
 ---
 
-## PHASE 3 — DRY RUNS (permission warm-up)
+### Phase 3 — Connection Verification
 
-Execute one minimal, safe, read-only call per tool category in the stack.
-The goal is to surface permission prompts NOW — not mid-analysis.
+Run one lightweight call per tool in the stack. The purpose is **not** to
+pre-approve permissions for later — Claude Code's permission system grants
+approval per command pattern, not per tool family. The actual pre-approval
+mechanism is writing to `settings.json` in the next phase.
 
-Run dry-run calls in parallel where the tool categories are independent.
-Annotate each one so the user knows what they're approving:
+What connection verification accomplishes:
+- Confirms the tool/MCP is installed, authenticated, and responding
+- Surfaces configuration problems before they interrupt analysis
+- Gives you visibility into what Claude will do before the analysis starts
 
-> "Dry-running BigQuery CLI: `bq ls` — this lists projects you have access to.
->  Approving this now means `bq query` calls during the actual analysis will
->  not prompt again for the same permission level."
+Run all calls in parallel where independent. Before each call, state what it does:
 
-### Dry-run calls by category
+> "Verifying BigQuery CLI: `bq ls` — confirms bq is installed and authenticated.
+>  This does not pre-approve later bq query calls; that happens when we write
+>  to settings.json."
 
-**BigQuery CLI**
-```bash
-bq ls
-```
-If a project is known: `bq ls <project>`
-If a dataset is known: `bq ls <project>:<dataset>`
+**For CLI tools** — use the specific command from the Tool Stack table above.
 
-**BigQuery MCP** (if connected — use ToolSearch to find `mcp__bigquery__*` tools)
-Call the lightest available list or schema tool with the named dataset.
+**For MCP tools** — do not hardcode tool IDs (they vary by session). Instead,
+use ToolSearch to find the lightest available tool for each MCP:
+- Gmail: `ToolSearch("gmail list labels")`
+- Calendar: `ToolSearch("calendar list calendars")`
+- Todoist: `ToolSearch("todoist overview")`
+- GitHub: `ToolSearch("github get me")`
+- Twilio: `ToolSearch("twilio search")`
+- Drive: `ToolSearch("drive list recent files")`
 
-**Python / pandas**
-```bash
-python3 --version && pip3 list 2>/dev/null | grep -E "pandas|numpy|pyarrow|duckdb" | head -10
-```
+Call whichever tool the search returns. If ToolSearch returns nothing for an MCP,
+that MCP is not connected — flag it.
 
-**Bash / shell**
-```bash
-ls -la <relevant directory or file path from intake>
-```
-If no path known yet: `pwd && ls`
-
-**Web fetch**
-Use the `WebFetch` tool on a safe, public URL relevant to the study (an API's status
-page, a docs page, a redirect endpoint). Never use a URL that may cost money or
-trigger side effects.
-
-**GitHub MCP**
-```
-mcp__github__get_me
-```
-
-**Gmail MCP**
-```
-mcp__aa6c29f9-c4d6-4b58-9404-b8695ffbd052__list_labels
-```
-
-**Calendar MCP**
-```
-mcp__d47985ed-4d14-4aad-8d06-3f815da43698__list_calendars
-```
-
-**Todoist MCP**
-```
-mcp__bc6fcd4a-95f8-4274-a93e-622d0f902709__get-overview
-```
-
-**Twilio MCP**
-```
-mcp__fae20c75-96ff-4679-8506-11c4f04fba73__twilio__search  (minimal query, e.g. last 1 message)
-```
-
-**Google Drive / filesystem MCP**
-```
-mcp__3d3b5430-5449-4b12-bf49-b0dc2bf6f8b2__list_recent_files  (limit 5)
-```
-
-**File read/write**
-Read a benign file the user is likely to have (e.g. a config file, feeds.json, or
-any file mentioned in the intake). This warms up `Read` and `Write` permissions
-for the analysis directory.
-
-### After dry runs
-
-Report the outcome:
+**Report the outcome:**
 
 ```
-Dry run results:
-  ✓ BigQuery CLI        — connected, N projects visible
-  ✓ Python / pandas     — python 3.x, pandas X.Y.Z available
-  ✓ Bash                — analysis directory accessible
-  ✗ Web fetch           — blocked by network policy (note this for analysis)
+Connection verification:
+  ✓ BigQuery CLI   — authenticated, 3 projects visible
+  ✓ Python 3.11    — pandas 2.1.0, numpy 1.26.0 available
+  ✓ Gmail MCP      — connected, 24 labels found
+  ✗ Twilio MCP     — not connected (ToolSearch returned no match)
 
-All needed permissions are now pre-approved for this session.
+Proceed with: BigQuery, Python, Gmail
+Blocked: Twilio
 ```
 
-If any dry run fails (tool not connected, permission denied, network blocked), flag
-it explicitly and ask the user whether to:
-a) Fix the connection before proceeding
-b) Remove that tool from the stack and adjust the approach
-c) Proceed anyway and handle it during analysis
+For any blocked tool, ask:
+- a) Fix the connection before proceeding
+- b) Remove it from the stack and adjust the approach
+- c) Proceed anyway; handle it during analysis if it comes up
 
 ---
 
-## PHASE 4 — ALLOW-LIST CURATION
+## ALLOW-LIST CURATION
 
-Now that you know what the study needs, present a ranked candidate list for the
-session allow-list. The user's answers from Phase 1, Question 6 (autonomy level)
-inform how aggressive the recommendations are.
+_Used by both standard mode (after Phase 3) and discovery mode (after Step 5)._
 
-### Present candidates
+Build the candidate table from the **current context**: the tool stack from Phase 2
+(standard) or the merged discovery results (discovery). Do not show tools that
+aren't in scope.
 
-Group by risk tier and ask the user to approve, reject, or modify each group:
+**Tier definitions:**
 
----
+- **Tier 1 — Safe reads**: read-only or idempotent, no billing, no live system mutation.
+  Recommend allowing all.
+- **Tier 2 — Consequential reads**: read from live systems or incur cost (BigQuery
+  billing, external API calls). Recommend allowing, but note the scope.
+- **Tier 3 — Writes / mutations**: create or modify data. Recommend prompt-per-call,
+  not blanket allow. Show them here so the user can decide.
 
-**Tier 1 — Safe / always-on (recommend: allow all)**
-These are read-only or idempotent with no data-mutation risk. Approving means
-fewer interruptions with no meaningful downside.
+**Allow-rule normalization** (map raw tool/binary names to settings.json syntax):
 
-| # | Allow rule | What it permits |
+| Observed | Allow rule(s) | Tier |
 |---|---|---|
-| 1 | `Bash(bq ls*)` | List BigQuery projects, datasets, tables |
-| 2 | `Bash(bq show*)` | Show schema and metadata |
-| 3 | `Bash(bq query --dry_run*)` | Estimate query cost without executing |
-| 4 | `Bash(python3 -c*)` | One-liner Python expressions |
-| 5 | `Bash(python3 *.py)` | Run Python scripts in repo |
-| 6 | `Bash(ls*)` | Directory listing |
-| 7 | `Bash(cat *.csv)` | Read CSV files |
-| 8 | `Bash(jq*)` | Parse JSON from stdout |
-| 9 | `Bash(head*)` `Bash(tail*)` | Preview file contents |
-| 10 | `Bash(wc*)` | Count lines/words |
+| `bq ls`, `bq show` | `Bash(bq ls*)`, `Bash(bq show*)` | 1 |
+| `bq query --dry_run` | `Bash(bq query --dry_run*)` | 1 |
+| `bq query` (real) | `Bash(bq query*)` | 2 |
+| `python3` | `Bash(python3*)` | 1 |
+| `pip3` | `Bash(pip3*)` | 1 |
+| `ls`, `cat`, `head`, `tail`, `wc` | `Bash(ls*)` etc. | 1 |
+| `jq` | `Bash(jq*)` | 1 |
+| `git` | `Bash(git*)` | 1 |
+| `gh` | `Bash(gh*)` | 2 |
+| `curl` | `Bash(curl*)` | 2 |
+| `ffmpeg`, `rwe-publish`, `nlm` | `Bash(<name>*)` | 1 |
+| `WebFetch` | `WebFetch(*)` | 2 |
+| GitHub read tools | `mcp__github__*_read` | 2 |
+| GitHub write tools | `mcp__github__*_write` | 3 |
+| Gmail search/read | tool name pattern `*search*`, `*get_thread*` | 2 |
+| Gmail label/draft writes | tool name pattern `*label*`, `*draft*` | 3 |
+| Calendar list | tool name pattern `*list_events*` | 1 |
+| Todoist reads | tool name pattern `*find*`, `*get*` | 1 |
+| Todoist writes | tool name pattern `*add*`, `*update*`, `*complete*` | 3 |
 
-Only include rows for tools actually in the stack.
+Built-in tools (`Read`, `Glob`, `Grep`, `Edit`, `Write`) do not require allow-list
+entries — skip them.
 
----
+**Present candidates grouped by tier and ask for approval:**
 
-**Tier 2 — Consequential reads (recommend: allow, note the scope)**
-These read from live systems. No data mutation, but they touch real data.
-Approve if you trust the analysis to be scoped correctly.
+> "Here are the candidate allow rules for this context.
+>  For each tier: approve all, approve with modifications, or skip.
+>  For Tier 3: tell me if any should become blanket-allowed."
 
-| # | Allow rule | What it permits |
-|---|---|---|
-| 11 | `Bash(bq query*)` | Execute BigQuery SQL (billed against your project) |
-| 12 | `mcp__github__*_read` | Read GitHub issues, PRs, code |
-| 13 | `mcp__*gmail*__search_threads` | Search Gmail |
-| 14 | `mcp__*gmail*__get_thread` | Read Gmail thread content |
-| 15 | `mcp__*calendar*__list_events` | List calendar events |
-| 16 | `mcp__*todoist*__find-tasks` | Read Todoist tasks |
+Show only tiers that have candidates. Example:
 
----
+```
+Tier 1 — Safe reads (recommend: allow all)
+  Bash(bq ls*)          list BigQuery projects, datasets, tables
+  Bash(bq show*)        show schema and metadata
+  Bash(bq query --dry_run*)  estimate query cost without executing
+  Bash(python3*)        run Python
+  Bash(jq*)             parse JSON
 
-**Tier 3 — Writes and mutations (recommend: case-by-case, not blanket)**
-These create or modify data. Generally do NOT blanket-allow these — approve
-individual calls during the analysis instead.
+Tier 2 — Consequential reads (billed / live data)
+  Bash(bq query*)       execute BigQuery SQL — billed against your project
+  WebFetch(*)           fetch external URLs
 
-| # | Tool | What it does | Recommend |
-|---|---|---|---|
-| 17 | `Write` (file output) | Creates/overwrites local files | Allow if output path is known |
-| 18 | `Bash(bq load*)` | Loads data into BigQuery | Prompt per call |
-| 19 | GitHub issue / PR writes | Creates issues, PRs, comments | Prompt per call |
-| 20 | Todoist task creation | Adds tasks to your inbox | Prompt per call |
-| 21 | Gmail label / draft writes | Labels messages, creates drafts | Prompt per call |
-
----
-
-Ask:
-
-> "For each tier, tell me: approve all, approve with modifications, or skip?
->  For Tier 3 items, let me know if any should become blanket-allowed for this session."
-
----
-
-## PHASE 4b — WRITE ALLOW-LIST TO SETTINGS
-
-Once the user approves, write the approved rules to the project settings file.
-
-Check if `.claude/settings.json` exists at the repo root:
-```bash
-ls -la .claude/settings.json 2>/dev/null || echo "not found"
+Tier 3 — Writes (shown for awareness; recommend prompt-per-call)
+  mcp__github__*_write  create issues, PRs, comments
 ```
 
-**If it exists:** Read it first, then merge the new allow rules into the existing
-`permissions.allow` array. Do not overwrite existing rules.
+---
 
-**If it does not exist:** Create `.claude/` and write a minimal `settings.json`:
+### Write to Settings
+
+Once approved, determine where to write the rules.
+
+**Global vs. project settings:**
+- Tools you use across all your projects (`python3`, `ls`, `git`, `jq`, `pip3`) →
+  recommend `~/.claude/settings.json` (global, applies to every repo)
+- Tools specific to this project or org (project-scoped `bq`, specific MCPs) →
+  recommend `.claude/settings.json` (project-only)
+
+Ask if any approved Tier 1 rules look like they belong globally.
+
+**Check what exists:**
+
+```bash
+cat ~/.claude/settings.json 2>/dev/null || echo "global: none"
+cat .claude/settings.json 2>/dev/null || echo "project: none"
+```
+
+Read the existing file(s) before writing. Merge new rules into the `permissions.allow`
+array — do not overwrite existing rules. Deduplicate by rule string.
+
+If a file does not exist, create it with:
 ```json
 {
   "permissions": {
@@ -635,29 +514,31 @@ ls -la .claude/settings.json 2>/dev/null || echo "not found"
 }
 ```
 
-Then add each approved rule to the array. Show the diff before writing:
+Show the diff before writing:
 
 ```
-Adding to .claude/settings.json:
+Writing to ~/.claude/settings.json (global):
+  + "Bash(python3*)"
+  + "Bash(ls*)"
+  + "Bash(jq*)"
+
+Writing to .claude/settings.json (project):
   + "Bash(bq ls*)"
   + "Bash(bq show*)"
   + "Bash(bq query --dry_run*)"
-  + "Bash(python3 *.py)"
-  + "Bash(ls*)"
-  + "Bash(jq*)"
   + "Bash(bq query*)"
 ```
 
-After writing, confirm:
-> "Allow-list written. These rules are now active for this project — they will persist
->  across sessions in this repo."
+After writing, read the files back and confirm the final state.
+
+> "Rules written. To remove a rule later, edit the file directly or
+>  run `/update-config`."
 
 ---
 
-## PHASE 5 — HANDOFF
+## Phase 5 — Handoff (standard mode only)
 
-Produce a concise brief the user can paste into the next message (or a new session)
-to kick off the actual analysis:
+Produce the study brief:
 
 ```
 ## Analytics Study Brief
@@ -676,20 +557,17 @@ to kick off the actual analysis:
 
 **Autonomy:** <full auto | checkpoint | supervised>
 
-**Constraints:** <PII rules, billing limits, etc. — or "none noted">
+**Constraints:** <PII rules, billing limits — or "none noted">
 
-**Permissions:** All needed tool permissions pre-approved for this session.
-
----
-Ready. Run the analysis.
+**Connections verified:** <list of tools confirmed working>
+**Allow-list written:** <global and/or project settings>
 ```
 
-Ask the user: "Does this brief look right? Say 'run it' to start the analysis,
-or correct anything before we proceed."
+Ask: "Does this brief look right? Correct anything, or say 'run it' to start."
 
-If the user says "run it" or equivalent, begin the analysis immediately using the
-brief as the specification. The pre-approval work is done — execute without further
-housekeeping prompts.
+If the user confirms, **begin the analysis immediately in this session** — do not
+wait for a new message. Use the brief as the specification and proceed according
+to the autonomy level they chose.
 
 ---
 
@@ -697,15 +575,30 @@ housekeeping prompts.
 
 - **One round-trip rule**: Batch all questions into as few messages as possible.
   Never ask one question at a time.
-- **Transparency on dry runs**: Always tell the user what a dry-run call does before
-  running it, especially for MCPs and `bq` commands that touch live systems.
-- **Billing awareness**: For BigQuery, always dry-run the query cost estimate before
-  executing the real query. Flag high-cost estimates (>1 GB) to the user.
+
+- **Connection verification ≠ permission pre-approval**: Approving a specific
+  `bq ls` prompt does not carry to `bq query`. The settings.json write is what
+  actually pre-approves command patterns. State this clearly; do not imply otherwise.
+
+- **Billing discipline**: For BigQuery, always run `bq query --dry_run` before
+  the real query and report the estimated bytes. If the estimate exceeds 10 GB,
+  stop and ask the user before executing.
+
 - **PII discipline**: If the user names tables or fields that look like PII
-  (email, name, SSN, IP, user_id linked to identity), call it out during intake
-  and confirm handling instructions before querying.
-- **No analysis during setup**: Phases 1–4 are prep only. Do not start answering
-  the research question until Phase 5 hands off. The study itself belongs in a
-  clean, focused context where all permissions are already warm.
-- **Fail loudly on blocked tools**: If a dry run is blocked, say so explicitly.
-  Do not silently adjust the plan. Give the user a clear choice.
+  (email, name, phone, IP, SSN, user_id linked to identity), call it out during
+  intake and confirm handling instructions before querying.
+
+- **No analysis during setup**: Phases 1–4 and discovery Steps 0–5 are prep only.
+  Do not start answering the research question until Phase 5 hands off.
+
+- **Fail loudly on blocked connections**: If a connection verification fails, say
+  so explicitly. Do not silently adjust the plan. Give the user a clear choice.
+
+- **Mid-analysis new tool**: If analysis reaches a tool not in the verified stack,
+  pause. Run connection verification for that tool only, offer to add it to the
+  allow-list, then continue.
+
+- **Cloud / ephemeral environments**: Discovery mode's transcript crawl will
+  return nothing in cloud-hosted or CI sessions. This is expected — the skill
+  gracefully falls back to skill-definition and context crawls only. Do not
+  treat empty transcript results as an error.
