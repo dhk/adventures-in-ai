@@ -5,7 +5,8 @@ description: >
   restored in every future session on any surface — web, desktop, CLI, or IDE.
   Use when the user says anything like "save context", "save my place",
   "checkpoint", "save session", "/save-context", "I want to pick this up later",
-  "create a handoff", or "save before I switch surfaces".
+  "save before I switch surfaces", or "preserve context for the next session".
+  NOT for committing code or generating handoff notes — use git-push-handoff for that.
 ---
 
 # Save Context
