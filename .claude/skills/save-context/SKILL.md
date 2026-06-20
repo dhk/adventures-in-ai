@@ -27,7 +27,7 @@ just what you remember from conversation:
 git branch --show-current
 git status --short
 git log --oneline -5
-date -u +"%Y-%m-%d %H:%M UTC"
+date +"%Y-%m-%d %H:%M %Z"
 ```
 
 ---
@@ -92,7 +92,7 @@ linked file in `.claude/context/` and reference it here.
 
 ```bash
 mkdir -p .claude/context/snapshots
-SNAPSHOT=".claude/context/snapshots/$(date -u +%Y-%m-%d-%H%M%S).md"
+SNAPSHOT=".claude/context/snapshots/$(date +%Y-%m-%d-%H%M%S).md"
 cp .claude/context/current.md "$SNAPSHOT"
 echo "Snapshot saved: $SNAPSHOT"
 ```
@@ -103,7 +103,7 @@ echo "Snapshot saved: $SNAPSHOT"
 
 ```bash
 git add .claude/context/
-git commit -m "context: checkpoint [$(date -u +%Y-%m-%d %H:%M UTC)]"
+git commit -m "context: checkpoint [$(date +%Y-%m-%d %H:%M %Z)]"
 git push -u origin "$(git branch --show-current)"
 ```
 
