@@ -169,5 +169,7 @@ node_modules/
 .cursor/*
 !.cursor/mcp.json
 
-# Claude Code — local worktrees / machine-specific (do not commit)
-.claude/
+# Claude Code — exclude local/personal files; commit project config
+.claude/settings.local.json
+.claude/projects/
+.claude/sessions/
