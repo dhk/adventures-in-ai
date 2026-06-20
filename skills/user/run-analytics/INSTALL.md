@@ -10,19 +10,17 @@ needing an active study.
 
 ```bash
 mkdir -p ~/.claude/skills/run-analytics && \
-  curl -fsSL https://raw.githubusercontent.com/dhk/adventures-in-ai/claude/run-analytics-meta-skill-b2mum2/skills/user/run-analytics/SKILL.md \
+  curl -fsSL https://raw.githubusercontent.com/dhk/adventures-in-ai/main/skills/user/run-analytics/SKILL.md \
     -o ~/.claude/skills/run-analytics/SKILL.md
 ```
 
 Claude Code picks up skills from `~/.claude/skills/` automatically.
 
-> Once this branch merges to main, replace the branch name in the URL with `main`.
-
 ## Manual install
 
 ```bash
 mkdir -p ~/.claude/skills/run-analytics
-curl -fsSL https://raw.githubusercontent.com/dhk/adventures-in-ai/claude/run-analytics-meta-skill-b2mum2/skills/user/run-analytics/SKILL.md \
+curl -fsSL https://raw.githubusercontent.com/dhk/adventures-in-ai/main/skills/user/run-analytics/SKILL.md \
   -o ~/.claude/skills/run-analytics/SKILL.md
 ls -lh ~/.claude/skills/run-analytics/SKILL.md
 ```
@@ -60,6 +58,6 @@ ls -lh ~/.claude/skills/run-analytics/SKILL.md
 ## Updating
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dhk/adventures-in-ai/claude/run-analytics-meta-skill-b2mum2/skills/user/run-analytics/SKILL.md \
+curl -fsSL https://raw.githubusercontent.com/dhk/adventures-in-ai/main/skills/user/run-analytics/SKILL.md \
   -o ~/.claude/skills/run-analytics/SKILL.md
 ```
