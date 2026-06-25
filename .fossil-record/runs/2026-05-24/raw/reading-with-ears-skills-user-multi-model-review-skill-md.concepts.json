@@ -1,0 +1,601 @@
+[
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "claude-orchestrator",
+    "concept_label": "Claude as Orchestrator",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 3,
+    "evidence": "+Uses Claude as orchestrator and Codex as a second-opinion reviewer via MCP.",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "codex-mcp-reviewer",
+      "sequential-review-order",
+      "synthesis-output"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "codex-mcp-reviewer",
+    "concept_label": "Codex MCP Second Opinion",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 3,
+    "evidence": "+compatibility: \"Requires: Codex registered as MCP server (claude mcp add codex -- npx codex mcp-server)\"\n+Call the `codex` MCP tool with the appropriate prompt below.",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "claude-orchestrator",
+      "mcp-prerequisite-check",
+      "codex-followup-probe"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "mcp-prerequisite-check",
+    "concept_label": "MCP Registration Check",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+Codex must be registered as an MCP server. Verify with:\n+claude mcp list\n+If `codex` is not listed, ask the user to run:",
+    "certainty": 2,
+    "autonomy": 1,
+    "linked_concepts": [
+      "codex-mcp-reviewer"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "review-mode-selection",
+    "concept_label": "Review Mode Selection",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+Ask the user which review mode they want, or infer from context:\n+| `/review-redteam` | Proposal, plan, design doc \u2014 find what breaks |\n+If unclear, default to `/review-redteam`.",
+    "certainty": 3,
+    "autonomy": 2,
+    "linked_concepts": [
+      "redteam-mode",
+      "steelman-mode",
+      "debate-mode",
+      "code-review-mode"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "redteam-mode",
+    "concept_label": "Red Team Review Mode",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+### Red Team prompt (Claude's own)\n+Find at least 5 failure modes. Label each High / Med / Low severity.\n+You are an adversarial reviewer. Your job is to find problems, not validate.",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "review-mode-selection",
+      "synthesis-output"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "steelman-mode",
+    "concept_label": "Steelman Review Mode",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+### Steelman prompt (Claude's own)\n+Identify: core insight (one sentence), 3 ways to strengthen, the single condition",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "review-mode-selection",
+      "synthesis-output"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "debate-mode",
+    "concept_label": "Debate Review Mode",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+### Debate prompt (Claude's own)\n+Argue FOR the proposal \u2014 steelman it as strongly as possible.",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "review-mode-selection",
+      "synthesis-output"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "code-review-mode",
+    "concept_label": "Code Review Mode",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+### Code Review prompt (Claude's own)\n+Focus on: logic errors, edge cases, maintainability. Do not comment on style.",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "review-mode-selection",
+      "synthesis-output"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "sequential-review-order",
+    "concept_label": "Sequential Review Order",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+Before calling Codex, Claude completes its own full review using the selected mode.\n+Do not call Codex first \u2014 independent reviews are more valuable than sequential ones.",
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "claude-orchestrator",
+      "codex-mcp-reviewer"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "verbatim-content-passing",
+    "concept_label": "Verbatim Content Passing",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+Pass the original content verbatim \u2014 do not summarize or pre-process it.",
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "codex-mcp-reviewer"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "codex-followup-probe",
+    "concept_label": "Codex Follow-up Probe",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+If Codex validates without critique, follow up via `codex-reply` with:\n+Assume the proposal is wrong. What breaks first?",
+    "certainty": 2,
+    "autonomy": 3,
+    "linked_concepts": [
+      "codex-mcp-reviewer",
+      "divergence-signal"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "synthesis-output",
+    "concept_label": "Structured Synthesis Output",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 3,
+    "evidence": "+## Step 3: Synthesize\n+Compare Claude's review and Codex's review. Produce a synthesis in this format:\n+CONSENSUS (both flagged):\n+DIVERGENT \u2014 Claude only:\n+DIVERGENT \u2014 Codex only:\n+THE CRUX: [the single most important unresolved question]\n+RECOMMENDED NEXT STEP: [one concrete action]",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "divergence-signal",
+      "claude-orchestrator",
+      "codex-mcp-reviewer"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "divergence-signal",
+    "concept_label": "Divergence as Signal",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 3,
+    "evidence": "+The value is in the *divergence* \u2014 where models disagree is where you should investigate.\n+Two models agreeing does not mean they are right \u2014 it may mean they share a blind spot.\n+Genuine divergence is what to investigate.",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "synthesis-output",
+      "signal-vs-noise"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "signal-vs-noise",
+    "concept_label": "Signal vs Noise Table",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+| Signal | Noise |\n+| Claude flags X, Codex doesn't | Both say \"looks good\" |\n+| Models disagree on severity | One model echoes the other's framing |",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "divergence-signal"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "concept_id": "edge-case-handling",
+    "concept_label": "Edge Case Fallbacks",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 2,
+    "evidence": "+-**Codex MCP not available**: Tell user to run...\n+-**Codex validates without critique**: Follow up with...\n+-**Models fully agree**: Note the consensus but flag that shared training data may explain agreement\n+-**Content too long for single call**: Summarize to key claims before sending to Codex\n+-**No mode specified**: Default to red team and confirm with user before proceeding",
+    "certainty": 2,
+    "autonomy": 2,
+    "linked_concepts": [
+      "mcp-prerequisite-check",
+      "codex-followup-probe",
+      "review-mode-selection"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "sequential-review-order",
+    "concept_label": "Sequential Review Order",
+    "lifecycle_state": "DIED",
+    "category": "REMOVE",
+    "significance": 3,
+    "evidence": "-## Step 1: Claude's Review\n-Before calling Codex, Claude completes its own full review using the selected mode.\n-Do not call Codex first \u2014 independent reviews are more valuable than sequential ones.",
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "parallel-review-execution"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "parallel-review-execution",
+    "concept_label": "Parallel Review Execution",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 3,
+    "evidence": "+## Step 1: Run Both Reviews in Parallel\n+Call the Codex MCP tool AND complete Claude's own review at the same time.\n+Do NOT wait for Codex before forming your own view \u2014 parallel execution preserves independence.\n+Do NOT show the user anything until both reviews are complete.",
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "claude-orchestrator",
+      "codex-mcp-reviewer",
+      "raw-output-display"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "raw-output-display",
+    "concept_label": "Raw Output Display",
+    "lifecycle_state": "BORN",
+    "category": "ADD",
+    "significance": 3,
+    "evidence": "+## Step 3: Show Raw Outputs, Then Synthesize\n+**CRITICAL: Always show both raw reviews separately before synthesizing.**\n+Do not collapse them into a single pre-synthesized response. The user needs to see\n+what each model contributed independently \u2014 that visibility is the whole point.\n+Output in this exact order:",
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "synthesis-output",
+      "parallel-review-execution"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "synthesis-output",
+    "concept_label": "Structured Synthesis Output",
+    "lifecycle_state": "MORPHED",
+    "category": "REFINE",
+    "significance": 2,
+    "evidence": "+[Claude's full findings, unmerged]\n+[Codex's full findings, verbatim or closely paraphrased \u2014 do not filter]\n+The DIVERGENT \u2014 Codex only section is the highest-value output. If it is empty,\n+something went wrong \u2014 re-prompt Codex with \"What did Claude likely miss?\"",
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "raw-output-display",
+      "divergence-signal",
+      "codex-followup-probe"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "codex-step-label",
+    "concept_label": "Codex Step Label Reframe",
+    "lifecycle_state": "BORN",
+    "category": "REFINE",
+    "significance": 1,
+    "evidence": "-## Step 2: Call Codex via MCP\n+## Step 2: Codex Prompt (runs in parallel with Step 1)",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "parallel-review-execution",
+      "codex-mcp-reviewer"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "claude-orchestrator",
+    "concept_label": "Claude as Orchestrator",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "parallel-review-execution",
+      "codex-mcp-reviewer"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "codex-mcp-reviewer",
+    "concept_label": "Codex MCP Second Opinion",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "parallel-review-execution",
+      "synthesis-output"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "mcp-prerequisite-check",
+    "concept_label": "MCP Registration Check",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 2,
+    "autonomy": 1,
+    "linked_concepts": [
+      "codex-mcp-reviewer"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "review-mode-selection",
+    "concept_label": "Review Mode Selection",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 2,
+    "linked_concepts": [
+      "redteam-mode",
+      "steelman-mode",
+      "debate-mode",
+      "code-review-mode"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "verbatim-content-passing",
+    "concept_label": "Verbatim Content Passing",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "codex-mcp-reviewer"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "codex-followup-probe",
+    "concept_label": "Codex Follow-up Probe",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 2,
+    "autonomy": 3,
+    "linked_concepts": [
+      "synthesis-output",
+      "divergence-signal"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "divergence-signal",
+    "concept_label": "Divergence as Signal",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "synthesis-output",
+      "signal-vs-noise"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "signal-vs-noise",
+    "concept_label": "Signal vs Noise Table",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "divergence-signal"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "concept_id": "edge-case-handling",
+    "concept_label": "Edge Case Fallbacks",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 2,
+    "autonomy": 2,
+    "linked_concepts": [
+      "mcp-prerequisite-check",
+      "codex-followup-probe",
+      "review-mode-selection"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "concept_id": "skill-file-location",
+    "concept_label": "Skill File Relocation",
+    "lifecycle_state": "BORN",
+    "category": "INFRA",
+    "significance": 1,
+    "evidence": "rename from dhk-daily-brief/skills/user/multi-model-review/SKILL.md\nrename to reading-with-ears/skills/user/multi-model-review/SKILL.md",
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "claude-orchestrator"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "concept_id": "claude-orchestrator",
+    "concept_label": "Claude as Orchestrator",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "parallel-review-execution",
+      "codex-mcp-reviewer"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "concept_id": "parallel-review-execution",
+    "concept_label": "Parallel Review Execution",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "claude-orchestrator",
+      "codex-mcp-reviewer",
+      "raw-output-display"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "concept_id": "raw-output-display",
+    "concept_label": "Raw Output Display",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "synthesis-output",
+      "parallel-review-execution"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "concept_id": "synthesis-output",
+    "concept_label": "Structured Synthesis Output",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 4,
+    "autonomy": 3,
+    "linked_concepts": [
+      "raw-output-display",
+      "divergence-signal"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  },
+  {
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "concept_id": "divergence-signal",
+    "concept_label": "Divergence as Signal",
+    "lifecycle_state": "STABLE",
+    "category": null,
+    "significance": 1,
+    "evidence": null,
+    "certainty": 3,
+    "autonomy": 3,
+    "linked_concepts": [
+      "synthesis-output",
+      "signal-vs-noise"
+    ],
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md"
+  }
+]

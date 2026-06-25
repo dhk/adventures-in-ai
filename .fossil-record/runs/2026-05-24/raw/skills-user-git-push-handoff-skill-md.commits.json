@@ -1,0 +1,27 @@
+{
+  "file": "skills/user/git-push-handoff/SKILL.md",
+  "tier": 1,
+  "patch_size_chars": 7517,
+  "commits": [
+    {
+      "hash": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+      "date": "2026-03-28",
+      "message": "Skill for supporting handoff notes",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 152,
+      "deletions": 0,
+      "net_loc_delta": 152,
+      "absolute_loc": 152
+    },
+    {
+      "hash": "631b5af6f8d99f6d624776c0a3f5fb0f6e7d60e6",
+      "date": "2026-03-28",
+      "message": "fix ynml",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 1,
+      "deletions": 1,
+      "net_loc_delta": 0,
+      "absolute_loc": 152
+    }
+  ]
+}
