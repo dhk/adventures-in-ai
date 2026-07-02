@@ -98,6 +98,14 @@ follows the same line, but because it needs *three different model tiers* in one
 run, the orchestration itself moves to Python (direct Anthropic API), with `claude -p`
 called only for the one step that genuinely needs MCP tools (NotebookLM).
 
+> **Review comment (credentials):** This is the first place in the repo that
+> would call the Anthropic API directly rather than going through `claude -p` /
+> the existing Claude Pro session. Worth spelling out where `ANTHROPIC_API_KEY`
+> lives (env var read by `rwe-weekly`? a new entry alongside
+> `automation/mcp-headless.json`? macOS keychain like other secrets here?) and
+> what happens if it's unset or invalid — since steps 3-5 are the only paid
+> stages, a missing/bad key should fail at pre-flight, not partway through a run.
+
 ```
 rwe-weekly (new bin script)
   │
