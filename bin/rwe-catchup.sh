@@ -78,6 +78,12 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
     # it interactively — the detail is already on disk when the failure happens.
     DEBUG_FILE="${LOG_DIR}/catchup-debug-${current}.log"
 
+    # Print what the shell actually sees before we scrub it — this is diagnostic
+    # only: claude may still pick up a key from its own settings (~/.claude.json
+    # env block) even when nothing is exported here, so an empty line below does
+    # NOT prove claude is unauthenticated, only that this shell isn't the source.
+    echo "[${current}] ANTHROPIC_API_KEY in shell (first 20 chars): ${ANTHROPIC_API_KEY:0:20}${ANTHROPIC_API_KEY:+ (...truncated)}"
+
     # claude -p uses the claude.ai/Pro session, not ANTHROPIC_API_KEY — scrub it in
     # case the caller's shell has it set (e.g. a prior rwe-weekly run this session),
     # which otherwise makes claude refuse to start with an auth-conflict error.
