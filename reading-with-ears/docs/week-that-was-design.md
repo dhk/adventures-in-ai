@@ -256,6 +256,13 @@ Trend classification (pure arithmetic, no model):
 - **dipping** — this week's count < 0.5x trailing-4-week average, and was ≥2 last period
 - **steady** — everything else
 
+> **Review comment (noise floor):** The ratio thresholds have no minimum-volume
+> gate. A tag going from 1 mention to 2 is a 100% increase and would be flagged
+> **growing** right alongside a tag going from 10 to 20 — same label, very
+> different signal strength. Consider requiring a minimum trailing-4-week
+> average (e.g. ≥3) before applying the ratio math at all; below that, bucket
+> as `steady` (or a distinct `low-volume`) regardless of the ratio.
+
 Known limitation: tags are free-form (`AI-policy` vs `AI policy` vs `ai-regulation`
 all plausible from different daily runs), so naive string-matching will undercount.
 v1 accepts this — it's directionally useful, not a rigorous metric. If it turns out
