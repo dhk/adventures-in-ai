@@ -373,6 +373,14 @@ and the run stops there, resumable on next invocation. Logs go to
 `~/logs/reading-with-ears/weekly-YYYY-Www.log`, same convention as
 `~/logs/reading-with-ears/YYYY-MM-DD.log` today.
 
+> **Review comment (concurrency):** The daily pipeline's `done-YYYY-MM-DD`
+> sentinel doubles as a lock against accidental double-runs. `rwe-weekly`'s
+> manifest-based resume covers crash recovery but doesn't obviously prevent two
+> concurrent invocations for the same week (e.g. a manual re-run fired while
+> the first is still mid-flight) from racing on `manifest.yaml` and
+> `themes.yaml` writes. Worth a simple in-progress marker (e.g. a `.lock` file,
+> or an `in_progress` stage status checked at startup) alongside the manifest.
+
 ---
 
 ## 9. Build order
