@@ -122,13 +122,15 @@ sources from every subsequent day in that same week. Process days chronologicall
 
 ### Finding this week's notebook for a feed
 
-Before creating a notebook, determine the current ISO week (Monday-Sunday) for the
-date being processed, then check whether this feed already has a notebook this week:
+Before creating any notebooks, determine the current ISO week (Monday-Sunday) for the
+date being processed, then check whether each enabled feed already has a notebook
+this week:
 
-1. Read `reading-db/runs/YYYY-MM-DD.yaml` for every date in this ISO week *prior to*
-   the date being processed (Monday through yesterday, if any exist).
-2. For this feed's slug, collect every `notebook_id` recorded under that day's
-   top-level `notebooks:` list.
+1. Read each prior day's `reading-db/runs/YYYY-MM-DD.yaml` in this ISO week (Monday
+   through yesterday, if any exist) **once per day, not once per feed** — one file
+   read gives you every feed's `notebook_id` for that day in a single pass.
+2. For each feed's slug, collect every `notebook_id` recorded under that day's
+   top-level `notebooks:` list, across all days read.
 3. **Zero found:** no notebook yet this week for this feed — create one (see below).
 4. **Exactly one found:** reuse it — `source_add` today's emails onto it, don't
    create a new one.
@@ -223,27 +225,30 @@ For each extracted link:
 
 1. Assign `article_id`: `<messageId>-<sequence>` (e.g. `19d77ecea1ccb554-01`)
 2. Store `url_raw` (as found in email HTML)
-3. Resolve redirect → `url_canonical` via `web_fetch` (follow redirects, store final URL)
+3. Fetch the URL **once**: `web_fetch(url=url_raw)`. Following a redirect *is*
+   fetching the destination page — do not fetch `url_raw` to resolve it and then
+   fetch `url_canonical` again to get the body; that's the same network request
+   twice per article. One `web_fetch` call gives you both the final landed URL
+   (→ `url_canonical`) and the page content.
 4. Extract `domain` from `url_canonical`
 5. Store `anchor_text` and `excerpt` (surrounding sentence(s) from email body)
-6. Set `resolve_status`: `resolved | failed | redirect_loop | timeout`
+6. Set `resolve_status`: `resolved | failed | redirect_loop | timeout`, from this
+   same fetch's outcome
 7. Set `parse_confidence`: 0.0–1.0
    - 0.9–1.0: clean canonical URL, clear headline anchor text
    - 0.7–0.89: resolved but anchor text vague or URL looks like a section page
    - 0.5–0.69: resolved but uncertain if this is the primary article
    - <0.5: could not resolve or anchor text is unclear
 
-Fetch full article body for each article where `resolve_status = "resolved"`:
-```
-web_fetch(url=url_canonical)
-```
-
-Extract main article body (strip nav, ads, footers, sidebars — main content only).
-Truncate to 12,000 chars if needed.
+From that same fetch's content, extract the main article body (strip nav, ads,
+footers, sidebars — main content only). Truncate to 12,000 chars if needed.
 
 Set `fetch_status`: `success | paywalled | not_found | bot_blocked | timeout | error`
 Set `full_body_available`: `true | false`
 Set `full_body_chars`: character count of what was retrieved
+
+Do not issue a second `web_fetch` call for the same article under any circumstance —
+`resolve_status` and `fetch_status` both come from the one attempt in step 3.
 
 ---
 
@@ -327,7 +332,7 @@ File structure:
 ```yaml
 run_date: YYYY-MM-DD
 skill_version: "3.0"
-pipeline_mode: standard
+pipeline_mode: deep
 notebooks:
   - label: "newsletter/pro"
     notebook_id: "ghi789-..."
