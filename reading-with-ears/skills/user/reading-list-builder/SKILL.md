@@ -496,18 +496,25 @@ Titling rules:
 ### Download & Publish
 
 Once all artifacts are titled, hand off to `rwe-publish` for download, m4a→mp3
-conversion, and Element.fm upload — using **today's date** (the day this weekly run
-executes), not the week's date range:
+conversion, and Element.fm upload — the audio file is dated/named with **today's
+date** (the day this weekly run executes), but notebook lookup must use the ISO
+week (`--notebook-week`), since notebook titles are week-scoped
+(`reading-list-YYYY-Www-nn ...`), not date-scoped:
 
 ```bash
-rwe-publish --date YYYY-MM-DD --no-wait-for-studio-status --audio-format mp3
+rwe-publish --date YYYY-MM-DD --notebook-week YYYY-Www --no-wait-for-studio-status --audio-format mp3
 ```
 
-The filename/title convention (`YYYY-MM-DD-<slug>.mp3`, `<show_name> - YYYY-MM-DD`)
-is unchanged and needs no new logic — it's scoped by "the day this episode was
-published," which is now once a week instead of once a day, but the mechanism doesn't
-need to know that. `rwe-publish` is idempotent: already-downloaded files are skipped
-automatically.
+The downloaded-audio filename/title convention (`YYYY-MM-DD-<slug>.mp3`,
+`<show_name> - YYYY-MM-DD`) is unchanged — it's scoped by "the day this episode was
+published," which is now once a week instead of once a day, but that mechanism
+doesn't need to know that. **Notebook discovery is a separate mechanism** and does
+need to know: `--notebook-week` tells `rwe-publish` to look up notebooks by ISO week
+label instead of by date (see `find_notebooks_for_week` in `publish_episodes.py`).
+Omitting `--notebook-week` here would make `rwe-publish` search for a
+`YYYY-MM-DD`-titled notebook that no longer exists under v3.0's weekly naming — it
+would find zero notebooks and exit non-zero. `rwe-publish` is idempotent:
+already-downloaded files are skipped automatically.
 
 To skip the Element.fm upload, add `--download-only`. Do not manually invoke
 `nlm download` or `ffmpeg` — `rwe-publish` handles both.

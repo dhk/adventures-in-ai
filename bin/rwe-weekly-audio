@@ -57,5 +57,6 @@ echo "${CLAUDE_PROMPT}" | claude -p \
 
 # Redundant safety net, same as rwe-run.sh: the skill's own STEP W3 already calls
 # rwe-publish, this just re-runs it in case that step didn't complete — idempotent,
-# already-downloaded/published episodes are skipped automatically.
-python3 "${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py"
+# already-downloaded/published episodes are skipped automatically. --notebook-week
+# is required here too: notebook titles are week-scoped, not date-scoped, under v3.0.
+python3 "${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py" --notebook-week "${WEEK_ARG}"

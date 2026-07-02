@@ -46,6 +46,13 @@ READING_LIST_NOTEBOOK_RE = re.compile(
     r"^reading-list-(?P<date>\d{4}-\d{2}-\d{2})-(?P<nn>\d{2})\s+(?P<category>.+)$"
 )
 
+# Weekly-accumulating notebooks (reading-list-builder v3.0+, see
+# docs/weekly-cadence-migration.md) use an ISO week label instead of a calendar date:
+# "reading-list-2026-W26-01 <category>".
+READING_LIST_WEEKLY_NOTEBOOK_RE = re.compile(
+    r"^reading-list-(?P<week>\d{4}-W\d{2})-(?P<nn>\d{2})\s+(?P<category>.+)$"
+)
+
 
 def _read_json(path: Path) -> dict[str, Any]:
     try:
@@ -147,6 +154,17 @@ def parse_reading_list_notebook_title(title: str) -> Optional[tuple[str, int, st
     if not m:
         return None
     return (m.group("date"), int(m.group("nn")), m.group("category"))
+
+
+def parse_reading_list_weekly_notebook_title(title: str) -> Optional[tuple[str, int, str]]:
+    """
+    Parse 'reading-list-YYYY-Www-NN <CATEGORY>' into (week, nn, category).
+    Returns None if not matched.
+    """
+    m = READING_LIST_WEEKLY_NOTEBOOK_RE.match(title.strip())
+    if not m:
+        return None
+    return (m.group("week"), int(m.group("nn")), m.group("category"))
 
 
 def parse_audio_filename(filename: str) -> Optional[tuple[str, str, str]]:

@@ -24,6 +24,7 @@ import argparse
 import json
 import re
 import sys
+import os
 import time
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -31,16 +32,30 @@ from pathlib import Path
 import yaml
 
 # ── Paths ──────────────────────────────────────────────────────────────────
-
-SCRIPT_DIR = Path(__file__).resolve().parent
-RWE_ROOT = SCRIPT_DIR.parent
-REPO_ROOT = RWE_ROOT.parent
+#
+# Prefer RWE_REPO if set — bin/rwe-weekly exports it after resolving the repo root
+# via rwe-common.sh's rwe_repo_root() (which honors RWE_REPO / ~/.config/reading-with-
+# ears/config.json / relative-to-caller, in that order). Falling back to
+# Path(__file__).resolve() only works when scripts/ is a symlink into the repo
+# (install-local.sh's default SYNC_MODE); under SYNC_MODE=copy this file is a real
+# copy under ~/.local/share with nothing to resolve back to the repo, so RWE_REPO
+# must be trusted when present rather than always re-deriving from __file__.
+_env_repo = os.environ.get("RWE_REPO", "").strip()
+if _env_repo:
+    REPO_ROOT = Path(_env_repo).expanduser().resolve()
+    RWE_ROOT = REPO_ROOT / "reading-with-ears"
+else:
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    RWE_ROOT = SCRIPT_DIR.parent
+    REPO_ROOT = RWE_ROOT.parent
 
 RUNS_DIR = REPO_ROOT / "dhkondata" / "reading-db" / "runs"
 ZEITGEIST_DIR = REPO_ROOT / "dhkondata" / "reading-db" / "zeitgeist"
 THEMES_PATH = ZEITGEIST_DIR / "themes.yaml"
 WEEKLY_DIR = REPO_ROOT / "dhkondata" / "reading-db" / "weekly"
 WEEKLY_CONFIG_PATH = RWE_ROOT / "config" / "weekly.json"
+FEEDS_CONFIG_PATH = RWE_ROOT / "config" / "feeds.json"
+FEEDS_CONFIG_OVERRIDE_PATH = Path.home() / ".config" / "reading-with-ears" / "feeds.json"
 
 # Rough public per-token pricing for manifest cost estimates. Not billing-accurate
 # — just enough to give the cost guardrail (design doc §7) something to compare
@@ -107,21 +122,65 @@ def load_week_runs(runs_dir, dates):
     return runs, found, missing
 
 
-def iter_articles(runs):
+def load_feeds_config():
+    """Merge-first, same precedence as podcast_config.load_feeds_json(): prefer
+    ~/.config/reading-with-ears/feeds.json, else the bundled repo config."""
+    for path in (FEEDS_CONFIG_OVERRIDE_PATH, FEEDS_CONFIG_PATH):
+        if path.is_file():
+            with path.open(encoding="utf-8") as f:
+                data = json.load(f)
+            if data.get("feeds"):
+                return data
+    return {"feeds": []}
+
+
+def build_label_to_slug(feeds_cfg):
+    """Map every spelling of a feed's label seen in daily run YAMLs to its slug.
+
+    The daily YAML's `emails[].label` field has drifted over time between the raw
+    Gmail label (e.g. "newsletter/pro") and the feed slug (e.g. "professional") —
+    both forms exist in real run files. weekly.json's taxonomy `feeds` lists use
+    slugs, so every other spelling must normalize to the slug before filtering."""
+    mapping = {}
+    for feed in feeds_cfg.get("feeds") or []:
+        slug = feed.get("slug")
+        if not slug:
+            continue
+        mapping[slug] = slug
+        for gl in feed.get("gmail_labels") or []:
+            mapping[gl] = slug
+            if "/" in gl:
+                mapping[gl.split("/", 1)[1]] = slug
+    return mapping
+
+
+def _synthesis_bullets_and_note(art):
+    """Some older run files (e.g. reading-db-backfill.py's "deep-email-body"
+    pipeline_mode) store `synthesis` as a flat list of bullet strings rather than
+    the current `{bullets: [...], confidence_note: ...}` dict — handle both."""
+    synthesis = art.get("synthesis")
+    if isinstance(synthesis, list):
+        return synthesis, None
+    if isinstance(synthesis, dict):
+        return synthesis.get("bullets") or [], synthesis.get("confidence_note")
+    return [], None
+
+
+def iter_articles(runs, label_to_slug):
     for d, data in runs:
         for email in data.get("emails") or []:
-            label = email.get("label")
+            label = label_to_slug.get(email.get("label"), email.get("label"))
             for art in email.get("articles") or []:
-                synthesis = art.get("synthesis") or {}
+                bullets, confidence_note = _synthesis_bullets_and_note(art)
                 yield {
                     "date": d.isoformat(),
                     "label": label,
                     "subject": email.get("subject"),
                     "sender_name": email.get("sender_name"),
                     "thread_id": email.get("thread_id"),
-                    "url_canonical": (art.get("source") or {}).get("url_canonical"),
-                    "bullets": synthesis.get("bullets") or [],
-                    "confidence_note": synthesis.get("confidence_note"),
+                    "url_canonical": (art.get("source") or {}).get("url_canonical") or art.get("canonical_url"),
+                    "bullets": bullets,
+                    "confidence_note": confidence_note,
                     "tags": art.get("tags") or [],
                 }
 
@@ -377,8 +436,6 @@ def main(argv=None):
     manifest_path = weekly_dir / "manifest.yaml"
     manifest = load_manifest(manifest_path, week_str)
 
-    import os  # local import: only needed for the credential check below
-
     # Checked unconditionally, independent of preflight's resume state: a prior
     # --dry-run can leave preflight marked complete without ever having checked
     # for a key, and a real run must still fail fast rather than inherit that.
@@ -410,7 +467,8 @@ def main(argv=None):
     else:
         runs, _, _ = load_week_runs(RUNS_DIR, dates)
 
-    all_articles = list(iter_articles(runs))
+    label_to_slug = build_label_to_slug(load_feeds_config())
+    all_articles = list(iter_articles(runs, label_to_slug))
 
     # ── Stage: zeitgeist_counts ──
     stage = manifest["stages"].setdefault("zeitgeist_counts", {"status": "pending"})
@@ -446,6 +504,12 @@ def main(argv=None):
             continue
         if sec_state.get("status") == "skipped":
             continue
+        # "dry_run_skipped" is only terminal for another dry run. A real invocation
+        # must still attempt synthesis even if an earlier --dry-run already touched
+        # this section — otherwise a dry run permanently blocks real synthesis for
+        # every section it ran (same class of bug already fixed for preflight above).
+        if sec_state.get("status") == "dry_run_skipped" and args.dry_run:
+            continue
 
         articles = articles_for_section(all_articles, feeds)
         if not articles:
@@ -454,7 +518,7 @@ def main(argv=None):
             continue
 
         if args.dry_run:
-            sec_state.update(status="skipped", reason="dry-run")
+            sec_state.update(status="dry_run_skipped", reason="dry-run")
             save_manifest(manifest_path, manifest)
             continue
 
@@ -469,8 +533,11 @@ def main(argv=None):
         section_texts[key] = text
         save_manifest(manifest_path, manifest)
 
+    # "dry_run_skipped" only counts as done for a dry run. A real invocation must
+    # still treat those sections as unfinished so it actually retries them.
+    terminal_statuses = {"complete", "skipped"} | ({"dry_run_skipped"} if args.dry_run else set())
     section_statuses = [s.get("status") for s in stage["sections"].values()]
-    if section_statuses and all(s in ("complete", "skipped") for s in section_statuses):
+    if section_statuses and all(s in terminal_statuses for s in section_statuses):
         section_tokens = sum(s.get("tokens", 0) for s in stage["sections"].values())
         section_cost = sum(s.get("cost_usd", 0) for s in stage["sections"].values())
         stage.update(status="complete", at=now_iso(), tokens=section_tokens, cost_usd=round(section_cost, 4))
