@@ -269,6 +269,13 @@ v1 accepts this — it's directionally useful, not a rigorous metric. If it turn
 to matter, the fix is a small synonym-merge table in `weekly.json`, not an LLM
 classification pass (keep the free thing free).
 
+> **Review comment (retention):** `themes.yaml` accumulates `weekly_counts`
+> indefinitely — §10 notes trend math only looks back 4 weeks, but nothing
+> prunes entries older than that from the file itself. Probably harmless at
+> personal-project scale, but worth a one-line call-out on whether old entries
+> are ever dropped, or whether unbounded growth here is an accepted non-goal
+> like the rest of §10.
+
 The **narrative** wrapped around these numbers (step 4) is the one Sonnet call that
 explains *why* something's rising, using the underlying article bullets for the
 top 3-4 movers as context. The counting is mechanical; only the explanation costs
