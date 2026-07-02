@@ -58,7 +58,11 @@ cd "${RWE_ROOT}"
 
 CLAUDE_PROMPT=$'Read and follow skills/user/reading-list-builder/SKILL.md and run the DAILY FLOW (Steps 0-8) for today\'s date (use America/Los_Angeles for "today"). Do not run the weekly audio flow.'
 
-echo "${CLAUDE_PROMPT}" | claude -p \
+# claude -p uses the claude.ai/Pro session, not ANTHROPIC_API_KEY. If the caller's
+# shell has that var set (e.g. for a prior rwe-weekly/week_that_was.py run in the
+# same terminal), claude refuses to start with an auth-conflict error — scrub it
+# for this invocation regardless of what the parent shell has exported.
+echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
   --permission-mode bypassPermissions \
   --strict-mcp-config \
   --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
