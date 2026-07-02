@@ -58,14 +58,30 @@ cd "${RWE_ROOT}"
 
 CLAUDE_PROMPT=$'Read and follow skills/user/reading-list-builder/SKILL.md and run the DAILY FLOW (Steps 0-8) for today\'s date (use America/Los_Angeles for "today"). Do not run the weekly audio flow.'
 
+# Full claude debug capture (unfiltered — a category filter like "mcp" broke
+# stdin prompt piping in testing), so a failure (Gmail vs. NotebookLM vs. something
+# else in the MCP handshake) doesn't require manually reproducing it interactively —
+# the detail is already on disk when the failure happens.
+DEBUG_FILE="${LOG_DIR}/run-debug-$(date +%F).log"
+
 # claude -p uses the claude.ai/Pro session, not ANTHROPIC_API_KEY. If the caller's
 # shell has that var set (e.g. for a prior rwe-weekly/week_that_was.py run in the
 # same terminal), claude refuses to start with an auth-conflict error — scrub it
 # for this invocation regardless of what the parent shell has exported.
-echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
+if ! echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
   --permission-mode bypassPermissions \
   --strict-mcp-config \
   --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
-  --add-dir "${RWE_ROOT}"
+  --add-dir "${RWE_ROOT}" \
+  --debug \
+  --debug-file "${DEBUG_FILE}"; then
+  echo "ERROR: daily flow failed. MCP debug log: ${DEBUG_FILE}"
+  if [[ -f "${DEBUG_FILE}" ]]; then
+    echo "--- last 40 lines of MCP debug log ---"
+    tail -40 "${DEBUG_FILE}"
+    echo "--- end debug log excerpt ---"
+  fi
+  exit 1
+fi
 
 touch "${SENTINEL}"

@@ -49,14 +49,30 @@ cd "${RWE_ROOT}"
 
 CLAUDE_PROMPT="Read and follow skills/user/reading-list-builder/SKILL.md and run the WEEKLY AUDIO FLOW (Steps W1-W4) for ISO week ${WEEK_ARG}. Do not run the daily flow."
 
+# Full claude debug capture (unfiltered — a category filter like "mcp" broke
+# stdin prompt piping in testing), so a failure (Gmail vs. NotebookLM vs. something
+# else in the MCP handshake) doesn't require manually reproducing it interactively —
+# the detail is already on disk when the failure happens.
+DEBUG_FILE="${LOG_DIR}/weekly-audio-debug-${WEEK_ARG}.log"
+
 # claude -p uses the claude.ai/Pro session, not ANTHROPIC_API_KEY — scrub it in
 # case the caller's shell has it set, which otherwise makes claude refuse to start
 # with an auth-conflict error.
-echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
+if ! echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
   --permission-mode bypassPermissions \
   --strict-mcp-config \
   --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
-  --add-dir "${RWE_ROOT}"
+  --add-dir "${RWE_ROOT}" \
+  --debug \
+  --debug-file "${DEBUG_FILE}"; then
+  echo "ERROR: weekly audio flow failed. MCP debug log: ${DEBUG_FILE}"
+  if [[ -f "${DEBUG_FILE}" ]]; then
+    echo "--- last 40 lines of MCP debug log ---"
+    tail -40 "${DEBUG_FILE}"
+    echo "--- end debug log excerpt ---"
+  fi
+  exit 1
+fi
 
 # Redundant safety net, same as rwe-run.sh: the skill's own STEP W3 already calls
 # rwe-publish, this just re-runs it in case that step didn't complete — idempotent,

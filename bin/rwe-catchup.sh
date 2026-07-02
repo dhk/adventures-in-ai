@@ -72,6 +72,12 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
 
     cd "${RWE_ROOT}"
 
+    # Full claude debug capture (unfiltered — a category filter like "mcp" broke
+    # stdin prompt piping in testing) per day, so a failure (Gmail vs. NotebookLM
+    # vs. something else in the MCP handshake) doesn't require manually reproducing
+    # it interactively — the detail is already on disk when the failure happens.
+    DEBUG_FILE="${LOG_DIR}/catchup-debug-${current}.log"
+
     # claude -p uses the claude.ai/Pro session, not ANTHROPIC_API_KEY — scrub it in
     # case the caller's shell has it set (e.g. a prior rwe-weekly run this session),
     # which otherwise makes claude refuse to start with an auth-conflict error.
@@ -80,12 +86,20 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
         --permission-mode bypassPermissions \
         --strict-mcp-config \
         --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
-        --add-dir "${RWE_ROOT}"; then
+        --add-dir "${RWE_ROOT}" \
+        --debug \
+        --debug-file "${DEBUG_FILE}"; then
       touch "${SENTINEL}"
       echo "[${current}] Done."
       processed=$((processed + 1))
     else
       echo "[${current}] Pipeline failed — sentinel not written, will retry on next catch-up run."
+      echo "[${current}] MCP debug log: ${DEBUG_FILE}"
+      if [[ -f "${DEBUG_FILE}" ]]; then
+        echo "[${current}] --- last 40 lines of MCP debug log ---"
+        tail -40 "${DEBUG_FILE}"
+        echo "[${current}] --- end debug log excerpt ---"
+      fi
       failed=$((failed + 1))
     fi
   fi
