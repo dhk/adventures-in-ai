@@ -340,6 +340,15 @@ stages:
 total_cost_usd: 0.57
 ```
 
+> **Review comment (resume granularity):** `section_synthesis` is one manifest
+> entry but it's actually 6 independent Sonnet calls, one per taxonomy section
+> (§6.2). If section 4 of 6 fails, does resume re-pay for the 5 that already
+> succeeded, or is there per-section sub-state? As written, the schema can only
+> represent the whole stage as `complete`/`failed`/`pending`, which undercuts
+> the "don't re-pay for what's already done" rationale this section argues for.
+> Consider a `sections: {ai_tech: complete, economy: failed, ...}` map so a
+> single section retry doesn't re-run all six.
+
 **Why per-stage, not whole-run:** the existing sentinel pattern (`done-YYYY-MM-DD`)
 is whole-run pass/fail, which is fine for the daily pipeline because it's cheap to
 just retry. The weekly run has a $0.50-2.50 cost and a NotebookLM step that can take
