@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Full pipeline via reading-list-builder skill (fetch → notebooks → audio → Element.fm).
-# Intended for launchd and manual runs. Syncs repo → ~/.local/share before each run.
+# Daily flow via reading-list-builder skill (fetch → notebooks → synthesize → YAML/briefs).
+# As of skill v3.0, audio/publish no longer happens daily — see bin/rwe-weekly-audio
+# and docs/weekly-cadence-migration.md. Intended for launchd and manual runs. Syncs
+# repo → ~/.local/share before each run.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,7 +23,12 @@ if [[ "${1:-}" == "--catch-up" ]]; then
   exec "${HERE}/rwe-catchup.sh" "$@"
 fi
 
-SKILL_VERSION_REQUIRED="1.1"
+if [[ "${1:-}" == "--weekly-audio" ]]; then
+  shift
+  exec "${HERE}/rwe-weekly-audio" "$@"
+fi
+
+SKILL_VERSION_REQUIRED="3.0"
 SKILL_FILE="${RWE_ROOT}/skills/user/reading-list-builder/SKILL.md"
 SKILL_VERSION=$(grep -m1 '^version:' "${SKILL_FILE}" | sed 's/version:[[:space:]]*"\([^"]*\)"/\1/')
 if [[ "${SKILL_VERSION}" != "${SKILL_VERSION_REQUIRED}" ]]; then
@@ -49,14 +56,12 @@ fi
 
 cd "${RWE_ROOT}"
 
-CLAUDE_PROMPT=$'Read and follow skills/user/reading-list-builder/SKILL.md and run the full pipeline for today\'s date (use America/Los_Angeles for "today").'
+CLAUDE_PROMPT=$'Read and follow skills/user/reading-list-builder/SKILL.md and run the DAILY FLOW (Steps 0-8) for today\'s date (use America/Los_Angeles for "today"). Do not run the weekly audio flow.'
 
 echo "${CLAUDE_PROMPT}" | claude -p \
   --permission-mode bypassPermissions \
   --strict-mcp-config \
   --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
   --add-dir "${RWE_ROOT}"
-
-python3 "${HOME}/.local/share/reading-with-ears/scripts/publish_episodes.py"
 
 touch "${SENTINEL}"

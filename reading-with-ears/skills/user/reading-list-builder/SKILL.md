@@ -1,51 +1,56 @@
 ---
 name: reading-list-builder
-version: "2.1"
+version: "3.0"
 description: >
-  Fetches newsletter emails by label, routes to NotebookLM notebooks with per-feed audio
-  overviews, downloads audio, and (in deep mode) logs a full per-article record — URL
-  extraction, full article fetch, Claude synthesis, infographic generation — to the
-  reading-db YAML store. Runs unattended. Default mode is DEEP.
-  Deep triggers (default): "process my newsletters", "triage my inbox", "build my reading
+  Fetches newsletter emails by label, routes them into a per-feed NotebookLM notebook
+  that accumulates all of an ISO week's sources, and logs a full per-article record —
+  URL extraction, full article fetch, Claude synthesis, infographic generation — to
+  the reading-db YAML store. Runs unattended. One mode only (previously "deep" — the
+  "light" fast-audio mode was removed when audio moved to a separate weekly step).
+  Daily triggers: "process my newsletters", "triage my inbox", "build my reading
   list", "add newsletters to NotebookLM", "run my email triage", "run the pipeline",
-  "/reading-list-builder", "deep reading list", "reading list with analysis", "full pipeline".
-  Light triggers (explicit opt-in only): "/reading-list-builder light", "light reading
-  list", "quick pipeline", "just notebooks".
-  Handles today or a multi-day range in both modes.
-compatibility: "Both modes: Gmail MCP, NotebookLM MCP, nlm CLI, ffmpeg. Deep: adds web_fetch, filesystem write to adventures-in-ai/dhkondata/reading-db/runs/"
+  "/reading-list-builder", "reading list with analysis", "full pipeline".
+  Weekly audio triggers (separate, explicit): "/reading-list-builder weekly-audio",
+  "publish this week's audio", "weekly audio".
+  Handles today or a multi-day range for the daily flow.
+compatibility: "Gmail MCP, NotebookLM MCP, nlm CLI, ffmpeg, web_fetch, filesystem write to adventures-in-ai/dhkondata/reading-db/runs/"
 ---
 
 # Reading List Builder
 
 ## Model
 
-- **Light mode**: Use **Haiku-class** (`claude-haiku-4-5`). Steps 0–6 are a deterministic pipeline (config read, Gmail fetch, notebook creation, source loading, audio polling, episode titling, download) — no deep reasoning required.
-- **Deep mode**: Use **Sonnet-class** (`claude-sonnet-4-6`). Steps 7–10 add URL extraction, full article fetch, Claude synthesis, and infographic generation — genuine reasoning required.
+Use **Sonnet-class** (`claude-sonnet-4-6`) for both the daily flow and the weekly
+audio flow. Steps 4-6 (article fetch, synthesis, infographic generation) require
+genuine reasoning; the rest is deterministic but shares a run, so there's no
+Haiku-tier sub-mode to switch to.
 
 ---
 
-Two modes. Default is always Deep. Read the trigger to determine which to run.
+One mode for the daily flow (STEPS 0-8 below), plus a separate weekly audio flow
+(STEPS W1-W4) triggered independently, on its own cadence.
 
-Version is defined in this skill's frontmatter (version: "2.1"). At the start of every
-deep run, read this value and write it as skill_version in the YAML run file header.
+Version is defined in this skill's frontmatter (version: "3.0"). At the start of every
+daily run, read this value and write it as `skill_version` in the YAML run file header.
+
+**What changed from v2.1:** audio generation, polling, titling, download, and publish
+used to happen every day, per feed, right after that day's sources were loaded. As of
+v3.0, the daily flow stops after writing the reading-db YAML and briefs — no audio
+step runs as part of a daily invocation. A per-feed NotebookLM notebook now
+accumulates a full ISO week of sources before any audio is generated; the weekly audio
+flow (STEPS W1-W4) is a separate, explicitly-triggered run that finds each feed's
+week-old notebook, generates audio, and publishes it. See
+`docs/weekly-cadence-migration.md` for the full rationale. This does not affect the
+separate "Week That Was" feature (`docs/week-that-was-design.md`) — that's a fifth,
+new show with its own synthesis; this skill's notebooks are the four pre-existing
+shows (news, think, professional, vital-signs).
+
+State this at the start of a daily run: "Running v3.0 -- [date range]"
+State this at the start of a weekly audio run: "Running weekly audio v3.0 -- [ISO week]"
 
 ---
 
-## MODE DETECTION
-
-**Deep mode** (default): `/reading-list-builder`, "process my newsletters",
-"run the pipeline", "triage my inbox", "build my reading list", "deep reading list",
-"reading list with analysis", "full pipeline" -> run Steps 0-10 below.
-
-**Light mode** (explicit opt-in only): `/reading-list-builder light`, "light reading
-list", "quick pipeline", "just notebooks" -> run Steps 0-6 only. No article fetch,
-no synthesis, no YAML write.
-
-State the mode at the start of the run:
-- Deep: "Running in deep mode v2.1 -- [date range]"
-- Light: "Running in light mode v2.1 -- [date range]"
-
----
+# DAILY FLOW — STEPS 0-8
 
 ## STEP 0: Load Feeds Config
 
@@ -58,8 +63,8 @@ For each feed where `"enabled": true`, sorted by `notebook_order` ascending, rec
 - `gmail_labels` (array) — labels to search
 - `notebook_category` — full title suffix with emoji
 - `notebook_order` — determines nn suffix
-- `audio_focus_prompt` — passed to studio_create for this feed
-- `audio_dir` (top-level) — where to save downloaded audio files
+- `audio_focus_prompt` — used by the weekly audio flow, not the daily flow
+- `audio_dir` (top-level) — where the weekly audio flow saves downloaded audio
 
 Assign `nn` (zero-padded two digits) by position in the sorted enabled list:
 lowest `notebook_order` → `01`, next → `02`, etc.
@@ -106,34 +111,57 @@ Note in the report.
 
 ---
 
-## STEP 3: Route to NotebookLM
+## STEP 3: Route to NotebookLM (weekly-accumulating notebooks)
 
 Labels are the routing. No triage table. No confirmation. Proceed immediately.
 
-One notebook per day per non-empty feed. Group emails by received date.
-Create notebooks for each (date × feed) pair that has at least one email.
-Process days chronologically (oldest first).
+**One notebook per ISO week per non-empty feed** — not one per day. A notebook
+created on the first day of the week that has mail for a feed keeps accumulating
+sources from every subsequent day in that same week. Process days chronologically
+(oldest first) when handling a multi-day range.
 
-Notebook naming convention:
+### Finding this week's notebook for a feed
+
+Before creating any notebooks, determine the current ISO week (Monday-Sunday) for the
+date being processed, then check whether each enabled feed already has a notebook
+this week:
+
+1. Read each prior day's `reading-db/runs/YYYY-MM-DD.yaml` in this ISO week (Monday
+   through yesterday, if any exist) **once per day, not once per feed** — one file
+   read gives you every feed's `notebook_id` for that day in a single pass.
+2. For each feed's slug, collect every `notebook_id` recorded under that day's
+   top-level `notebooks:` list, across all days read.
+3. **Zero found:** no notebook yet this week for this feed — create one (see below).
+4. **Exactly one found:** reuse it — `source_add` today's emails onto it, don't
+   create a new one.
+5. **More than one distinct `notebook_id` found:** this week was already partway
+   through under the old per-day scheme (mid-week cutover to v3.0, or a bug). Run
+   reconciliation before proceeding — see "Reconciliation" below. After
+   reconciliation there is exactly one canonical notebook_id for this feed this
+   week; use it.
+
+### Notebook naming
+
 ```
-reading-list-YYYY-MM-DD-nn <notebook_category>
+reading-list-YYYY-Www-nn <notebook_category>
 ```
 
-Examples:
-- `reading-list-2026-05-09-01 📰 News & Current Affairs`
-- `reading-list-2026-05-09-02 🧠 Things to Think About`
-- `reading-list-2026-05-09-03 💼 Professional Reading`
-- `reading-list-2026-05-09-05 🏥 Healthcare Reading`
+Examples (ISO week 26 of 2026):
+- `reading-list-2026-W26-01 📰 News & Current Affairs`
+- `reading-list-2026-W26-02 🧠 Things to Think About`
+- `reading-list-2026-W26-03 💼 Professional Reading`
+- `reading-list-2026-W26-05 🏥 Healthcare Reading`
 
-Date in notebook name = received date of emails in that notebook.
-If a notebook with that title already exists, use it — do not create a duplicate.
+If a notebook with that exact title already exists (per NotebookLM itself, not just
+the YAML scan), use it — do not create a duplicate.
 
-Create each notebook:
+Create each new notebook:
 ```
-notebook_create(title="reading-list-YYYY-MM-DD-nn <notebook_category>")
+notebook_create(title="reading-list-YYYY-Www-nn <notebook_category>")
 ```
 
-Add each email as a text source (process all sources for one notebook before the next):
+Add each email as a text source (process all sources for one notebook before the
+next):
 ```
 source_add(
   notebook_id=<id>,
@@ -144,108 +172,28 @@ source_add(
 )
 ```
 
----
+### Reconciliation (only when STEP 3 finds >1 notebook_id for a feed this week)
 
-## STEP 4: Generate Audio Overviews
+No notebook merge/delete tool exists in this MCP surface. Reconcile by replaying
+sources into one canonical notebook, using data already on hand:
 
-After all notebooks have all sources loaded, trigger audio for all notebooks.
-Use the `audio_focus_prompt` from feeds.json for each feed — do not use a generic prompt.
+1. **Canonical notebook = the earliest day's notebook.** Leave it as-is.
+2. For every *other* day this week that has its own separate notebook for this feed:
+   re-fetch that day's emails via `gmail_read_message`, using the `email_id` values
+   already recorded in that day's YAML (no new Gmail search needed). `source_add`
+   each one onto the canonical notebook.
+3. Update that day's YAML `notebooks:` entry for this feed to point at the canonical
+   `notebook_id`, and add `reconciled_from: <original_notebook_id>` for traceability.
+4. Leave the orphaned original notebook(s) alone — no delete call. They're harmless
+   leftovers, not referenced again, not included in this week's audio.
 
-In **deep mode**: fire all audio generations then immediately continue to Step 5.
-In **light mode**: fire all audio generations then poll until complete before downloading.
-
-```
-studio_create(
-  notebook_id=<id>,
-  artifact_type="audio",
-  audio_format="deep_dive",
-  audio_length="long",
-  focus_prompt="<audio_focus_prompt from feeds.json for this feed>",
-  confirm=True
-)
-```
-
-**Tool call ordering (both modes):**
-1. Fetch all emails (Steps 1-2) before creating any notebooks
-2. Create all notebooks before adding any sources
-3. Add sources notebook by notebook (one at a time)
-4. Fire all audio generations after all sources are loaded
-5. Deep: continue to Step 5 immediately. Light: poll then download.
+This only triggers on a feed's first out-of-sync week (e.g. the v2.1→v3.0 cutover
+week). Every week after converges on exactly one notebook per feed by construction,
+so reconciliation should not recur.
 
 ---
 
-## STEP 5 (Light mode): Poll, Title & Publish Audio
-
-Poll each notebook with `studio_status` every 30 seconds until `status == "complete"`.
-Timeout: 10 minutes. Log any that time out and continue with the rest.
-
-### Episode titling
-
-Once complete, call `notebook_describe` then rename the artifact:
-
-```
-notebook_describe(notebook_id=<id>)
-
-studio_status(
-  notebook_id=<id>,
-  action="rename",
-  artifact_id=<artifact_id>,
-  new_title="<NotebookLM-generated title>\n\n• <key idea 1>\n• <key idea 2>\n• <key idea 3>\n\nSources: <Newsletter (topic)> · <Newsletter (topic)> · ..."
-)
-```
-
-Titling rules:
-- Keep NotebookLM's auto-generated title — do not replace it
-- Bullets state what something *means*, not what it *covers* — insight-first
-- 3 bullets minimum, 5 maximum
-- Sources line: `Newsletter Name (topic shorthand) · ...`
-
-### Download & Publish
-
-Once all artifacts are titled, hand off to `rwe-publish` for download, m4a→mp3
-conversion, and Element.fm upload:
-
-```bash
-rwe-publish --date YYYY-MM-DD --no-wait-for-studio-status --audio-format mp3
-```
-
-`--no-wait-for-studio-status` skips re-polling — readiness was already confirmed
-during the titling step above. `rwe-publish` is idempotent: already-downloaded files
-are skipped automatically.
-
-To skip the Element.fm upload (e.g. catch-up run or missing API key), add
-`--download-only`. Do not manually invoke `nlm download` or `ffmpeg` — `rwe-publish`
-handles both.
-
----
-
-## STEP 6 (Light mode): Report
-
-```
-Done -- [date range] -- Light mode v2.1
-
-NotebookLM -- [N] notebooks created:
-
-  2026-05-09:
-  - "reading-list-2026-05-09-01 📰 News & Current Affairs" -> 3 sources
-    → YYYY-MM-DD-news.mp3
-  - "reading-list-2026-05-09-03 💼 Professional Reading" -> 2 sources
-    → YYYY-MM-DD-professional.mp3
-
-HTML-only (body unavailable): [list if any, else omit]
-Nothing was deleted or archived in Gmail.
-```
-
----
-
-# DEEP MODE — STEPS 5-10
-
-Steps 5-8 run after Step 4 (audio triggered). Do not wait for audio to complete.
-Audio is polled, titled, and downloaded in Step 9 after all article work is done.
-
----
-
-## STEP 5 (Deep): Extract & Fetch Articles
+## STEP 4: Extract & Fetch Articles
 
 For each email processed in Step 3, extract article links from the email HTML body.
 
@@ -258,7 +206,7 @@ For each email processed in Step 3, extract article links from the email HTML bo
 adventures-in-ai/dhkondata/reading-db/blocked-domains.yaml
 ```
 
-Load this file at the start of Step 5 and apply:
+Load this file at the start of Step 4 and apply:
 - All domains under `blocked.esp`, `blocked.tracker`, `blocked.social`
 - All anchor text patterns under `suspicious_anchor_patterns`
 - Domains under `watch` are NOT blocked — fetch and record `fetch_status` for monitoring
@@ -277,31 +225,34 @@ For each extracted link:
 
 1. Assign `article_id`: `<messageId>-<sequence>` (e.g. `19d77ecea1ccb554-01`)
 2. Store `url_raw` (as found in email HTML)
-3. Resolve redirect → `url_canonical` via `web_fetch` (follow redirects, store final URL)
+3. Fetch the URL **once**: `web_fetch(url=url_raw)`. Following a redirect *is*
+   fetching the destination page — do not fetch `url_raw` to resolve it and then
+   fetch `url_canonical` again to get the body; that's the same network request
+   twice per article. One `web_fetch` call gives you both the final landed URL
+   (→ `url_canonical`) and the page content.
 4. Extract `domain` from `url_canonical`
 5. Store `anchor_text` and `excerpt` (surrounding sentence(s) from email body)
-6. Set `resolve_status`: `resolved | failed | redirect_loop | timeout`
+6. Set `resolve_status`: `resolved | failed | redirect_loop | timeout`, from this
+   same fetch's outcome
 7. Set `parse_confidence`: 0.0–1.0
    - 0.9–1.0: clean canonical URL, clear headline anchor text
    - 0.7–0.89: resolved but anchor text vague or URL looks like a section page
    - 0.5–0.69: resolved but uncertain if this is the primary article
    - <0.5: could not resolve or anchor text is unclear
 
-Fetch full article body for each article where `resolve_status = "resolved"`:
-```
-web_fetch(url=url_canonical)
-```
-
-Extract main article body (strip nav, ads, footers, sidebars — main content only).
-Truncate to 12,000 chars if needed.
+From that same fetch's content, extract the main article body (strip nav, ads,
+footers, sidebars — main content only). Truncate to 12,000 chars if needed.
 
 Set `fetch_status`: `success | paywalled | not_found | bot_blocked | timeout | error`
 Set `full_body_available`: `true | false`
 Set `full_body_chars`: character count of what was retrieved
 
+Do not issue a second `web_fetch` call for the same article under any circumstance —
+`resolve_status` and `fetch_status` both come from the one attempt in step 3.
+
 ---
 
-## STEP 6 (Deep): Synthesize Articles
+## STEP 5: Synthesize Articles
 
 For each article, generate synthesis bullets using only the fetched content.
 
@@ -327,7 +278,7 @@ Set `synthesis.confidence_note`: null, or a brief note if fallback was used
 
 ---
 
-## STEP 7 (Deep): Generate Article Brief Infographics
+## STEP 6: Generate Article Brief Infographics
 
 For each article where `synthesis.status = "complete"`, generate an HTML infographic
 using the template at:
@@ -363,7 +314,7 @@ Skip if `synthesis.status != "complete"`. Record path as `infographic.path`.
 
 ---
 
-## STEP 8 (Deep): Write YAML to reading-db
+## STEP 7: Write YAML to reading-db
 
 Write one YAML file per run date to:
 ```
@@ -380,12 +331,13 @@ File structure:
 
 ```yaml
 run_date: YYYY-MM-DD
-skill_version: "2.1"
+skill_version: "3.0"
 pipeline_mode: deep
 notebooks:
   - label: "newsletter/pro"
     notebook_id: "ghi789-..."
-    notebook_title: "reading-list-YYYY-MM-DD-03 💼 Professional Reading"
+    notebook_title: "reading-list-2026-W26-03 💼 Professional Reading"
+    reconciled_from: null   # set only if STEP 3 reconciliation ran for this entry
 
 emails:
   - email_id: "19d77ecea1ccb554"
@@ -419,7 +371,7 @@ emails:
         routing:
           category: "pro"
           notebook_id: "ghi789-..."
-          notebook_title: "reading-list-2026-05-09-03 💼 Professional Reading"
+          notebook_title: "reading-list-2026-W26-03 💼 Professional Reading"
 
         synthesis:
           status: "complete"
@@ -444,9 +396,84 @@ After writing, confirm file path and record count.
 
 ---
 
-## STEP 9 (Deep): Poll, Title & Publish Audio
+## STEP 8: Report
 
-Now that article work is complete, poll audio status and title all notebooks.
+```
+Done -- [date range] -- v3.0
+
+NotebookLM -- [N] feeds routed this run:
+
+  📰 News & Current Affairs -> "reading-list-2026-W26-01 📰 News & Current Affairs"
+    +3 sources today (week total: 11)
+  💼 Professional Reading -> "reading-list-2026-W26-03 💼 Professional Reading"
+    +2 sources today (week total: 7)
+
+No audio generated -- audio runs separately via the weekly audio flow (see below).
+
+Reading DB -- adventures-in-ai/dhkondata/reading-db/runs/YYYY-MM-DD.yaml
+  skill_version: 3.0
+  [N] emails processed
+  [N] articles extracted
+  [N] fully fetched (synthesis from article)
+  [N] fallback (synthesis from email excerpt)
+  [N] skipped (paywalled / no body)
+
+Briefs -- adventures-in-ai/dhkondata/reading-db/briefs/YYYY-MM-DD/
+  [N] infographics generated
+  [N] skipped (synthesis incomplete)
+
+Fetch issues (if any):
+  - paywalled: [N] -- [sender names]
+  - failed/timeout: [N] -- [sender names]
+
+Reconciliation (if any ran this week): [feed] -- merged [N] notebook(s) into
+  <canonical_notebook_id>
+
+HTML-only emails (if any): [list]
+Nothing was deleted or archived in Gmail.
+```
+
+---
+
+# WEEKLY AUDIO FLOW — STEPS W1-W4
+
+Separate, explicitly-triggered run. Not part of the daily flow, and not the same
+feature as "Week That Was" (`docs/week-that-was-design.md`) — this generates one
+audio episode per week for each of the four existing feeds, from the notebook that
+accumulated over the week via STEP 3 above.
+
+If no ISO week is given, use the current one.
+
+## STEP W1: Find This Week's Notebooks
+
+For the target ISO week, read every `reading-db/runs/YYYY-MM-DD.yaml` whose date
+falls in that week. For each enabled feed, collect the distinct `notebook_id` under
+that day's `notebooks:` list.
+
+- **Exactly one distinct `notebook_id`:** this is the feed's week notebook. Proceed.
+- **Zero:** no mail for this feed all week — skip it, not an error.
+- **More than one:** STEP 3's reconciliation should have already prevented this by
+  the time weekly audio runs. If it still happens, stop and report it rather than
+  guessing which notebook is authoritative — this indicates STEP 3 reconciliation
+  didn't run or didn't complete for that feed/week.
+
+## STEP W2: Generate Audio
+
+For each feed's week notebook found in STEP W1:
+```
+studio_create(
+  notebook_id=<id>,
+  artifact_type="audio",
+  audio_format="deep_dive",
+  audio_length="long",
+  focus_prompt="<audio_focus_prompt from feeds.json for this feed>",
+  confirm=True
+)
+```
+
+Fire all audio generations before polling any of them.
+
+## STEP W3: Poll, Title & Publish Audio
 
 Poll each notebook with `studio_status` every 30 seconds until `status == "complete"`.
 Timeout: 10 minutes. Log any that time out and continue with the rest.
@@ -466,76 +493,60 @@ studio_status(
 
 Titling rules:
 - Keep NotebookLM's auto-generated title — do not replace it
-- Bullets state what something *means*, not what it *covers* — insight-first
+- Bullets state what something *means*, not what it *covers* — insight-first,
+  drawing on the whole week's sources, not just one day
 - 3 bullets minimum, 5 maximum
 - Sources line: `Newsletter Name (topic shorthand) · ...`
 
 ### Download & Publish
 
 Once all artifacts are titled, hand off to `rwe-publish` for download, m4a→mp3
-conversion, and Element.fm upload:
+conversion, and Element.fm upload — the audio file is dated/named with **today's
+date** (the day this weekly run executes), but notebook lookup must use the ISO
+week (`--notebook-week`), since notebook titles are week-scoped
+(`reading-list-YYYY-Www-nn ...`), not date-scoped:
 
 ```bash
-rwe-publish --date YYYY-MM-DD --no-wait-for-studio-status --audio-format mp3
+rwe-publish --date YYYY-MM-DD --notebook-week YYYY-Www --no-wait-for-studio-status --audio-format mp3
 ```
 
-`--no-wait-for-studio-status` skips re-polling — readiness was already confirmed
-during the titling step above. `rwe-publish` is idempotent: already-downloaded files
-are skipped automatically.
+The downloaded-audio filename/title convention (`YYYY-MM-DD-<slug>.mp3`,
+`<show_name> - YYYY-MM-DD`) is unchanged — it's scoped by "the day this episode was
+published," which is now once a week instead of once a day, but that mechanism
+doesn't need to know that. **Notebook discovery is a separate mechanism** and does
+need to know: `--notebook-week` tells `rwe-publish` to look up notebooks by ISO week
+label instead of by date (see `find_notebooks_for_week` in `publish_episodes.py`).
+Omitting `--notebook-week` here would make `rwe-publish` search for a
+`YYYY-MM-DD`-titled notebook that no longer exists under v3.0's weekly naming — it
+would find zero notebooks and exit non-zero. `rwe-publish` is idempotent:
+already-downloaded files are skipped automatically.
 
-To skip the Element.fm upload (e.g. catch-up run or missing API key), add
-`--download-only`. Do not manually invoke `nlm download` or `ffmpeg` — `rwe-publish`
-handles both.
+To skip the Element.fm upload, add `--download-only`. Do not manually invoke
+`nlm download` or `ffmpeg` — `rwe-publish` handles both.
 
----
-
-## STEP 10 (Deep): Report
+## STEP W4: Report
 
 ```
-Done -- [date range] -- Deep mode v2.1
+Done -- weekly audio -- [ISO week] -- v3.0
 
-NotebookLM -- [N] notebooks created:
+  📰 News & Current Affairs -> 2026-07-03-news.mp3 (published)
+  💼 Professional Reading -> 2026-07-03-professional.mp3 (published)
+  🧠 Things to Think About -> skipped (no mail this week)
 
-  2026-05-09:
-  - "reading-list-2026-05-09-01 📰 News & Current Affairs" -> 3 sources
-    → YYYY-MM-DD-news.mp3
-  - "reading-list-2026-05-09-03 💼 Professional Reading" -> 2 sources
-    → YYYY-MM-DD-professional.mp3
-
-Reading DB -- adventures-in-ai/dhkondata/reading-db/runs/YYYY-MM-DD.yaml
-  skill_version: 2.1
-  [N] emails processed
-  [N] articles extracted
-  [N] fully fetched (synthesis from article)
-  [N] fallback (synthesis from email excerpt)
-  [N] skipped (paywalled / no body)
-
-Briefs -- adventures-in-ai/dhkondata/reading-db/briefs/YYYY-MM-DD/
-  [N] infographics generated
-  [N] skipped (synthesis incomplete)
-
-Fetch issues (if any):
-  - paywalled: [N] -- [sender names]
-  - failed/timeout: [N] -- [sender names]
-
-HTML-only emails (if any): [list]
-Nothing was deleted or archived in Gmail.
+Timeouts (if any): [feed] -- studio_status did not complete within 10 min
 ```
 
 ---
 
-## Edge Cases (both modes)
+## Edge Cases
 
+Daily flow:
 - No emails in range: tell user, offer to widen date range
 - HTML-only email body: use subject + snippet, note body unavailable in report
 - Gmail MCP unavailable: tell user to check Settings → Connectors
 - Notebook already exists (same title): reuse it, do not create a duplicate
 - Tool call limit hit mid-run: report what is done, what is pending; continue next turn with "proceed"
 - No emails on a given day in range: skip that day silently, no empty notebooks
-- `studio_status` timeout (10 min): log it, continue with other notebooks
-- Audio file already exists at download path: `rwe-publish` skips automatically
-
-Deep only:
 - URL resolve fails: store `url_raw` only, set `resolve_status: failed`, continue
 - Article fetch paywalled: fall back to email excerpt for synthesis, flag in report
 - Article fetch any other failure: set `synthesis.status: skipped`, flag in report
@@ -545,3 +556,12 @@ Deep only:
 - Infographic template missing: log warning, skip generation, continue
 - `blocked-domains.yaml` missing: log warning, fall back to hardcoded minimal list,
   flag prominently in report so user knows config was not loaded
+- More than one `notebook_id` found for a feed this week (STEP 3): run reconciliation
+  before adding today's sources
+
+Weekly audio flow:
+- `studio_status` timeout (10 min): log it, continue with other notebooks
+- Audio file already exists at download path: `rwe-publish` skips automatically
+- More than one `notebook_id` found for a feed this week (STEP W1): stop and report
+  rather than guessing — this means STEP 3 reconciliation didn't complete
+- No notebook at all for a feed this week: skip it in the report, not an error
