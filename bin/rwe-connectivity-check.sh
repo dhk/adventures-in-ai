@@ -150,9 +150,10 @@ else
 fi
 
 phase "Toolchain"
-if command -v claude >/dev/null 2>&1; then
-  ok "claude: $(command -v claude)"
-  claude --version 2>&1 | head -1 | tee "${ARTIFACT_DIR}/claude-version.txt" | while read -r line; do
+if command -v claude >/dev/null 2>&1 || [[ -n "$(rwe_claude_bin 2>/dev/null || true)" ]]; then
+  claude_bin="$(rwe_claude_bin)"
+  ok "claude: ${claude_bin}"
+  "${claude_bin}" --version 2>&1 | head -1 | tee "${ARTIFACT_DIR}/claude-version.txt" | while read -r line; do
     ok "claude version: ${line}"
   done
   if command -v which >/dev/null 2>&1; then
@@ -284,6 +285,19 @@ if command -v nlm >/dev/null 2>&1; then
   else
     warn "nlm login --check failed — run: nlm login (see ${ARTIFACT_DIR}/nlm-login-check.txt)"
   fi
+fi
+
+phase "Headless MCP server probe (claude -p)"
+MCP_LIST_DEBUG="${ARTIFACT_DIR}/probe-mcp-list.debug.log"
+MCP_PROMPT='Connectivity test only. List every MCP server name available in this session (e.g. Gmail, NotebookLM, Google Calendar). One name per line. If Gmail is missing, say exactly: GMAIL_MISSING.'
+run_claude_probe "probe-mcp-list" "${MCP_PROMPT}" "${MCP_LIST_DEBUG}" 120 || true
+if [[ -f "${ARTIFACT_DIR}/probe-mcp-list.stdout" ]] && grep -qi 'GMAIL_MISSING\|no gmail\|gmail is missing' "${ARTIFACT_DIR}/probe-mcp-list.stdout"; then
+  bad "Gmail MCP not loaded in headless session (other connectors may still work)"
+  note "Fix: claude mcp remove gmail; claude mcp add --transport http --scope user gmail https://gmailmcp.googleapis.com/mcp/v1"
+  note "Then in interactive claude: claude mcp login gmail  (or /mcp → gmail → Authenticate)"
+  note "Also verify claude.ai Settings → Connectors → Gmail is connected"
+elif [[ -f "${ARTIFACT_DIR}/probe-mcp-list.stdout" ]] && grep -qi 'gmail' "${ARTIFACT_DIR}/probe-mcp-list.stdout"; then
+  ok "Gmail appears in headless MCP server list"
 fi
 
 if [[ "${LEVEL}" != "quick" ]]; then

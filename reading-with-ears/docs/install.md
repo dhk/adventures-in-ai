@@ -94,6 +94,21 @@ claude mcp remove gmail 2>/dev/null || true
 claude mcp add --transport http --scope user gmail https://gmailmcp.googleapis.com/mcp/v1
 ```
 
+**Headless auth:** claude.ai Connectors alone may not expose Gmail in `claude -p`
+(other connectors like Calendar may load without Gmail). Complete user-scoped login:
+
+```bash
+claude mcp login gmail
+```
+
+Or interactively: `claude` → `/mcp` → select **gmail** → **Authenticate**.
+
+Verify headless sees Gmail:
+
+```bash
+bin/rwe-connectivity-check.sh --live --verbose
+```
+
 **NotebookLM CLI:**
 
 ```bash

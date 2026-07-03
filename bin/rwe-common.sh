@@ -9,7 +9,14 @@ _RWE_BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # in ~/.local/bin that the user's interactive shell uses.
 rwe_ensure_path() {
   local dir
-  for dir in "${HOME}/.local/bin" /opt/homebrew/bin /usr/local/bin; do
+  # Prefer ~/.local/bin (native claude install) over entries already on PATH.
+  if [[ -d "${HOME}/.local/bin" ]]; then
+    case ":${PATH}:" in
+      *:"${HOME}/.local/bin":*) ;;
+      *) PATH="${HOME}/.local/bin:${PATH:-/usr/bin:/bin}" ;;
+    esac
+  fi
+  for dir in /opt/homebrew/bin /usr/local/bin; do
     [[ -d "${dir}" ]] || continue
     case ":${PATH}:" in
       *:"${dir}":*) ;;
@@ -20,6 +27,51 @@ rwe_ensure_path() {
 }
 
 rwe_ensure_path
+
+# Resolve the newest claude on PATH (avoids stale Homebrew shadowing native install).
+# Override: export RWE_CLAUDE_BIN=/path/to/claude
+rwe_claude_bin() {
+  if [[ -n "${RWE_CLAUDE_BIN:-}" && -x "${RWE_CLAUDE_BIN}" ]]; then
+    echo "${RWE_CLAUDE_BIN}"
+    return 0
+  fi
+  rwe_ensure_path
+  python3 - <<'PY'
+import os, re, subprocess, sys
+
+def ver_tuple(s):
+    m = re.search(r"(\d+)\.(\d+)\.(\d+)", s or "")
+    return tuple(int(x) for x in m.groups()) if m else (0, 0, 0)
+
+path = os.environ.get("PATH", "")
+seen = set()
+best = None
+best_v = (0, 0, 0)
+for d in path.split(":"):
+    p = os.path.join(d, "claude")
+    if not os.path.isfile(p) or os.access(p, os.X_OK):
+        continue
+    rp = os.path.realpath(p)
+    if rp in seen:
+        continue
+    seen.add(rp)
+    try:
+        out = subprocess.run([rp, "--version"], capture_output=True, text=True, timeout=10)
+        vt = ver_tuple((out.stdout or "") + (out.stderr or ""))
+    except Exception:
+        vt = (0, 0, 0)
+    if vt > best_v:
+        best_v = vt
+        best = rp
+print(best or "claude")
+PY
+}
+
+rwe_log_claude_bin() {
+  local bin
+  bin="$(rwe_claude_bin)"
+  echo "Using claude: ${bin} ($("${bin}" --version 2>/dev/null | head -1 || echo unknown))"
+}
 # Resolve repo root (directory that contains reading-with-ears/).
 # Precedence: RWE_REPO → ~/.config/reading-with-ears/config.json repo_root
 # → caller lives in-repo at bin/ (parent is repo root).
@@ -122,9 +174,10 @@ rwe_claude_headless() {
   shift
   local strict=()
   [[ "${RWE_STRICT_MCP:-0}" == "1" ]] && strict=(--strict-mcp-config)
-  # Honor claude.ai connector MCPs in headless runs (required for Gmail on many versions).
   export ENABLE_CLAUDEAI_MCP_SERVERS="${ENABLE_CLAUDEAI_MCP_SERVERS:-true}"
-  env -u ANTHROPIC_API_KEY claude -p \
+  local claude_bin
+  claude_bin="$(rwe_claude_bin)"
+  env -u ANTHROPIC_API_KEY "${claude_bin}" -p \
     --permission-mode bypassPermissions \
     ${strict[@]+"${strict[@]}"} \
     --mcp-config "${rwe_root}/automation/mcp-headless.json" \
@@ -134,11 +187,13 @@ rwe_claude_headless() {
 
 # Warn when Claude Code is below the version where claude.ai MCP in -p was restored.
 rwe_claude_version_warn() {
-  if ! command -v claude >/dev/null 2>&1; then
+  local bin
+  bin="$(rwe_claude_bin)"
+  if [[ ! -x "${bin}" ]] && ! command -v "${bin}" >/dev/null 2>&1; then
     return 0
   fi
   local ver
-  ver="$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)"
+  ver="$("${bin}" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)"
   [[ -z "${ver}" ]] && return 0
   python3 - "${ver}" <<'PY'
 import sys
