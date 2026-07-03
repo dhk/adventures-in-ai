@@ -1,25 +1,21 @@
 ## Context handoff — auth debugging (updated 2026-07-03)
 
-**Status:** Root cause narrowed; diagnostic tooling added on branch `cursor/rwe-auth-diagnostics-001e`.
+**Status:** Root cause confirmed on laptop (2026-07-03).
 
-### Most likely remaining blocker (never inspected on laptop)
+### Confirmed root cause
 
-The debug log from the prior session showed:
+Two **different** `ANTHROPIC_API_KEY` values:
 
-```
-settingsEnv keys: VERCEL_TOKEN,ANTHROPIC_API_KEY
-```
+| Source | Fingerprint | API test |
+|--------|-------------|----------|
+| Shell / keychain (`.zshrc`) | `sk-a…nQAA` | **valid** |
+| `~/.claude/settings.json` env | `sk-a…HgAA` | **rejected** |
 
-`settingsEnv` comes from **`~/.claude/settings.json`**, not `~/.claude.json` (which was
-already cleaned). The user removed the dead key from `~/.claude.json` only — if
-`~/.claude/settings.json` still has `env.ANTHROPIC_API_KEY`, `claude -p` will keep
-injecting it regardless of `env -u ANTHROPIC_API_KEY` in the shell scripts.
+`rwe-catchup.sh` scrubs the shell key with `env -u`, but Claude Code still injects the
+**dead** key from `~/.claude/settings.json`. That produces `Invalid API key · Fix external
+API key`. Shell/.zshrc warnings are benign — keep keychain for `week_that_was.py`.
 
-The exact error `Invalid API key · Fix external API key` is **Claude Code OAuth vs.
-API-key conflict** (GitHub anthropics/claude-code#11587), not NotebookLM or Gmail MCP.
-MCP auth failures show `[MCP]` / `AxiosError` / `401` lines in the debug log instead.
-
-### Run on laptop (in order)
+### Fix (run on laptop)
 
 ```bash
 # 1. New audit (replaces the four manual cat commands)

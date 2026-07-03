@@ -51,7 +51,76 @@ AUTH_ENV_KEYS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_OAUTH
 BLOCKER_ENV_KEYS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
 
 issues = []
+warnings = []
 notes = []
+key_sources: dict[str, list[str]] = {}  # fingerprint -> labels
+
+
+def fingerprint(value: str) -> str:
+    value = (value or "").strip()
+    if len(value) < 12:
+        return value
+    return f"{value[:8]}…{value[-4:]}"
+
+
+def record_key(value: str, label: str) -> None:
+    fp = fingerprint(value)
+    if fp:
+        key_sources.setdefault(fp, [])
+        if label not in key_sources[fp]:
+            key_sources[fp].append(label)
+
+
+def test_api_key(key: str, label: str) -> str | None:
+    """Return 'valid', 'invalid', or None if not tested."""
+    if not TEST_API or not key.strip():
+        return None
+    try:
+        proc = subprocess.run(
+            [
+                "curl", "-sS",
+                "https://api.anthropic.com/v1/models",
+                "-H", f"x-api-key: {key.strip()}",
+                "-H", "anthropic-version: 2023-06-01",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+        body = (proc.stdout or proc.stderr or "").strip()
+        if "authentication_error" in body or "invalid x-api-key" in body:
+            return "invalid"
+        if proc.returncode == 0 and '"data"' in body:
+            return "valid"
+        notes.append(f"{label}: API test inconclusive ({body[:120]})")
+    except Exception as exc:  # noqa: BLE001
+        notes.append(f"{label}: API test failed ({exc})")
+    return None
+
+
+def audit_env_block(data: dict, label: str, *, critical: bool) -> None:
+    env = data.get("env")
+    if not isinstance(env, dict) or not env:
+        return
+    keys = sorted(env.keys())
+    print(f"  env keys: {', '.join(keys)}")
+    for key in BLOCKER_ENV_KEYS:
+        if key in env and str(env.get(key) or "").strip():
+            val = str(env[key])
+            record_key(val, label)
+            msg = (
+                f"{label}: {key} in settings env block ({mask_key(val)}) — "
+                "Claude Code injects this; env -u in rwe scripts cannot remove it"
+            )
+            if critical:
+                issues.append(msg)
+            else:
+                warnings.append(msg)
+            result = test_api_key(val, f"{label} env.{key}")
+            if result == "valid":
+                notes.append(f"{label} env.{key}: Anthropic API accepts this key")
+            elif result == "invalid":
+                issues.append(f"{label} env.{key}: Anthropic API rejects this key (authentication_error)")
 
 
 def mask_key(value: str) -> str:
@@ -72,49 +141,7 @@ def load_json(path: Path):
         return None, f"invalid JSON: {exc}"
 
 
-def test_api_key(key: str, label: str) -> None:
-    if not TEST_API or not key.strip():
-        return
-    try:
-        proc = subprocess.run(
-            [
-                "curl", "-sS",
-                "https://api.anthropic.com/v1/models",
-                "-H", f"x-api-key: {key.strip()}",
-                "-H", "anthropic-version: 2023-06-01",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=20,
-        )
-        body = (proc.stdout or proc.stderr or "").strip()
-        if "authentication_error" in body or "invalid x-api-key" in body:
-            issues.append(f"{label}: Anthropic API rejects this key (authentication_error)")
-        elif proc.returncode == 0 and '"data"' in body:
-            notes.append(f"{label}: Anthropic API accepts this key")
-        else:
-            notes.append(f"{label}: API test inconclusive ({body[:120]})")
-    except Exception as exc:  # noqa: BLE001
-        notes.append(f"{label}: API test failed ({exc})")
-
-
-def audit_env_block(data: dict, label: str) -> None:
-    env = data.get("env")
-    if not isinstance(env, dict) or not env:
-        return
-    keys = sorted(env.keys())
-    print(f"  env keys: {', '.join(keys)}")
-    for key in BLOCKER_ENV_KEYS:
-        if key in env and str(env.get(key) or "").strip():
-            val = str(env[key])
-            issues.append(
-                f"{label}: {key} is set in settings env block ({mask_key(val)}) — "
-                "overrides OAuth in claude -p and causes auth failures when invalid"
-            )
-            test_api_key(val, f"{label} env.{key}")
-
-
-def audit_file(path: Path, label: str) -> None:
+def audit_file(path: Path, label: str, *, critical: bool = True) -> None:
     print(f"\n{label}")
     print(f"  path: {path}")
     data, err = load_json(path)
@@ -124,7 +151,7 @@ def audit_file(path: Path, label: str) -> None:
             issues.append(f"{label}: {err}")
         return
     print("  status: present")
-    audit_env_block(data, label)
+    audit_env_block(data, label, critical=critical)
     helper = data.get("apiKeyHelper")
     if helper:
         issues.append(
@@ -141,10 +168,16 @@ def audit_shell_env() -> None:
         if val:
             print(f"  {key}: {mask_key(val)}")
             if key in BLOCKER_ENV_KEYS:
-                issues.append(
-                    f"Shell exports {key} ({mask_key(val)}) — scrub with env -u before claude -p"
+                record_key(val, "shell")
+                warnings.append(
+                    f"Shell exports {key} ({mask_key(val)}) — rwe scripts scrub with env -u; "
+                    "safe to keep for week_that_was.py / rwe-weekly"
                 )
-                test_api_key(val, f"shell {key}")
+                result = test_api_key(val, f"shell {key}")
+                if result == "valid":
+                    notes.append(f"shell {key}: Anthropic API accepts this key")
+                elif result == "invalid":
+                    warnings.append(f"shell {key}: Anthropic API rejects this key")
         else:
             print(f"  {key}: (unset)")
 
@@ -167,8 +200,9 @@ def audit_shell_profiles() -> None:
             print(f"  {path}: {len(hits)} non-comment line(s)")
             for hit in hits[:3]:
                 print(f"    {hit[:100]}")
-            issues.append(
-                f"{path} exports ANTHROPIC_API_KEY — remove or comment out for OAuth headless runs"
+            warnings.append(
+                f"{path} exports ANTHROPIC_API_KEY — OK for week_that_was; "
+                "rwe-run/catchup scrub it with env -u"
             )
     if not found:
         print("  (no ANTHROPIC_API_KEY exports found in common profile files)")
@@ -189,11 +223,14 @@ def audit_claude_json() -> None:
         for key in BLOCKER_ENV_KEYS:
             if key in env and str(env.get(key) or "").strip():
                 val = str(env[key])
+                record_key(val, "~/.claude.json")
                 issues.append(
                     f"~/.claude.json env.{key} is set ({mask_key(val)}) — "
-                    "Claude Code injects this into every session (settingsEnv/globalEnv)"
+                    "Claude Code injects this into every session"
                 )
-                test_api_key(val, f"~/.claude.json env.{key}")
+                result = test_api_key(val, f"~/.claude.json env.{key}")
+                if result == "invalid":
+                    issues.append(f"~/.claude.json env.{key}: Anthropic API rejects this key")
     helper = data.get("apiKeyHelper")
     if helper:
         issues.append(f"~/.claude.json apiKeyHelper is set ({helper!r})")
@@ -218,10 +255,32 @@ audit_file(managed, "Managed settings (MDM)")
 
 audit_shell_profiles()
 
+# Detect multiple distinct keys — classic cause of "Invalid API key" after env -u
+print("\n=== Key fingerprint check ===")
+if len(key_sources) > 1:
+    print("MISMATCH: multiple distinct ANTHROPIC_API_KEY values found:")
+    for fp, labels in key_sources.items():
+        print(f"  {fp}: {', '.join(labels)}")
+    print(
+        "\nDiagnosis: rwe scripts scrub the shell key (env -u), but Claude Code still "
+        "injects keys from settings files. If the settings key is dead, you get "
+        "'Invalid API key · Fix external API key' even when your keychain key is valid."
+    )
+elif len(key_sources) == 1:
+    fp, labels = next(iter(key_sources.items()))
+    print(f"Single key fingerprint ({fp}) from: {', '.join(labels)}")
+else:
+    print("No ANTHROPIC_API_KEY values found in audited sources.")
+
 print("\n=== Summary ===")
 if notes:
     for n in notes:
         print(f"NOTE: {n}")
+
+if warnings:
+    print(f"\n{len(warnings)} warning(s) (scrubbed by rwe scripts — not blockers for catch-up):\n")
+    for i, item in enumerate(warnings, 1):
+        print(f"  {i}. {item}")
 
 if issues:
     print(f"\n{len(issues)} blocker(s) found:\n")
@@ -229,16 +288,19 @@ if issues:
         print(f"  {i}. {item}")
     print(
         "\nFix (OAuth headless — rwe-run / rwe-catchup / rwe-weekly-audio):\n"
-        "  1. Remove ANTHROPIC_API_KEY from every settings env block above.\n"
-        "  2. Remove or fix apiKeyHelper entries.\n"
+        "  1. Remove ANTHROPIC_API_KEY from settings env blocks (cannot be scrubbed).\n"
+        "  2. Keep your keychain/.zshrc key for week_that_was — rwe scripts scrub it.\n"
         "  3. Run: claude doctor\n"
         "  4. Re-run: rwe-auth-check.sh --test-api --doctor\n"
         "  5. Retry: bin/rwe-catchup.sh --from YYYY-MM-DD --to YYYY-MM-DD\n"
-        "\nTo remove a key from ~/.claude/settings.json:\n"
+        "\nTo remove the dead key from ~/.claude/settings.json:\n"
+        "  cp ~/.claude/settings.json ~/.claude/settings.json.bak\n"
         "  jq 'del(.env.ANTHROPIC_API_KEY)' ~/.claude/settings.json > /tmp/s.json && mv /tmp/s.json ~/.claude/settings.json"
     )
     sys.exit(1)
 
+if warnings:
+    print("\nNo settings-file blockers. Shell/.zshrc warnings above are OK for catch-up.")
 print("\nNo OAuth blockers detected in audited sources.")
 print("If claude -p still fails, run with --doctor and inspect the debug log for [MCP] lines.")
 sys.exit(0)
