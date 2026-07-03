@@ -3,6 +3,23 @@
 
 # Absolute path to bin/ — set at source time so helpers work after callers cd elsewhere.
 _RWE_BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Append tool dirs as fallbacks for launchd/cron (minimal PATH). Never prepend
+# /opt/homebrew/bin — an old Homebrew `claude` there shadows a newer install
+# in ~/.local/bin that the user's interactive shell uses.
+rwe_ensure_path() {
+  local dir
+  for dir in "${HOME}/.local/bin" /opt/homebrew/bin /usr/local/bin; do
+    [[ -d "${dir}" ]] || continue
+    case ":${PATH}:" in
+      *:"${dir}":*) ;;
+      *) PATH="${PATH:+${PATH}:}${dir}" ;;
+    esac
+  done
+  export PATH
+}
+
+rwe_ensure_path
 # Resolve repo root (directory that contains reading-with-ears/).
 # Precedence: RWE_REPO → ~/.config/reading-with-ears/config.json repo_root
 # → caller lives in-repo at bin/ (parent is repo root).

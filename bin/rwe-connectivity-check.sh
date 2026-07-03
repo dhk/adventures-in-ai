@@ -46,7 +46,7 @@ RWE_ROOT="${REPO_ROOT}/reading-with-ears"
 MCP_CONFIG="${RWE_ROOT}/automation/mcp-headless.json"
 SKILL_FILE="${RWE_ROOT}/skills/user/reading-list-builder/SKILL.md"
 
-export PATH="/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
+# PATH set by rwe-common.sh (rwe_ensure_path)
 
 if [[ -z "${PROBE_DATE}" ]]; then
   PROBE_DATE="$(date -v-1d +%F 2>/dev/null || date -d 'yesterday' +%F)"
@@ -150,21 +150,43 @@ else
 fi
 
 phase "Toolchain"
-for cmd in claude python3 uvx curl jq; do
+if command -v claude >/dev/null 2>&1; then
+  ok "claude: $(command -v claude)"
+  claude --version 2>&1 | head -1 | tee "${ARTIFACT_DIR}/claude-version.txt" | while read -r line; do
+    ok "claude version: ${line}"
+  done
+  if command -v which >/dev/null 2>&1; then
+    claude_paths="$(which -a claude 2>/dev/null || true)"
+    if [[ -n "${claude_paths}" ]]; then
+      note "All claude binaries on PATH:"
+      while IFS= read -r cp; do
+        [[ -z "${cp}" ]] && continue
+        cv="$("${cp}" --version 2>/dev/null | head -1 || echo 'unknown')"
+        log "       ${cp} → ${cv}"
+      done <<< "${claude_paths}"
+      unique_ver="$(while IFS= read -r cp; do
+        [[ -z "${cp}" ]] && continue
+        "${cp}" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true
+      done <<< "${claude_paths}" | sort -u | wc -l | tr -d ' ')"
+      if [[ "${unique_ver}" -gt 1 ]]; then
+        warn "Multiple claude versions on PATH — scripts use the first one: $(command -v claude)"
+        note "Remove stale copy: brew uninstall claude-code  OR  rm /opt/homebrew/bin/claude"
+      fi
+    fi
+  fi
+  rwe_claude_version_warn 2>&1 | while read -r line; do
+    [[ -n "${line}" ]] && warn "${line#WARN: }"
+  done
+else
+  bad "claude: not on PATH"
+fi
+for cmd in python3 uvx curl jq; do
   if command -v "${cmd}" >/dev/null 2>&1; then
     ok "${cmd}: $(command -v "${cmd}")"
   else
     bad "${cmd}: not on PATH"
   fi
 done
-if command -v claude >/dev/null 2>&1; then
-  claude --version 2>&1 | head -1 | tee "${ARTIFACT_DIR}/claude-version.txt" | while read -r line; do
-    ok "claude version: ${line}"
-  done
-  rwe_claude_version_warn 2>&1 | while read -r line; do
-    [[ -n "${line}" ]] && warn "${line#WARN: }"
-  done
-fi
 if command -v nlm >/dev/null 2>&1; then
   ok "nlm: $(command -v nlm)"
 else

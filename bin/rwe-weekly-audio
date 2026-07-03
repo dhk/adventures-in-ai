@@ -15,7 +15,7 @@ REPO_ROOT="$(rwe_repo_root "${HERE}")"
 RWE_ROOT="${REPO_ROOT}/reading-with-ears"
 
 # Do not source ~/.zshrc — see note in rwe-run.sh.
-export PATH="/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
+# PATH: rwe-common.sh appends homebrew/local fallbacks; does not prepend them.
 
 SKILL_VERSION_REQUIRED="3.0"
 SKILL_FILE="${RWE_ROOT}/skills/user/reading-list-builder/SKILL.md"

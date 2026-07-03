@@ -16,7 +16,7 @@ RWE_ROOT="${REPO_ROOT}/reading-with-ears"
 # $ZSH_VERSION, zsh-only syntax) is not valid here. For `claude` / `python3` / `nlm` on
 # PATH in launchd or cron, use ~/.profile, ~/.bash_profile, launchd EnvironmentVariables,
 # or conda `conda init bash` — not only ~/.zshrc.
-export PATH="/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
+# PATH: rwe-common.sh appends homebrew/local fallbacks; does not prepend them.
 
 if [[ "${1:-}" == "--catch-up" ]]; then
   shift
