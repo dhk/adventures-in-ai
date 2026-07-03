@@ -109,7 +109,7 @@ rwe_claude_headless() {
   export ENABLE_CLAUDEAI_MCP_SERVERS="${ENABLE_CLAUDEAI_MCP_SERVERS:-true}"
   env -u ANTHROPIC_API_KEY claude -p \
     --permission-mode bypassPermissions \
-    "${strict[@]}" \
+    ${strict[@]+"${strict[@]}"} \
     --mcp-config "${rwe_root}/automation/mcp-headless.json" \
     --add-dir "${rwe_root}" \
     "$@"

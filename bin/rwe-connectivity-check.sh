@@ -325,7 +325,10 @@ else:
 if "NO_GMAIL_TOOLS" in text:
     print("  FAIL Model reported NO_GMAIL_TOOLS")
 if ver_t and ver_t < (2, 1, 180):
-    print(f"  FAIL Claude Code {ver_m.group(1)} — claude.ai Gmail often missing in -p; upgrade: claude install")
+    if tools:
+        print(f"  WARN Claude Code {ver_m.group(1)} is below 2.1.180, but the live probe found Gmail tools anyway — no action needed")
+    else:
+        print(f"  FAIL Claude Code {ver_m.group(1)} — claude.ai Gmail often missing in -p; upgrade: claude install")
 if claudeai_lines:
     print("  INFO claudeai-mcp debug (sample):")
     for ln in claudeai_lines:
@@ -339,7 +342,7 @@ if deferred:
     for ln in deferred[:5]:
         print(f"    {ln[:140]}")
 
-ok = bool(tools) and "NO_GMAIL_TOOLS" not in text and (not ver_t or ver_t >= (2, 1, 180))
+ok = bool(tools) and "NO_GMAIL_TOOLS" not in text
 raise SystemExit(0 if ok else 1)
 PY
     gmail_scan=$?
