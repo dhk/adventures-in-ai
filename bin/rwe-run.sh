@@ -45,6 +45,16 @@ echo "=== $(date "+%Y-%m-%dT%H:%M:%S%z") rwe-run ==="
 
 "${RWE_ROOT}/scripts/install-local.sh"
 
+if ! rwe_audit_claude_auth "${REPO_ROOT}"; then
+  echo "Aborting — fix Claude auth blockers above, then re-run."
+  echo "Run: bin/rwe-auth-check.sh --test-api --doctor"
+  exit 1
+fi
+
+if ! rwe_check_claude_oauth; then
+  exit 1
+fi
+
 STATE_DIR="${HOME}/.local/state/reading-with-ears"
 mkdir -p "${STATE_DIR}"
 SENTINEL="${STATE_DIR}/done-$(date +%F)"
@@ -55,12 +65,6 @@ if [[ -f "${SENTINEL}" ]]; then
 fi
 
 cd "${RWE_ROOT}"
-
-if ! rwe_audit_claude_auth "${REPO_ROOT}"; then
-  echo "Aborting — fix Claude auth blockers above, then re-run."
-  echo "Run: bin/rwe-auth-check.sh --test-api --doctor"
-  exit 1
-fi
 
 CLAUDE_PROMPT=$'Read and follow skills/user/reading-list-builder/SKILL.md and run the DAILY FLOW (Steps 0-8) for today\'s date (use America/Los_Angeles for "today"). Do not run the weekly audio flow.'
 

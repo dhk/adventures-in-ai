@@ -93,6 +93,10 @@ Remove any `ANTHROPIC_API_KEY` from settings `env` blocks and any `apiKeyHelper`
 That error is Claude Code auth, not Gmail or NotebookLM MCP (MCP failures appear as `[MCP]`
 lines in `~/logs/reading-with-ears/catchup-debug-*.log`).
 
+Headless runs also require an active **claude.ai OAuth session** (`claude /login`). The
+scripts scrub your shell API key with `env -u`; without OAuth you will see
+`Not logged in · Please run /login`.
+
 ---
 
 ## 4. Install shell wrappers

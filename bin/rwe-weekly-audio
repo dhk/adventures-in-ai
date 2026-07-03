@@ -53,6 +53,10 @@ if ! rwe_audit_claude_auth "${REPO_ROOT}"; then
   exit 1
 fi
 
+if ! rwe_check_claude_oauth; then
+  exit 1
+fi
+
 CLAUDE_PROMPT="Read and follow skills/user/reading-list-builder/SKILL.md and run the WEEKLY AUDIO FLOW (Steps W1-W4) for ISO week ${WEEK_ARG}. Do not run the daily flow."
 
 # Full claude debug capture (unfiltered — a category filter like "mcp" broke

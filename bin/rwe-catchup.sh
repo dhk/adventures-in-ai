@@ -46,6 +46,16 @@ echo "=== $(date "+%Y-%m-%dT%H:%M:%S%z") rwe-catchup from=${FROM_DATE} to=${TO_D
 
 "${RWE_ROOT}/scripts/install-local.sh"
 
+if ! rwe_audit_claude_auth "${REPO_ROOT}"; then
+  echo "Aborting — fix Claude auth blockers above, then re-run."
+  echo "Run: bin/rwe-auth-check.sh --test-api --doctor"
+  exit 1
+fi
+
+if ! rwe_check_claude_oauth; then
+  exit 1
+fi
+
 STATE_DIR="${HOME}/.local/state/reading-with-ears"
 mkdir -p "${STATE_DIR}"
 
@@ -71,14 +81,6 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
     CLAUDE_PROMPT="Read and follow skills/user/reading-list-builder/SKILL.md and run the DAILY FLOW (Steps 0-8) for ${current}. In all Gmail searches use 'after:${gmail_after} before:${gmail_before}' to scope results to exactly this day. Do not run the weekly audio flow."
 
     cd "${RWE_ROOT}"
-
-    if ! rwe_audit_claude_auth "${REPO_ROOT}"; then
-      echo "[${current}] Aborting — fix Claude auth blockers above, then re-run."
-      echo "[${current}] Run: bin/rwe-auth-check.sh --test-api --doctor"
-      failed=$((failed + 1))
-      current=$(date -j -v+1d -f "%Y-%m-%d" "${current}" +"%Y-%m-%d")
-      continue
-    fi
 
     # Full claude debug capture (unfiltered — a category filter like "mcp" broke
     # stdin prompt piping in testing) per day, so a failure (Gmail vs. NotebookLM
