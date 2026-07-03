@@ -110,6 +110,7 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
       processed=$((processed + 1))
     else
       echo "[${current}] Pipeline failed — sentinel not written, will retry on next catch-up run."
+      echo "[${current}] Diagnose: bin/rwe-connectivity-check.sh --live --verbose --date ${current}"
       echo "[${current}] MCP debug log: ${DEBUG_FILE}"
       rwe_tail_debug_log "${DEBUG_FILE}" "[${current}] MCP debug log"
       failed=$((failed + 1))

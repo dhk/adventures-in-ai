@@ -97,6 +97,15 @@ Headless runs also require an active **claude.ai OAuth session** (`claude /login
 scripts scrub your shell API key with `env -u`; without OAuth you will see
 `Not logged in · Please run /login`.
 
+**Full connectivity test** (toolchain, auth, MCP registry, headless Gmail probes):
+
+```bash
+bin/rwe-connectivity-check.sh --live --verbose
+# Artifacts: ~/logs/reading-with-ears/connectivity-<timestamp>/
+```
+
+Use `--quick` to skip slow `claude -p` probes; `--deep` adds `claude doctor`.
+
 ---
 
 ## 4. Install shell wrappers

@@ -227,7 +227,7 @@ fi
 if feature_enabled permissions; then
 bin_dir="${REPO_ROOT}/bin"
 if [[ -d "${bin_dir}" ]]; then
-  for x in rwe-common.sh rwe-run.sh rwe-publish rwe-catchup.sh rwe-auth-check.sh; do
+  for x in rwe-common.sh rwe-run.sh rwe-publish rwe-catchup.sh rwe-auth-check.sh rwe-connectivity-check.sh; do
     [[ -f "${bin_dir}/${x}" ]] || continue
     if [[ ! -x "${bin_dir}/${x}" ]]; then
       warn "${bin_dir}/${x} is not executable — fixing chmod +x"
