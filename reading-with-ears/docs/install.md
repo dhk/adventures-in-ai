@@ -74,9 +74,25 @@ deprecated `gmail.mcp.claude.com` HTTP endpoint (404 as of 2026).
    claude mcp remove gmail   # only if it points at gmail.mcp.claude.com and shows Failed
    ```
 
-Headless runs (`rwe-catchup`, `rwe-run`) load **notebooklm** from
-`reading-with-ears/automation/mcp-headless.json` and rely on your **claude.ai Gmail**
-connector for mail tools. Do not use `--strict-mcp-config` — it blocks the connector.
+Headless runs (`rwe-catchup`, `rwe-run`) load **notebooklm + Gmail HTTP** from
+`reading-with-ears/automation/mcp-headless.json` and also honor **claude.ai Gmail**
+connectors when `ENABLE_CLAUDEAI_MCP_SERVERS=true` (set automatically by the scripts).
+
+**Claude Code version:** Gmail tools in `claude -p` require **2.1.180+**. On older versions
+(e.g. 2.1.87), `claude mcp list` shows Gmail as Connected but headless runs see zero tools.
+Upgrade:
+
+```bash
+claude install
+claude --version   # should be 2.1.180 or newer
+```
+
+Register the Google Gmail MCP endpoint (replaces deprecated `gmail.mcp.claude.com`):
+
+```bash
+claude mcp remove gmail 2>/dev/null || true
+claude mcp add --transport http --scope user gmail https://gmailmcp.googleapis.com/mcp/v1
+```
 
 **NotebookLM CLI:**
 

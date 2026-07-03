@@ -97,19 +97,42 @@ rwe_tail_debug_log() {
 }
 
 # Headless claude -p invocation shared by rwe-run / rwe-catchup / rwe-weekly-audio.
-# Gmail comes from claude.ai built-in connectors (Settings → Connectors → Gmail).
-# mcp-headless.json adds notebooklm only. Do NOT use --strict-mcp-config: it blocks
-# claude.ai Gmail and forces the deprecated gmail.mcp.claude.com endpoint (404).
-# Set RWE_STRICT_MCP=1 only for legacy debugging.
+# Gmail: claude.ai connectors (mcp__claude_ai_Gmail__*) may load in -p on recent
+# Claude Code versions; also try user-scoped HTTP gmail in mcp-headless.json.
+# Set RWE_STRICT_MCP=1 to exclude claude.ai connectors (legacy/debug only).
 rwe_claude_headless() {
   local rwe_root="${1:?reading-with-ears root}"
   shift
   local strict=()
   [[ "${RWE_STRICT_MCP:-0}" == "1" ]] && strict=(--strict-mcp-config)
+  # Honor claude.ai connector MCPs in headless runs (required for Gmail on many versions).
+  export ENABLE_CLAUDEAI_MCP_SERVERS="${ENABLE_CLAUDEAI_MCP_SERVERS:-true}"
   env -u ANTHROPIC_API_KEY claude -p \
     --permission-mode bypassPermissions \
     "${strict[@]}" \
     --mcp-config "${rwe_root}/automation/mcp-headless.json" \
     --add-dir "${rwe_root}" \
     "$@"
+}
+
+# Warn when Claude Code is below the version where claude.ai MCP in -p was restored.
+rwe_claude_version_warn() {
+  if ! command -v claude >/dev/null 2>&1; then
+    return 0
+  fi
+  local ver
+  ver="$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)"
+  [[ -z "${ver}" ]] && return 0
+  python3 - "${ver}" <<'PY'
+import sys
+parts = [int(x) for x in sys.argv[1].split(".")[:3]]
+while len(parts) < 3:
+    parts.append(0)
+if tuple(parts) < (2, 1, 180):
+    print(
+        f"WARN: Claude Code {sys.argv[1]} — Gmail in claude -p needs 2.1.180+ "
+        f"(you have {parts[0]}.{parts[1]}.{parts[2]}). Run: claude install",
+        file=sys.stderr,
+    )
+PY
 }

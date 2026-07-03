@@ -55,6 +55,7 @@ fi
 if ! rwe_check_claude_oauth; then
   exit 1
 fi
+rwe_claude_version_warn 2>&1 | while read -r line; do [[ -n "${line}" ]] && echo "${line}"; done
 
 STATE_DIR="${HOME}/.local/state/reading-with-ears"
 mkdir -p "${STATE_DIR}"

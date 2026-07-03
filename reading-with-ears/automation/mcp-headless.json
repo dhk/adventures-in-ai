@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "gmail": {
+      "type": "http",
+      "url": "https://gmailmcp.googleapis.com/mcp/v1"
+    },
     "notebooklm": {
       "type": "stdio",
       "command": "uvx",

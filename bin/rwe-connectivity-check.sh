@@ -161,6 +161,9 @@ if command -v claude >/dev/null 2>&1; then
   claude --version 2>&1 | head -1 | tee "${ARTIFACT_DIR}/claude-version.txt" | while read -r line; do
     ok "claude version: ${line}"
   done
+  rwe_claude_version_warn 2>&1 | while read -r line; do
+    [[ -n "${line}" ]] && warn "${line#WARN: }"
+  done
 fi
 if command -v nlm >/dev/null 2>&1; then
   ok "nlm: $(command -v nlm)"
@@ -182,7 +185,7 @@ else
   warn "rwe-auth-check.sh not found"
 fi
 
-phase "Claude OAuth credential files"
+phase "Claude OAuth (informational — headless PONG probe is definitive)"
 found_cred=0
 for f in "${HOME}/.claude/.credentials.json" "${HOME}/.claude/credentials.json"; do
   if [[ -f "${f}" ]]; then
@@ -190,16 +193,20 @@ for f in "${HOME}/.claude/.credentials.json" "${HOME}/.claude/credentials.json";
     found_cred=1
   fi
 done
-[[ "${found_cred}" -eq 0 ]] && warn "No ~/.claude/.credentials.json — run: claude /login"
+if [[ "${found_cred}" -eq 0 ]]; then
+  note "No ~/.claude/.credentials.json on disk (normal on some installs — not a failure by itself)"
+fi
 
 status_out="$(env -u ANTHROPIC_API_KEY claude /status 2>&1 || true)"
 printf '%s\n' "${status_out}" > "${ARTIFACT_DIR}/claude-status.txt"
 if echo "${status_out}" | grep -qiE 'not logged in|please run /login'; then
   bad "claude /status: not logged in — run: claude /login"
+elif echo "${status_out}" | grep -qiE 'unknown skill'; then
+  note "claude /status unavailable on Claude Code $(claude --version 2>/dev/null | head -1 || echo this version) — use headless PONG probe below"
 elif echo "${status_out}" | grep -qiE 'auth token|logged in|claude\.ai|subscription|max'; then
   ok "claude /status: OAuth session appears active"
 else
-  warn "claude /status inconclusive — see ${ARTIFACT_DIR}/claude-status.txt"
+  note "claude /status inconclusive — see ${ARTIFACT_DIR}/claude-status.txt (headless PONG probe below is definitive)"
   [[ "${VERBOSE}" -eq 1 ]] && head -15 "${ARTIFACT_DIR}/claude-status.txt" | while read -r line; do log "    ${line}"; done
 fi
 
@@ -229,12 +236,15 @@ fi
 
 phase "Deprecated endpoint check (gmail.mcp.claude.com)"
 legacy_code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 \
-  'https://gmail.mcp.claude.com/mcp' 2>/dev/null || echo '000')"
+  'https://gmail.mcp.claude.com/mcp' 2>/dev/null || true)"
+legacy_code="${legacy_code:-000}"
+# curl prints 000 on connection failure; avoid doubling with a fallback echo in $()
+legacy_code="${legacy_code:0:3}"
 echo "${legacy_code}" > "${ARTIFACT_DIR}/gmail-legacy-mcp-http.txt"
 if [[ "${legacy_code}" == "404" || "${legacy_code}" == "000" ]]; then
-  ok "gmail.mcp.claude.com unavailable (${legacy_code}) — RWE uses claude.ai Gmail connector instead"
+  ok "gmail.mcp.claude.com unavailable (HTTP ${legacy_code}) — expected; RWE uses claude.ai Gmail connector"
 else
-  warn "gmail.mcp.claude.com returned HTTP ${legacy_code} (unexpected)"
+  note "gmail.mcp.claude.com returned HTTP ${legacy_code} — RWE does not use this endpoint regardless"
 fi
 
 phase "NotebookLM subprocess (uvx)"
@@ -270,52 +280,84 @@ fi
 if [[ "${LEVEL}" == "live" ]]; then
     phase "Headless Gmail tool probe (claude -p + ToolSearch)"
     GMAIL_DEBUG="${ARTIFACT_DIR}/probe-gmail-tools.debug.log"
-    GMAIL_PROMPT='This is a connectivity test only. Use ToolSearch to find tools whose names contain "gmail" (case insensitive). List every matching tool name exactly as registered, one per line, no other text. If ToolSearch finds none, say exactly: NO_GMAIL_TOOLS.'
+    GMAIL_PROMPT='Connectivity test only. Use ToolSearch to find ALL tools whose names contain "gmail" (any case). List every matching tool name exactly as registered, one per line. Include mcp__claude_ai_Gmail__* tools if present. If ToolSearch finds none, say exactly: NO_GMAIL_TOOLS.'
     run_claude_probe "probe-gmail-tools" "${GMAIL_PROMPT}" "${GMAIL_DEBUG}" 180 || true
 
-    python3 - "${GMAIL_DEBUG}" "${ARTIFACT_DIR}/probe-gmail-tools.stdout" <<'PY'
+    python3 - "${GMAIL_DEBUG}" "${ARTIFACT_DIR}/probe-gmail-tools.stdout" "${ARTIFACT_DIR}/claude-version.txt" <<'PY'
 import re, sys
 from pathlib import Path
 
 debug = Path(sys.argv[1])
 stdout = Path(sys.argv[2])
+ver_file = Path(sys.argv[3])
 text = ""
 if debug.is_file():
     text += debug.read_text(encoding="utf-8", errors="replace")
 if stdout.is_file():
     text += "\n" + stdout.read_text(encoding="utf-8", errors="replace")
 
-tools = sorted(set(re.findall(r"mcp__gmail__\w+", text, re.I)))
+patterns = [
+    r"mcp__claude_ai_Gmail__\w+",
+    r"mcp__claude_ai_[A-Za-z_]+__\w+",
+    r"mcp__gmail__\w+",
+    r"mcp__Gmail__\w+",
+    r"\bgmail_search_messages\b",
+    r"\bgmail_read_message\b",
+    r"\bgmail_list_messages\b",
+    r"\bsearch_threads\b",
+    r"\bget_thread\b",
+]
+tools = sorted({m for pat in patterns for m in re.findall(pat, text, re.I)})
+
+claudeai_lines = [ln for ln in text.splitlines() if "claudeai-mcp" in ln.lower() or "claude_ai" in ln.lower()][:8]
+scope_lines = [ln for ln in text.splitlines() if "user:mcp_servers" in ln.lower() or "isprintmode" in ln.lower()][:5]
 deferred = [ln for ln in text.splitlines() if "deferred" in ln.lower() and "gmail" in ln.lower()]
-errors = [ln for ln in text.splitlines() if re.search(r"gmail.*(not available|failed|401|error)", ln, re.I)]
+
+ver = ver_file.read_text(encoding="utf-8", errors="replace") if ver_file.is_file() else ""
+ver_m = re.search(r"(\d+\.\d+\.\d+)", ver)
+ver_t = tuple(int(x) for x in ver_m.group(1).split(".")) if ver_m else (0, 0, 0)
 
 print("Gmail tool scan:")
 if tools:
-    print(f"  OK   Found tool IDs in logs/output: {', '.join(tools[:12])}")
+    print(f"  OK   Found: {', '.join(tools[:15])}")
 else:
-    print("  FAIL No mcp__gmail__* tools in probe output/debug log")
+    print("  FAIL No Gmail-related tools in probe output/debug log")
 if "NO_GMAIL_TOOLS" in text:
     print("  FAIL Model reported NO_GMAIL_TOOLS")
+if ver_t and ver_t < (2, 1, 180):
+    print(f"  FAIL Claude Code {ver_m.group(1)} — claude.ai Gmail often missing in -p; upgrade: claude install")
+if claudeai_lines:
+    print("  INFO claudeai-mcp debug (sample):")
+    for ln in claudeai_lines:
+        print(f"    {ln[:160]}")
+if scope_lines:
+    print("  INFO scope/print-mode debug (sample):")
+    for ln in scope_lines:
+        print(f"    {ln[:160]}")
 if deferred:
     print("  INFO deferred-tool lines (sample):")
     for ln in deferred[:5]:
         print(f"    {ln[:140]}")
-if errors:
-    print("  FAIL Gmail error lines:")
-    for ln in errors[:5]:
-        print(f"    {ln[:140]}")
-raise SystemExit(0 if tools and "NO_GMAIL_TOOLS" not in text else 1)
+
+ok = bool(tools) and "NO_GMAIL_TOOLS" not in text and (not ver_t or ver_t >= (2, 1, 180))
+raise SystemExit(0 if ok else 1)
 PY
     gmail_scan=$?
-    [[ "${gmail_scan}" -eq 0 ]] && ok "Gmail tools visible in headless probe" \
-      || bad "Gmail tools NOT visible in headless probe — this matches catch-up failures"
+    if [[ "${gmail_scan}" -ne 0 ]]; then
+      bad "Gmail tools NOT visible in headless probe"
+      note "claude.ai Gmail shows Connected in 'claude mcp list' but often does NOT load in claude -p on 2.1.87"
+      note "Fix: claude install  (target 2.1.180+) then re-run this check"
+      note "Also: claude mcp remove gmail && claude mcp add --transport http --scope user gmail https://gmailmcp.googleapis.com/mcp/v1"
+    else
+      ok "Gmail tools visible in headless probe"
+    fi
 
     phase "Headless Gmail search probe (optional live query)"
     SEARCH_DEBUG="${ARTIFACT_DIR}/probe-gmail-search.debug.log"
     gmail_after="$(echo "${PROBE_DATE}" | tr '-' '/')"
     gmail_next="$(date -j -v+1d -f "%Y-%m-%d" "${PROBE_DATE}" +%F 2>/dev/null || date -d "${PROBE_DATE} +1 day" +%F)"
     gmail_before="$(echo "${gmail_next}" | tr '-' '/')"
-    SEARCH_PROMPT="Connectivity test only. Call gmail_search_messages with q='label:newsletter/news after:${gmail_after} before:${gmail_before}' and reply with only the integer count of messages returned, nothing else."
+    SEARCH_PROMPT="Connectivity test only. Use ToolSearch to find a Gmail search tool, then search with query 'label:newsletter/news after:${gmail_after} before:${gmail_before}'. Reply with only the integer count of messages/threads returned, nothing else."
     if run_claude_probe "probe-gmail-search" "${SEARCH_PROMPT}" "${SEARCH_DEBUG}" 240; then
       ok "Gmail search probe completed for ${PROBE_DATE}"
       head -5 "${ARTIFACT_DIR}/probe-gmail-search.stdout" 2>/dev/null | while read -r line; do
@@ -344,9 +386,11 @@ log "Failures: ${ISSUES}  Warnings: ${WARNS}"
 if [[ "${ISSUES}" -gt 0 ]]; then
   log ""
   log "Common fixes:"
+  log "  claude install                    # upgrade to 2.1.180+ (Gmail in -p broken on 2.1.87)"
   log "  claude /login"
   log "  Claude Settings → Connectors → enable Gmail (claude.ai Gmail / gmailmcp.googleapis.com)"
-  log "  claude mcp remove gmail   # remove broken legacy gmail.mcp.claude.com registration"
+  log "  claude mcp remove gmail"
+  log "  claude mcp add --transport http --scope user gmail https://gmailmcp.googleapis.com/mcp/v1"
   log "  nlm login"
   log "  Re-run: bin/rwe-connectivity-check.sh --live --verbose"
   exit 1
