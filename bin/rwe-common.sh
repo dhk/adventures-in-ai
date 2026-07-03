@@ -63,6 +63,10 @@ rwe_check_claude_oauth() {
   fi
   local status_out
   status_out="$(env -u ANTHROPIC_API_KEY claude /status 2>&1 || true)"
+  if echo "${status_out}" | grep -qiE 'unknown skill'; then
+    # /status is not a valid command on all Claude Code versions (e.g. 2.1.87).
+    return 0
+  fi
   if echo "${status_out}" | grep -qiE 'not logged in|please run /login'; then
     echo "ERROR: Claude Code is not logged in."
     echo "  rwe-catchup / rwe-run scrub ANTHROPIC_API_KEY and use your claude.ai subscription."
@@ -90,4 +94,22 @@ rwe_tail_debug_log() {
   else
     echo "WARN: ${label} not found at ${debug_file}"
   fi
+}
+
+# Headless claude -p invocation shared by rwe-run / rwe-catchup / rwe-weekly-audio.
+# Gmail comes from claude.ai built-in connectors (Settings → Connectors → Gmail).
+# mcp-headless.json adds notebooklm only. Do NOT use --strict-mcp-config: it blocks
+# claude.ai Gmail and forces the deprecated gmail.mcp.claude.com endpoint (404).
+# Set RWE_STRICT_MCP=1 only for legacy debugging.
+rwe_claude_headless() {
+  local rwe_root="${1:?reading-with-ears root}"
+  shift
+  local strict=()
+  [[ "${RWE_STRICT_MCP:-0}" == "1" ]] && strict=(--strict-mcp-config)
+  env -u ANTHROPIC_API_KEY claude -p \
+    --permission-mode bypassPermissions \
+    "${strict[@]}" \
+    --mcp-config "${rwe_root}/automation/mcp-headless.json" \
+    --add-dir "${rwe_root}" \
+    "$@"
 }

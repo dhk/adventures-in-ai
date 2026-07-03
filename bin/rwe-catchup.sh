@@ -98,11 +98,7 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
     # case the caller's shell has it set (e.g. a prior rwe-weekly run this session),
     # which otherwise makes claude refuse to start with an auth-conflict error.
     # Use 'if' so a single day's failure doesn't abort the whole catch-up run.
-    if echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
-        --permission-mode bypassPermissions \
-        --strict-mcp-config \
-        --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
-        --add-dir "${RWE_ROOT}" \
+    if echo "${CLAUDE_PROMPT}" | rwe_claude_headless "${RWE_ROOT}" \
         --debug \
         --debug-file "${DEBUG_FILE}"; then
       touch "${SENTINEL}"

@@ -74,11 +74,7 @@ echo "ANTHROPIC_API_KEY in shell (first 20 chars): ${ANTHROPIC_API_KEY:0:20}${AN
 # claude -p uses the claude.ai/Pro session, not ANTHROPIC_API_KEY — scrub it in
 # case the caller's shell has it set, which otherwise makes claude refuse to start
 # with an auth-conflict error.
-if ! echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
-  --permission-mode bypassPermissions \
-  --strict-mcp-config \
-  --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
-  --add-dir "${RWE_ROOT}" \
+if ! echo "${CLAUDE_PROMPT}" | rwe_claude_headless "${RWE_ROOT}" \
   --debug \
   --debug-file "${DEBUG_FILE}"; then
   echo "ERROR: weekly audio flow failed. MCP debug log: ${DEBUG_FILE}"

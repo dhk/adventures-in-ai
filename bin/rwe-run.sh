@@ -84,11 +84,7 @@ echo "ANTHROPIC_API_KEY in shell (first 20 chars): ${ANTHROPIC_API_KEY:0:20}${AN
 # shell has that var set (e.g. for a prior rwe-weekly/week_that_was.py run in the
 # same terminal), claude refuses to start with an auth-conflict error — scrub it
 # for this invocation regardless of what the parent shell has exported.
-if ! echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
-  --permission-mode bypassPermissions \
-  --strict-mcp-config \
-  --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
-  --add-dir "${RWE_ROOT}" \
+if ! echo "${CLAUDE_PROMPT}" | rwe_claude_headless "${RWE_ROOT}" \
   --debug \
   --debug-file "${DEBUG_FILE}"; then
   echo "ERROR: daily flow failed. MCP debug log: ${DEBUG_FILE}"

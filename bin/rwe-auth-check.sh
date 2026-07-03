@@ -256,6 +256,44 @@ audit_file(managed, "Managed settings (MDM)")
 
 audit_shell_profiles()
 
+
+def audit_oauth_login() -> None:
+    print("\nClaude Code OAuth session (required for claude -p after env -u scrub)")
+    if not shutil.which("claude"):
+        print("  claude CLI: not on PATH")
+        warnings.append("claude CLI not on PATH — cannot verify OAuth login")
+        return
+    env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+    try:
+        proc = subprocess.run(
+            ["claude", "/status"],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            env=env,
+        )
+        out = ((proc.stdout or "") + (proc.stderr or "")).strip()
+        if out:
+            for line in out.splitlines()[:12]:
+                print(f"  {line}")
+        if re.search(r"not logged in|please run /login", out, re.I):
+            issues.append(
+                "Claude Code OAuth: not logged in — run interactively once: claude /login"
+            )
+        elif re.search(r"unknown skill", out, re.I):
+            notes.append("claude /status not available on this Claude Code version — use rwe-connectivity-check.sh --live")
+        elif re.search(r"auth token|logged in|claude\.ai|subscription|max", out, re.I):
+            notes.append("Claude Code OAuth session appears active (claude /status)")
+        else:
+            warnings.append(
+                "Could not confirm OAuth from claude /status — if catch-up fails, run: claude /login"
+            )
+    except Exception as exc:  # noqa: BLE001
+        warnings.append(f"claude /status failed ({exc}) — if catch-up fails, run: claude /login")
+
+
+audit_oauth_login()
+
 # Detect multiple distinct keys — classic cause of "Invalid API key" after env -u
 print("\n=== Key fingerprint check ===")
 if len(key_sources) > 1:

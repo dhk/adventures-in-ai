@@ -76,13 +76,8 @@ verbose_file() {
 }
 
 rwe_claude_headless_cmd() {
-  # Same flags as bin/rwe-catchup.sh — keep in sync.
-  env -u ANTHROPIC_API_KEY claude -p \
-    --permission-mode bypassPermissions \
-    --strict-mcp-config \
-    --mcp-config "${MCP_CONFIG}" \
-    --add-dir "${RWE_ROOT}" \
-    "$@"
+  # Same invocation as bin/rwe-catchup.sh — keep in sync via rwe_claude_headless().
+  rwe_claude_headless "${RWE_ROOT}" "$@"
 }
 
 run_claude_probe() {
@@ -210,35 +205,35 @@ fi
 phase "MCP registry (claude mcp list)"
 if command -v claude >/dev/null 2>&1; then
   claude mcp list 2>&1 | tee "${ARTIFACT_DIR}/mcp-list.txt" || true
-  if grep -qi 'gmail' "${ARTIFACT_DIR}/mcp-list.txt"; then
-    if grep -qiE 'gmail\.mcp\.claude\.com|claude\.ai Gmail' "${ARTIFACT_DIR}/mcp-list.txt"; then
-      ok "Full Gmail MCP listed (claude.ai / gmail.mcp.claude.com)"
-    else
-      warn "gmail entry found but may not be full Gmail MCP — check for gmail-send (send-only)"
-      grep -i gmail "${ARTIFACT_DIR}/mcp-list.txt" | while read -r line; do log "    ${line}"; done
-    fi
+  if grep -qiE 'claude\.ai Gmail|gmailmcp\.googleapis' "${ARTIFACT_DIR}/mcp-list.txt" \
+      && grep -i 'Gmail' "${ARTIFACT_DIR}/mcp-list.txt" | grep -qi 'Connected'; then
+    ok "claude.ai Gmail connector connected (gmailmcp.googleapis.com)"
   else
-    bad "Gmail MCP not in claude mcp list — run: claude mcp add --transport http --scope user gmail https://gmail.mcp.claude.com/mcp"
+    bad "claude.ai Gmail connector not connected — enable in Claude Settings → Connectors → Gmail"
+  fi
+  if grep -E '^gmail:.*gmail\.mcp\.claude\.com' "${ARTIFACT_DIR}/mcp-list.txt" | grep -qi 'Failed'; then
+    warn "Legacy gmail.mcp.claude.com registration failed (expected — endpoint deprecated/404). Remove with: claude mcp remove gmail"
   fi
   if grep -qi 'notebooklm\|nlm' "${ARTIFACT_DIR}/mcp-list.txt"; then
     ok "NotebookLM-related MCP listed"
   else
-    warn "NotebookLM not in claude mcp list (headless uses uvx via mcp-headless.json — may still work)"
+    warn "NotebookLM not in claude mcp list (headless adds it via mcp-headless.json — OK if uvx probe passed)"
   fi
   if grep -qi 'codex' "${ARTIFACT_DIR}/mcp-list.txt"; then
-    warn "codex MCP registered — unrelated to RWE; may trigger macOS malware block on session start"
+    warn "codex MCP registered — unrelated to RWE; may trigger macOS malware block. Remove: claude mcp remove codex"
   fi
 else
   bad "claude CLI missing — cannot list MCP servers"
 fi
 
-phase "Network reachability"
-if curl -sS -o /dev/null -w "%{http_code}" --max-time 15 \
-    "https://gmail.mcp.claude.com/mcp" >"${ARTIFACT_DIR}/gmail-mcp-http.txt" 2>&1; then
-  code="$(cat "${ARTIFACT_DIR}/gmail-mcp-http.txt")"
-  ok "gmail.mcp.claude.com reachable (HTTP ${code})"
+phase "Deprecated endpoint check (gmail.mcp.claude.com)"
+legacy_code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 \
+  'https://gmail.mcp.claude.com/mcp' 2>/dev/null || echo '000')"
+echo "${legacy_code}" > "${ARTIFACT_DIR}/gmail-legacy-mcp-http.txt"
+if [[ "${legacy_code}" == "404" || "${legacy_code}" == "000" ]]; then
+  ok "gmail.mcp.claude.com unavailable (${legacy_code}) — RWE uses claude.ai Gmail connector instead"
 else
-  warn "Could not reach gmail.mcp.claude.com — see ${ARTIFACT_DIR}/gmail-mcp-http.txt"
+  warn "gmail.mcp.claude.com returned HTTP ${legacy_code} (unexpected)"
 fi
 
 phase "NotebookLM subprocess (uvx)"
@@ -349,8 +344,8 @@ if [[ "${ISSUES}" -gt 0 ]]; then
   log ""
   log "Common fixes:"
   log "  claude /login"
-  log "  claude mcp add --transport http --scope user gmail https://gmail.mcp.claude.com/mcp"
-  log "  Open interactive claude once and approve Gmail connector OAuth"
+  log "  Claude Settings → Connectors → enable Gmail (claude.ai Gmail / gmailmcp.googleapis.com)"
+  log "  claude mcp remove gmail   # remove broken legacy gmail.mcp.claude.com registration"
   log "  nlm login"
   log "  Re-run: bin/rwe-connectivity-check.sh --live --verbose"
   exit 1

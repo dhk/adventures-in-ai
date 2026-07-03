@@ -63,15 +63,22 @@ If you used the old names and paths:
 
 ## 3. MCP authentication
 
-Register the Gmail MCP at user scope so it works in non-interactive (`-p`) mode:
+**Gmail (read/search):** Enable the **claude.ai Gmail** connector — not `gmail-send`, not the
+deprecated `gmail.mcp.claude.com` HTTP endpoint (404 as of 2026).
 
-```bash
-claude mcp add --transport http --scope user gmail https://gmail.mcp.claude.com/mcp
-```
+1. Open Claude Code or claude.ai → **Settings → Connectors**
+2. Connect **Gmail** (`https://gmailmcp.googleapis.com/mcp/v1`) and complete OAuth
+3. Verify: `claude mcp list` should show `claude.ai Gmail: … ✓ Connected`
+4. Remove any broken legacy registration if present:
+   ```bash
+   claude mcp remove gmail   # only if it points at gmail.mcp.claude.com and shows Failed
+   ```
 
-Then open an interactive Claude Code session and authorize each connector via OAuth (browser flow, one-time per connector).
+Headless runs (`rwe-catchup`, `rwe-run`) load **notebooklm** from
+`reading-with-ears/automation/mcp-headless.json` and rely on your **claude.ai Gmail**
+connector for mail tools. Do not use `--strict-mcp-config` — it blocks the connector.
 
-Authenticate the `nlm` CLI:
+**NotebookLM CLI:**
 
 ```bash
 nlm login
