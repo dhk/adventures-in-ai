@@ -77,6 +77,22 @@ Authenticate the `nlm` CLI:
 nlm login
 ```
 
+### Claude Code auth for headless runs (`rwe-run`, `rwe-catchup`, `rwe-weekly-audio`)
+
+These scripts invoke `claude -p` with your **claude.ai subscription (OAuth)**. They scrub
+`ANTHROPIC_API_KEY` from the shell, but Claude Code also reads keys from settings files —
+`~/.claude/settings.json` (global) and `~/.claude.json` (config) are **different files**.
+
+If catch-up fails immediately with `Invalid API key · Fix external API key`, run:
+
+```bash
+bin/rwe-auth-check.sh --test-api --doctor
+```
+
+Remove any `ANTHROPIC_API_KEY` from settings `env` blocks and any `apiKeyHelper` entries.
+That error is Claude Code auth, not Gmail or NotebookLM MCP (MCP failures appear as `[MCP]`
+lines in `~/logs/reading-with-ears/catchup-debug-*.log`).
+
 ---
 
 ## 4. Install shell wrappers

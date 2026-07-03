@@ -56,6 +56,12 @@ fi
 
 cd "${RWE_ROOT}"
 
+if ! rwe_audit_claude_auth "${REPO_ROOT}"; then
+  echo "Aborting — fix Claude auth blockers above, then re-run."
+  echo "Run: bin/rwe-auth-check.sh --test-api --doctor"
+  exit 1
+fi
+
 CLAUDE_PROMPT=$'Read and follow skills/user/reading-list-builder/SKILL.md and run the DAILY FLOW (Steps 0-8) for today\'s date (use America/Los_Angeles for "today"). Do not run the weekly audio flow.'
 
 # Full claude debug capture (unfiltered — a category filter like "mcp" broke
@@ -82,11 +88,7 @@ if ! echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
   --debug \
   --debug-file "${DEBUG_FILE}"; then
   echo "ERROR: daily flow failed. MCP debug log: ${DEBUG_FILE}"
-  if [[ -f "${DEBUG_FILE}" ]]; then
-    echo "--- last 40 lines of MCP debug log ---"
-    tail -40 "${DEBUG_FILE}"
-    echo "--- end debug log excerpt ---"
-  fi
+  rwe_tail_debug_log "${DEBUG_FILE}" "MCP debug log"
   exit 1
 fi
 

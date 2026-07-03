@@ -72,6 +72,14 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
 
     cd "${RWE_ROOT}"
 
+    if ! rwe_audit_claude_auth "${REPO_ROOT}"; then
+      echo "[${current}] Aborting — fix Claude auth blockers above, then re-run."
+      echo "[${current}] Run: bin/rwe-auth-check.sh --test-api --doctor"
+      failed=$((failed + 1))
+      current=$(date -j -v+1d -f "%Y-%m-%d" "${current}" +"%Y-%m-%d")
+      continue
+    fi
+
     # Full claude debug capture (unfiltered — a category filter like "mcp" broke
     # stdin prompt piping in testing) per day, so a failure (Gmail vs. NotebookLM
     # vs. something else in the MCP handshake) doesn't require manually reproducing
@@ -101,11 +109,7 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
     else
       echo "[${current}] Pipeline failed — sentinel not written, will retry on next catch-up run."
       echo "[${current}] MCP debug log: ${DEBUG_FILE}"
-      if [[ -f "${DEBUG_FILE}" ]]; then
-        echo "[${current}] --- last 40 lines of MCP debug log ---"
-        tail -40 "${DEBUG_FILE}"
-        echo "[${current}] --- end debug log excerpt ---"
-      fi
+      rwe_tail_debug_log "${DEBUG_FILE}" "[${current}] MCP debug log"
       failed=$((failed + 1))
     fi
   fi
