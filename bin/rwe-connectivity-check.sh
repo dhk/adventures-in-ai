@@ -63,6 +63,7 @@ STEP=0
 log() { echo "$*"; echo "$*" >> "${ARTIFACT_DIR}/summary.log"; }
 ok()  { log "  OK   $*"; }
 warn(){ log "  WARN $*"; WARNS=$((WARNS + 1)); }
+note(){ log "  NOTE $*"; }
 bad() { log "  FAIL $*"; ISSUES=$((ISSUES + 1)); }
 phase() {
   STEP=$((STEP + 1))
