@@ -13,6 +13,7 @@ pipeline experiments. Skills live in `skills/` (repo-level) and
 | `run-analytics` | `skills/user/run-analytics/` | see INSTALL.md |
 | `redpen` | `skills/redpen/` | see INSTALL.md |
 | `git-push-handoff` | `skills/user/git-push-handoff/` | manual copy |
+| `review-document` | `skills/user/review-document/` | manual copy |
 | `multi-model-review` | `reading-with-ears/skills/user/multi-model-review/` | manual copy |
 | `personal-podcast` | `reading-with-ears/skills/user/personal-podcast/` | manual copy |
 | `reading-list-builder` | `reading-with-ears/skills/user/reading-list-builder/` | manual copy |
@@ -20,7 +21,15 @@ pipeline experiments. Skills live in `skills/` (repo-level) and
 Skills are installed by copying their `SKILL.md` to `~/.claude/skills/<name>/SKILL.md`.
 Claude Code picks them up automatically from that directory.
 
-## run-analytics (most recently worked on)
+## review-document (most recently added)
+
+Full-lifecycle document reviewer: review → score against a six-axis rubric
+(`skills/user/review-document/reference/rubric.md`) → offer severity-tiered
+edits → apply only on confirmation. For written documents (reports, proposals,
+memos, READMEs, specs) — not source code (`redpen`) and not a Claude Agent
+Skill's own `SKILL.md` (`skill-doctor`, in the `dhk/skill-map` repo).
+
+## run-analytics
 
 **Status:** Merged to main (PR #19, commit `440f36e`).
 **Branch:** `claude/run-analytics-meta-skill-b2mum2` — merged, feature branch still exists.
