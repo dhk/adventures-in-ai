@@ -6,24 +6,59 @@ A personal collection of Claude Code skills, analytics tooling, and reading/audi
 pipeline experiments. Skills live in `skills/` (repo-level) and
 `reading-with-ears/skills/` (reading pipeline specific).
 
+## Local environment
+
+- User's repos all live at `~/Documents/dev/<repo-name>` locally (e.g.
+  `~/Documents/dev/adventures-in-ai`, `~/Documents/dev/skill-map`). Use this
+  path when giving local checkout/install commands instead of a placeholder.
+
 ## Skills in this repo
 
-| Skill | Path | Install |
-|---|---|---|
-| `run-analytics` | `skills/user/run-analytics/` | see INSTALL.md |
-| `redpen` | `skills/redpen/` | see INSTALL.md |
-| `git-push-handoff` | `skills/user/git-push-handoff/` | manual copy |
-| `multi-model-review` | `reading-with-ears/skills/user/multi-model-review/` | manual copy |
-| `personal-podcast` | `reading-with-ears/skills/user/personal-podcast/` | manual copy |
-| `reading-list-builder` | `reading-with-ears/skills/user/reading-list-builder/` | manual copy |
+Every skill installs the same way: put its directory into
+`~/.claude/skills/<name>/`. Claude Code picks it up automatically — no
+restart needed. Symlink from this repo rather than copying, so there's one
+source of truth and no drift when the skill is updated:
 
-Skills are installed by copying their `SKILL.md` to `~/.claude/skills/<name>/SKILL.md`.
-Claude Code picks them up automatically from that directory.
+```bash
+ln -s ~/Documents/dev/adventures-in-ai/<path> ~/.claude/skills/<name>
+```
 
-## run-analytics (most recently worked on)
+| Skill | Path | Status | Notes |
+|---|---|---|---|
+| `run-analytics` | `skills/user/run-analytics/` | Merged via PR #19 (`440f36e`) — the only skill here built on a feature branch; `claude/run-analytics-meta-skill-b2mum2` still exists post-merge | Has its own INSTALL.md with a curl one-shot |
+| `redpen` | `skills/redpen/` | On `main`, direct commit (no PR), last touched 2026-06-14 | Has its own INSTALL.md with a curl one-shot; `--tickets`/`--pr` require GitHub MCP connected |
+| `git-push-handoff` | `skills/user/git-push-handoff/` | On `main`, direct commit (no PR), last touched 2026-03-29 | — |
+| `review-document` | `skills/user/review-document/` | **Open — PR #31, not yet merged** | Must include `reference/` — SKILL.md links to it, symlinking the whole directory (not just SKILL.md) covers this |
+| `multi-model-review` | `reading-with-ears/skills/user/multi-model-review/` | On `main`, direct commit (no PR), last touched 2026-04-05 | Requires Codex registered as an MCP server (`claude mcp add codex -- npx codex mcp-server`) |
+| `personal-podcast` | `reading-with-ears/skills/user/personal-podcast/` | On `main`, direct commit (no PR), last touched 2026-04-08 | — |
+| `reading-list-builder` | `reading-with-ears/skills/user/reading-list-builder/` | On `main`, direct commit (no PR), last touched 2026-05-20 | — |
 
-**Status:** Merged to main (PR #19, commit `440f36e`).
-**Branch:** `claude/run-analytics-meta-skill-b2mum2` — merged, feature branch still exists.
+Most of these were committed straight to `main` in ad-hoc sessions, not via a
+feature branch — `run-analytics` is the exception, and `review-document` is
+still mid-PR. "Last touched" is the most recent commit that changed the
+skill's `SKILL.md`, not necessarily when it was first added.
+
+## review-document (most recently added)
+
+Two-mode document reviewer: review → score → offer severity-tiered edits →
+apply only on confirmation.
+
+- **Mode A — single document** (`skills/user/review-document/reference/rubric.md`):
+  one report/proposal/memo/README/spec, scored on 6 axes.
+- **Mode B — doc package** (`skills/user/review-document/reference/doc-package-rubric.md`):
+  a whole repo's documentation surface, scored against 4 audience journeys
+  (encounter/understand/use/extend-maintain-develop) plus a hygiene pass. The
+  hygiene checks (duplicate canonical docs, stale committed artifacts, broken
+  links, missing index, drifted numbers) are derived directly from the
+  `dhk/skill-map` docs cleanup done in this session (see PR #15 there).
+
+Declares `allowed-tools: Read, Grep, Glob, Edit, Write` — Mode B needs Grep/Glob
+to survey a repo and Write to create a new index file if one is missing.
+
+Not for source code (`redpen`) or a Claude Agent Skill's own `SKILL.md`
+(`skill-doctor`, in `dhk/skill-map`).
+
+## run-analytics
 
 ### What it does
 Two-mode meta-skill for analytics studies:
