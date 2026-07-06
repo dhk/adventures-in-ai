@@ -6,6 +6,12 @@ A personal collection of Claude Code skills, analytics tooling, and reading/audi
 pipeline experiments. Skills live in `skills/` (repo-level) and
 `reading-with-ears/skills/` (reading pipeline specific).
 
+## Local environment
+
+- User's repos all live at `~/Documents/dev/<repo-name>` locally (e.g.
+  `~/Documents/dev/adventures-in-ai`, `~/Documents/dev/skill-map`). Use this
+  path when giving local checkout/install commands instead of a placeholder.
+
 ## Skills in this repo
 
 | Skill | Path | Install |
@@ -23,11 +29,28 @@ Claude Code picks them up automatically from that directory.
 
 ## review-document (most recently added)
 
-Full-lifecycle document reviewer: review → score against a six-axis rubric
-(`skills/user/review-document/reference/rubric.md`) → offer severity-tiered
-edits → apply only on confirmation. For written documents (reports, proposals,
-memos, READMEs, specs) — not source code (`redpen`) and not a Claude Agent
-Skill's own `SKILL.md` (`skill-doctor`, in the `dhk/skill-map` repo).
+Two-mode document reviewer: review → score → offer severity-tiered edits →
+apply only on confirmation.
+
+- **Mode A — single document** (`skills/user/review-document/reference/rubric.md`):
+  one report/proposal/memo/README/spec, scored on 6 axes.
+- **Mode B — doc package** (`skills/user/review-document/reference/doc-package-rubric.md`):
+  a whole repo's documentation surface, scored against 4 audience journeys
+  (encounter/understand/use/extend-maintain-develop) plus a hygiene pass. The
+  hygiene checks (duplicate canonical docs, stale committed artifacts, broken
+  links, missing index, drifted numbers) are derived directly from the
+  `dhk/skill-map` docs cleanup done in this session (see PR #15 there).
+
+Declares `allowed-tools: Read, Grep, Glob, Edit, Write` — Mode B needs Grep/Glob
+to survey a repo and Write to create a new index file if one is missing.
+
+Not for source code (`redpen`) or a Claude Agent Skill's own `SKILL.md`
+(`skill-doctor`, in `dhk/skill-map`).
+
+Recommended install: keep this repo as the source of truth and symlink into
+`~/.claude/skills/review-document` rather than copying, since it's
+general-purpose (useful outside this repo) — e.g.
+`ln -s ~/Documents/dev/adventures-in-ai/skills/user/review-document ~/.claude/skills/review-document`.
 
 ## run-analytics
 
