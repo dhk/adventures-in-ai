@@ -14,18 +14,24 @@ pipeline experiments. Skills live in `skills/` (repo-level) and
 
 ## Skills in this repo
 
-| Skill | Path | Install |
-|---|---|---|
-| `run-analytics` | `skills/user/run-analytics/` | see INSTALL.md |
-| `redpen` | `skills/redpen/` | see INSTALL.md |
-| `git-push-handoff` | `skills/user/git-push-handoff/` | manual copy |
-| `review-document` | `skills/user/review-document/` | manual copy |
-| `multi-model-review` | `reading-with-ears/skills/user/multi-model-review/` | manual copy |
-| `personal-podcast` | `reading-with-ears/skills/user/personal-podcast/` | manual copy |
-| `reading-list-builder` | `reading-with-ears/skills/user/reading-list-builder/` | manual copy |
+Every skill installs the same way: put its directory into
+`~/.claude/skills/<name>/`. Claude Code picks it up automatically — no
+restart needed. Symlink from this repo rather than copying, so there's one
+source of truth and no drift when the skill is updated:
 
-Skills are installed by copying their `SKILL.md` to `~/.claude/skills/<name>/SKILL.md`.
-Claude Code picks them up automatically from that directory.
+```bash
+ln -s ~/Documents/dev/adventures-in-ai/<path> ~/.claude/skills/<name>
+```
+
+| Skill | Path | Notes |
+|---|---|---|
+| `run-analytics` | `skills/user/run-analytics/` | Has its own INSTALL.md with a curl one-shot (installs without cloning the repo) |
+| `redpen` | `skills/redpen/` | Has its own INSTALL.md with a curl one-shot; `--tickets`/`--pr` require GitHub MCP connected |
+| `git-push-handoff` | `skills/user/git-push-handoff/` | — |
+| `review-document` | `skills/user/review-document/` | Must include `reference/` — SKILL.md links to it, symlinking the whole directory (not just SKILL.md) covers this |
+| `multi-model-review` | `reading-with-ears/skills/user/multi-model-review/` | Requires Codex registered as an MCP server (`claude mcp add codex -- npx codex mcp-server`) |
+| `personal-podcast` | `reading-with-ears/skills/user/personal-podcast/` | — |
+| `reading-list-builder` | `reading-with-ears/skills/user/reading-list-builder/` | — |
 
 ## review-document (most recently added)
 
@@ -46,11 +52,6 @@ to survey a repo and Write to create a new index file if one is missing.
 
 Not for source code (`redpen`) or a Claude Agent Skill's own `SKILL.md`
 (`skill-doctor`, in `dhk/skill-map`).
-
-Recommended install: keep this repo as the source of truth and symlink into
-`~/.claude/skills/review-document` rather than copying, since it's
-general-purpose (useful outside this repo) — e.g.
-`ln -s ~/Documents/dev/adventures-in-ai/skills/user/review-document ~/.claude/skills/review-document`.
 
 ## run-analytics
 
