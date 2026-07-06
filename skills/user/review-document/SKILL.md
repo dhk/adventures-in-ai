@@ -124,8 +124,12 @@ directory (minor-to-major depending on size), broken internal links (minor).
 
 ### Step 4 — Confirm and apply
 
-Ask which to apply. Some doc-package fixes create a new file (an index)
-rather than edit an existing one — say so explicitly before doing it.
+Before asking, list every file this would touch, grouped by severity tier —
+and mark which are edits to an existing file vs. a new one (an index,
+typically). Then confirm per tier: all / critical+major only / none — same
+three-way choice as Mode A, but the user sees the full file list first, not
+just a count. A repo-wide batch is a bigger blast radius than Mode A's single
+document; one "yes" shouldn't hide how many files that covers.
 
 ## Output
 
