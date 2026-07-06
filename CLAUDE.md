@@ -23,20 +23,15 @@ source of truth and no drift when the skill is updated:
 ln -s ~/Documents/dev/adventures-in-ai/<path> ~/.claude/skills/<name>
 ```
 
-| Skill | Path | Status | Notes |
-|---|---|---|---|
-| `run-analytics` | `skills/user/run-analytics/` | Merged via PR #19 (`440f36e`) — the only skill here built on a feature branch; `claude/run-analytics-meta-skill-b2mum2` still exists post-merge | Has its own INSTALL.md with a curl one-shot |
-| `redpen` | `skills/redpen/` | On `main`, direct commit (no PR), last touched 2026-06-14 | Has its own INSTALL.md with a curl one-shot; `--tickets`/`--pr` require GitHub MCP connected |
-| `git-push-handoff` | `skills/user/git-push-handoff/` | On `main`, direct commit (no PR), last touched 2026-03-29 | — |
-| `review-document` | `skills/user/review-document/` | **Open — PR #31, not yet merged** | Must include `reference/` — SKILL.md links to it, symlinking the whole directory (not just SKILL.md) covers this |
-| `multi-model-review` | `reading-with-ears/skills/user/multi-model-review/` | On `main`, direct commit (no PR), last touched 2026-04-05 | Requires Codex registered as an MCP server (`claude mcp add codex -- npx codex mcp-server`) |
-| `personal-podcast` | `reading-with-ears/skills/user/personal-podcast/` | On `main`, direct commit (no PR), last touched 2026-04-08 | — |
-| `reading-list-builder` | `reading-with-ears/skills/user/reading-list-builder/` | On `main`, direct commit (no PR), last touched 2026-05-20 | — |
-
-Most of these were committed straight to `main` in ad-hoc sessions, not via a
-feature branch — `run-analytics` is the exception, and `review-document` is
-still mid-PR. "Last touched" is the most recent commit that changed the
-skill's `SKILL.md`, not necessarily when it was first added.
+| Skill | Path | Notes |
+|---|---|---|
+| `run-analytics` | `skills/user/run-analytics/` | Has its own INSTALL.md with a curl one-shot |
+| `redpen` | `skills/redpen/` | Has its own INSTALL.md with a curl one-shot; `--tickets`/`--pr` require GitHub MCP connected |
+| `git-push-handoff` | `skills/user/git-push-handoff/` | — |
+| `review-document` | `skills/user/review-document/` | Must include `reference/` — SKILL.md links to it, symlinking the whole directory (not just SKILL.md) covers this. Built via PR #31 if you want the backstory. |
+| `multi-model-review` | `reading-with-ears/skills/user/multi-model-review/` | Requires Codex registered as an MCP server (`claude mcp add codex -- npx codex mcp-server`) |
+| `personal-podcast` | `reading-with-ears/skills/user/personal-podcast/` | — |
+| `reading-list-builder` | `reading-with-ears/skills/user/reading-list-builder/` | — |
 
 ## review-document (most recently added)
 
