@@ -46,6 +46,16 @@ echo "=== $(date "+%Y-%m-%dT%H:%M:%S%z") rwe-catchup from=${FROM_DATE} to=${TO_D
 
 "${RWE_ROOT}/scripts/install-local.sh"
 
+if ! rwe_audit_claude_auth "${REPO_ROOT}"; then
+  echo "Aborting — fix Claude auth blockers above, then re-run."
+  echo "Run: bin/rwe-auth-check.sh --test-api --doctor"
+  exit 1
+fi
+
+if ! rwe_check_claude_oauth; then
+  exit 1
+fi
+
 STATE_DIR="${HOME}/.local/state/reading-with-ears"
 mkdir -p "${STATE_DIR}"
 
@@ -101,11 +111,7 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
     else
       echo "[${current}] Pipeline failed — sentinel not written, will retry on next catch-up run."
       echo "[${current}] MCP debug log: ${DEBUG_FILE}"
-      if [[ -f "${DEBUG_FILE}" ]]; then
-        echo "[${current}] --- last 40 lines of MCP debug log ---"
-        tail -40 "${DEBUG_FILE}"
-        echo "[${current}] --- end debug log excerpt ---"
-      fi
+      rwe_tail_debug_log "${DEBUG_FILE}" "[${current}] MCP debug log"
       failed=$((failed + 1))
     fi
   fi

@@ -149,6 +149,15 @@ fi
 if feature_enabled claude; then
 if have claude; then
   ok "claude CLI ($(claude --version 2>/dev/null | head -1 || echo present))"
+  auth_check="${REPO_ROOT}/bin/rwe-auth-check.sh"
+  if [[ -x "${auth_check}" ]]; then
+    if bash "${auth_check}" >/dev/null 2>&1; then
+      ok "Claude OAuth preflight (rwe-auth-check.sh) — no blockers"
+    else
+      bad "Claude auth blockers detected — run: bin/rwe-auth-check.sh --test-api --doctor"
+      note "Headless rwe-run / rwe-catchup need claude.ai OAuth, not ANTHROPIC_API_KEY in settings files."
+    fi
+  fi
 else
   bad "claude CLI not found (required for rwe-run.sh)"
   if [[ "${APPLY}" -eq 1 ]] && have npm; then
@@ -218,7 +227,7 @@ fi
 if feature_enabled permissions; then
 bin_dir="${REPO_ROOT}/bin"
 if [[ -d "${bin_dir}" ]]; then
-  for x in rwe-common.sh rwe-run.sh rwe-publish rwe-catchup.sh; do
+  for x in rwe-common.sh rwe-run.sh rwe-publish rwe-catchup.sh rwe-auth-check.sh; do
     [[ -f "${bin_dir}/${x}" ]] || continue
     if [[ ! -x "${bin_dir}/${x}" ]]; then
       warn "${bin_dir}/${x} is not executable — fixing chmod +x"
