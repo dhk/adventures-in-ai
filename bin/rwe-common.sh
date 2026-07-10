@@ -3,6 +3,75 @@
 
 # Absolute path to bin/ — set at source time so helpers work after callers cd elsewhere.
 _RWE_BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Append tool dirs as fallbacks for launchd/cron (minimal PATH). Never prepend
+# /opt/homebrew/bin — an old Homebrew `claude` there shadows a newer install
+# in ~/.local/bin that the user's interactive shell uses.
+rwe_ensure_path() {
+  local dir
+  # Prefer ~/.local/bin (native claude install) over entries already on PATH.
+  if [[ -d "${HOME}/.local/bin" ]]; then
+    case ":${PATH}:" in
+      *:"${HOME}/.local/bin":*) ;;
+      *) PATH="${HOME}/.local/bin:${PATH:-/usr/bin:/bin}" ;;
+    esac
+  fi
+  for dir in /opt/homebrew/bin /usr/local/bin; do
+    [[ -d "${dir}" ]] || continue
+    case ":${PATH}:" in
+      *:"${dir}":*) ;;
+      *) PATH="${PATH:+${PATH}:}${dir}" ;;
+    esac
+  done
+  export PATH
+}
+
+rwe_ensure_path
+
+# Resolve the newest claude on PATH (avoids stale Homebrew shadowing native install).
+# Override: export RWE_CLAUDE_BIN=/path/to/claude
+rwe_claude_bin() {
+  if [[ -n "${RWE_CLAUDE_BIN:-}" && -x "${RWE_CLAUDE_BIN}" ]]; then
+    echo "${RWE_CLAUDE_BIN}"
+    return 0
+  fi
+  rwe_ensure_path
+  python3 - <<'PY'
+import os, re, subprocess, sys
+
+def ver_tuple(s):
+    m = re.search(r"(\d+)\.(\d+)\.(\d+)", s or "")
+    return tuple(int(x) for x in m.groups()) if m else (0, 0, 0)
+
+path = os.environ.get("PATH", "")
+seen = set()
+best = None
+best_v = (0, 0, 0)
+for d in path.split(":"):
+    p = os.path.join(d, "claude")
+    if not os.path.isfile(p) or os.access(p, os.X_OK):
+        continue
+    rp = os.path.realpath(p)
+    if rp in seen:
+        continue
+    seen.add(rp)
+    try:
+        out = subprocess.run([rp, "--version"], capture_output=True, text=True, timeout=10)
+        vt = ver_tuple((out.stdout or "") + (out.stderr or ""))
+    except Exception:
+        vt = (0, 0, 0)
+    if vt > best_v:
+        best_v = vt
+        best = rp
+print(best or "claude")
+PY
+}
+
+rwe_log_claude_bin() {
+  local bin
+  bin="$(rwe_claude_bin)"
+  echo "Using claude: ${bin} ($("${bin}" --version 2>/dev/null | head -1 || echo unknown))"
+}
 # Resolve repo root (directory that contains reading-with-ears/).
 # Precedence: RWE_REPO → ~/.config/reading-with-ears/config.json repo_root
 # → caller lives in-repo at bin/ (parent is repo root).
@@ -63,6 +132,10 @@ rwe_check_claude_oauth() {
   fi
   local status_out
   status_out="$(env -u ANTHROPIC_API_KEY claude /status 2>&1 || true)"
+  if echo "${status_out}" | grep -qiE 'unknown skill'; then
+    # /status is not a valid command on all Claude Code versions (e.g. 2.1.87).
+    return 0
+  fi
   if echo "${status_out}" | grep -qiE 'not logged in|please run /login'; then
     echo "ERROR: Claude Code is not logged in."
     echo "  rwe-catchup / rwe-run scrub ANTHROPIC_API_KEY and use your claude.ai subscription."
@@ -90,4 +163,48 @@ rwe_tail_debug_log() {
   else
     echo "WARN: ${label} not found at ${debug_file}"
   fi
+}
+
+# Headless claude -p invocation shared by rwe-run / rwe-catchup / rwe-weekly-audio.
+# Gmail: claude.ai connectors (mcp__claude_ai_Gmail__*) may load in -p on recent
+# Claude Code versions; also try user-scoped HTTP gmail in mcp-headless.json.
+# Set RWE_STRICT_MCP=1 to exclude claude.ai connectors (legacy/debug only).
+rwe_claude_headless() {
+  local rwe_root="${1:?reading-with-ears root}"
+  shift
+  local strict=()
+  [[ "${RWE_STRICT_MCP:-0}" == "1" ]] && strict=(--strict-mcp-config)
+  export ENABLE_CLAUDEAI_MCP_SERVERS="${ENABLE_CLAUDEAI_MCP_SERVERS:-true}"
+  local claude_bin
+  claude_bin="$(rwe_claude_bin)"
+  env -u ANTHROPIC_API_KEY "${claude_bin}" -p \
+    --permission-mode bypassPermissions \
+    ${strict[@]+"${strict[@]}"} \
+    --mcp-config "${rwe_root}/automation/mcp-headless.json" \
+    --add-dir "${rwe_root}" \
+    "$@"
+}
+
+# Warn when Claude Code is below the version where claude.ai MCP in -p was restored.
+rwe_claude_version_warn() {
+  local bin
+  bin="$(rwe_claude_bin)"
+  if [[ ! -x "${bin}" ]] && ! command -v "${bin}" >/dev/null 2>&1; then
+    return 0
+  fi
+  local ver
+  ver="$("${bin}" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)"
+  [[ -z "${ver}" ]] && return 0
+  python3 - "${ver}" <<'PY'
+import sys
+parts = [int(x) for x in sys.argv[1].split(".")[:3]]
+while len(parts) < 3:
+    parts.append(0)
+if tuple(parts) < (2, 1, 180):
+    print(
+        f"WARN: Claude Code {sys.argv[1]} — Gmail in claude -p needs 2.1.180+ "
+        f"(you have {parts[0]}.{parts[1]}.{parts[2]}). Run: claude install",
+        file=sys.stderr,
+    )
+PY
 }

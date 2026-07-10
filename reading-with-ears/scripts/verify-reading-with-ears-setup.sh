@@ -227,7 +227,7 @@ fi
 if feature_enabled permissions; then
 bin_dir="${REPO_ROOT}/bin"
 if [[ -d "${bin_dir}" ]]; then
-  for x in rwe-common.sh rwe-run.sh rwe-publish rwe-catchup.sh rwe-auth-check.sh; do
+  for x in rwe-common.sh rwe-run.sh rwe-publish rwe-catchup.sh rwe-auth-check.sh rwe-connectivity-check.sh; do
     [[ -f "${bin_dir}/${x}" ]] || continue
     if [[ ! -x "${bin_dir}/${x}" ]]; then
       warn "${bin_dir}/${x} is not executable — fixing chmod +x"
@@ -251,17 +251,17 @@ if feature_enabled mcp; then
 if ! have claude; then
   warn "Claude CLI not on PATH — cannot check or register Gmail MCP (enable claude feature or install)."
 else
-  if claude mcp list 2>/dev/null | grep -qi 'gmail'; then
-    ok "Gmail MCP registered (claude mcp list)"
-  else
-    warn "Gmail MCP not listed — run: claude mcp add --transport http --scope user gmail https://gmail.mcp.claude.com/mcp"
-    if [[ "${APPLY}" -eq 1 ]]; then
-      if claude mcp add --transport http --scope user gmail https://gmail.mcp.claude.com/mcp 2>/dev/null; then
-        ok "Registered Gmail MCP (complete OAuth in an interactive claude session if prompted)."
-      else
-        note "claude mcp add failed or already configured under another name — run manually (install.md §3)."
-      fi
+  if claude mcp list 2>/dev/null | grep -qiE 'claude\.ai Gmail|gmailmcp\.googleapis'; then
+    if claude mcp list 2>/dev/null | grep -i 'Gmail' | grep -qi 'Connected'; then
+      ok "claude.ai Gmail connector connected"
+    else
+      bad "Gmail connector listed but not connected — complete OAuth in Settings → Connectors"
     fi
+  else
+    bad "claude.ai Gmail connector not found — enable Gmail in Claude Settings → Connectors (see install.md §3)"
+  fi
+  if claude mcp list 2>/dev/null | grep -E 'gmail\.mcp\.claude\.com' | grep -qi 'Failed'; then
+    warn "Legacy gmail.mcp.claude.com registration failed (deprecated) — run: claude mcp remove gmail"
   fi
 fi
 fi

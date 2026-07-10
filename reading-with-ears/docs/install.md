@@ -63,15 +63,53 @@ If you used the old names and paths:
 
 ## 3. MCP authentication
 
-Register the Gmail MCP at user scope so it works in non-interactive (`-p`) mode:
+**Gmail (read/search):** Enable the **claude.ai Gmail** connector — not `gmail-send`, not the
+deprecated `gmail.mcp.claude.com` HTTP endpoint (404 as of 2026).
+
+1. Open Claude Code or claude.ai → **Settings → Connectors**
+2. Connect **Gmail** (`https://gmailmcp.googleapis.com/mcp/v1`) and complete OAuth
+3. Verify: `claude mcp list` should show `claude.ai Gmail: … ✓ Connected`
+4. Remove any broken legacy registration if present:
+   ```bash
+   claude mcp remove gmail   # only if it points at gmail.mcp.claude.com and shows Failed
+   ```
+
+Headless runs (`rwe-catchup`, `rwe-run`) load **notebooklm + Gmail HTTP** from
+`reading-with-ears/automation/mcp-headless.json` and also honor **claude.ai Gmail**
+connectors when `ENABLE_CLAUDEAI_MCP_SERVERS=true` (set automatically by the scripts).
+
+**Claude Code version:** Gmail tools in `claude -p` require **2.1.180+**. On older versions
+(e.g. 2.1.87), `claude mcp list` shows Gmail as Connected but headless runs see zero tools.
+Upgrade:
 
 ```bash
-claude mcp add --transport http --scope user gmail https://gmail.mcp.claude.com/mcp
+claude install
+claude --version   # should be 2.1.180 or newer
 ```
 
-Then open an interactive Claude Code session and authorize each connector via OAuth (browser flow, one-time per connector).
+Register the Google Gmail MCP endpoint (replaces deprecated `gmail.mcp.claude.com`):
 
-Authenticate the `nlm` CLI:
+```bash
+claude mcp remove gmail 2>/dev/null || true
+claude mcp add --transport http --scope user gmail https://gmailmcp.googleapis.com/mcp/v1
+```
+
+**Headless auth:** claude.ai Connectors alone may not expose Gmail in `claude -p`
+(other connectors like Calendar may load without Gmail). Complete user-scoped login:
+
+```bash
+claude mcp login gmail
+```
+
+Or interactively: `claude` → `/mcp` → select **gmail** → **Authenticate**.
+
+Verify headless sees Gmail:
+
+```bash
+bin/rwe-connectivity-check.sh --live --verbose
+```
+
+**NotebookLM CLI:**
 
 ```bash
 nlm login
@@ -96,6 +134,15 @@ lines in `~/logs/reading-with-ears/catchup-debug-*.log`).
 Headless runs also require an active **claude.ai OAuth session** (`claude /login`). The
 scripts scrub your shell API key with `env -u`; without OAuth you will see
 `Not logged in · Please run /login`.
+
+**Full connectivity test** (toolchain, auth, MCP registry, headless Gmail probes):
+
+```bash
+bin/rwe-connectivity-check.sh --live --verbose
+# Artifacts: ~/logs/reading-with-ears/connectivity-<timestamp>/
+```
+
+Use `--quick` to skip slow `claude -p` probes; `--deep` adds `claude doctor`.
 
 ---
 

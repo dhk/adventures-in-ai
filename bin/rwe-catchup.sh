@@ -15,7 +15,7 @@ REPO_ROOT="$(rwe_repo_root "${HERE}")"
 RWE_ROOT="${REPO_ROOT}/reading-with-ears"
 
 # Do not source ~/.zshrc — see note in rwe-run.sh.
-export PATH="/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
+# PATH: rwe-common.sh appends homebrew/local fallbacks; does not prepend them.
 
 SKILL_VERSION_REQUIRED="3.0"
 SKILL_FILE="${RWE_ROOT}/skills/user/reading-list-builder/SKILL.md"
@@ -55,6 +55,8 @@ fi
 if ! rwe_check_claude_oauth; then
   exit 1
 fi
+rwe_log_claude_bin
+rwe_claude_version_warn 2>&1 | while read -r line; do [[ -n "${line}" ]] && echo "${line}"; done
 
 STATE_DIR="${HOME}/.local/state/reading-with-ears"
 mkdir -p "${STATE_DIR}"
@@ -98,11 +100,7 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
     # case the caller's shell has it set (e.g. a prior rwe-weekly run this session),
     # which otherwise makes claude refuse to start with an auth-conflict error.
     # Use 'if' so a single day's failure doesn't abort the whole catch-up run.
-    if echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
-        --permission-mode bypassPermissions \
-        --strict-mcp-config \
-        --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
-        --add-dir "${RWE_ROOT}" \
+    if echo "${CLAUDE_PROMPT}" | rwe_claude_headless "${RWE_ROOT}" \
         --debug \
         --debug-file "${DEBUG_FILE}"; then
       touch "${SENTINEL}"
@@ -110,6 +108,7 @@ while [[ "$current" < "$TO_DATE" || "$current" == "$TO_DATE" ]]; do
       processed=$((processed + 1))
     else
       echo "[${current}] Pipeline failed — sentinel not written, will retry on next catch-up run."
+      echo "[${current}] Diagnose: bin/rwe-connectivity-check.sh --live --verbose --date ${current}"
       echo "[${current}] MCP debug log: ${DEBUG_FILE}"
       rwe_tail_debug_log "${DEBUG_FILE}" "[${current}] MCP debug log"
       failed=$((failed + 1))

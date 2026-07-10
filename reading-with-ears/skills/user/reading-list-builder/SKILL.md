@@ -77,13 +77,26 @@ If no feeds are enabled, report and stop.
 
 If no date is given, use today. For a range, use the earliest day as the start.
 
-Search each enabled feed's labels individually (one call per label):
+Search each enabled feed's labels individually (one call per label).
+
+**Gmail tool names vary by MCP source** — use ToolSearch if needed, then call whichever
+search tool is available:
+
+| Source | Typical search tool | Typical read tool |
+|--------|--------------------|--------------------|
+| claude.ai Gmail connector | `search_threads` | `get_thread` |
+| Legacy / local Gmail MCP | `gmail_search_messages` | `gmail_read_message` |
+| Some local MCP packages | `gmail_list_messages` | `gmail_read_message` |
+
+Query syntax is Gmail search (labels, `after:`, `before:`) regardless of tool name.
+
+Single-day catch-up example (adjust tool name to what ToolSearch finds):
 
 ```
-gmail_search_messages(q="label:<gmail_label> after:YYYY/MM/DD")
+search_threads(query="label:<gmail_label> after:YYYY/MM/DD before:YYYY/MM/DD+1")
 ```
 
-Single past date (catch-up): add a `before:` bound to scope exactly that day:
+Or legacy form:
 
 ```
 gmail_search_messages(q="label:<gmail_label> after:YYYY/MM/DD before:YYYY/MM/DD+1")
@@ -96,11 +109,9 @@ If zero emails found across all labels, tell user and stop.
 
 ## STEP 2: Fetch Full Email Content
 
-For each email returned, fetch the full message:
-
-```
-gmail_read_message(messageId=<id>)
-```
+For each email returned, fetch the full message using the read tool that matches
+your Gmail MCP (`get_thread`, `gmail_read_message`, etc.). Pass the message or
+thread ID from the search results.
 
 Fetch ALL emails before doing anything else. Keep tool calls front-loaded.
 Record the received date for each email (from message headers).

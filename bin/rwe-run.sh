@@ -16,7 +16,7 @@ RWE_ROOT="${REPO_ROOT}/reading-with-ears"
 # $ZSH_VERSION, zsh-only syntax) is not valid here. For `claude` / `python3` / `nlm` on
 # PATH in launchd or cron, use ~/.profile, ~/.bash_profile, launchd EnvironmentVariables,
 # or conda `conda init bash` — not only ~/.zshrc.
-export PATH="/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
+# PATH: rwe-common.sh appends homebrew/local fallbacks; does not prepend them.
 
 if [[ "${1:-}" == "--catch-up" ]]; then
   shift
@@ -54,6 +54,7 @@ fi
 if ! rwe_check_claude_oauth; then
   exit 1
 fi
+rwe_claude_version_warn 2>&1 | while read -r line; do [[ -n "${line}" ]] && echo "${line}"; done
 
 STATE_DIR="${HOME}/.local/state/reading-with-ears"
 mkdir -p "${STATE_DIR}"
@@ -84,11 +85,7 @@ echo "ANTHROPIC_API_KEY in shell (first 20 chars): ${ANTHROPIC_API_KEY:0:20}${AN
 # shell has that var set (e.g. for a prior rwe-weekly/week_that_was.py run in the
 # same terminal), claude refuses to start with an auth-conflict error — scrub it
 # for this invocation regardless of what the parent shell has exported.
-if ! echo "${CLAUDE_PROMPT}" | env -u ANTHROPIC_API_KEY claude -p \
-  --permission-mode bypassPermissions \
-  --strict-mcp-config \
-  --mcp-config "${RWE_ROOT}/automation/mcp-headless.json" \
-  --add-dir "${RWE_ROOT}" \
+if ! echo "${CLAUDE_PROMPT}" | rwe_claude_headless "${RWE_ROOT}" \
   --debug \
   --debug-file "${DEBUG_FILE}"; then
   echo "ERROR: daily flow failed. MCP debug log: ${DEBUG_FILE}"

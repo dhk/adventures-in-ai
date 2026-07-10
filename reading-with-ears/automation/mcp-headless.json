@@ -2,7 +2,7 @@
   "mcpServers": {
     "gmail": {
       "type": "http",
-      "url": "https://gmail.mcp.claude.com/mcp"
+      "url": "https://gmailmcp.googleapis.com/mcp/v1"
     },
     "notebooklm": {
       "type": "stdio",
