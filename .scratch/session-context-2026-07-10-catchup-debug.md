@@ -1,5 +1,8 @@
 ## Context handoff — reading-list-builder v3.0 catch-up (2026-07-10)
 
+**Saved:** 2026-07-10 16:29 UTC via `/save-context`
+**Session status:** Paused at headless Gmail blocker; laptop steps below unblock catch-up.
+
 **Goal:** Backfill daily flow for week of 2026-06-22 via
 `bin/rwe-catchup.sh --from 2026-06-22 --to 2026-07-01` on branch
 `claude/reading-list-pipeline-ahpsE` (PR #25). First live test of weekly-notebook
