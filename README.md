@@ -1,6 +1,12 @@
-# reading-with-ears
+# adventures-in-ai
 
-Personal AI workflows and experiments — notably [**Reading with Ears**](reading-with-ears/README.md), a pipeline that turns newsletter reading into daily podcast episodes (Gmail → NotebookLM → Element.fm).
+Personal AI workflows and experiments — Claude Code skills, analytics
+tooling, and various demos.
+
+The newsletter-to-podcast pipeline (Gmail → NotebookLM → Element.fm) that
+used to live here moved to its own repo:
+[**dhk/reading-with-ears**](https://github.com/dhk/reading-with-ears)
+(extracted 2026-07-10, full git history preserved).
 
 Earlier experiments and demos also live here:
 
@@ -19,5 +25,3 @@ Earlier experiments and demos also live here:
     * links to code
     * rationale for using AI
     * discoveries & observations along the way
-
-**GitHub:** after renaming the remote repository, use `https://github.com/dhk/reading-with-ears` (update your `git remote` if needed).
