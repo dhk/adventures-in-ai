@@ -1,0 +1,14 @@
+{
+  "show_name": "The Week That Was",
+  "elementfm_show_id": null,
+  "max_cost_usd": 5.0,
+  "section_model": "claude-sonnet-4-6",
+  "taxonomy": [
+    { "key": "ai_tech",  "label": "🤖 AI & Technology",    "feeds": ["professional", "think", "news"] },
+    { "key": "economy",  "label": "💰 Economy & Markets",   "feeds": ["news", "professional"] },
+    { "key": "politics", "label": "🏛️ Politics & Power",    "feeds": ["news", "think"] },
+    { "key": "health",   "label": "🧬 Health & Science",    "feeds": ["vital-signs", "news"] },
+    { "key": "ideas",    "label": "💡 Ideas & Culture",     "feeds": ["think", "news"] },
+    { "key": "business", "label": "🏢 Business & Strategy", "feeds": ["professional", "think"] }
+  ]
+}

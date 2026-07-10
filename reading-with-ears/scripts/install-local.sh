@@ -82,14 +82,14 @@ shopt -u nullglob
 if [[ "${INSTALL_BIN}" -eq 1 ]]; then
   mkdir -p "${HOME}/bin"
   bin_abs="$(cd "${REPO_ROOT}/bin" && pwd)"
-  for f in rwe-common.sh rwe-run.sh rwe-publish; do
+  for f in rwe-common.sh rwe-run.sh rwe-publish rwe-weekly rwe-weekly-audio; do
     if [[ "${SYNC_MODE}" == "symlink" ]]; then
       ln -sf "${bin_abs}/${f}" "${HOME}/bin/${f}"
     else
       cp -f "${REPO_ROOT}/bin/${f}" "${HOME}/bin/${f}"
     fi
   done
-  chmod +x "${HOME}/bin/rwe-run.sh" "${HOME}/bin/rwe-publish"
+  chmod +x "${HOME}/bin/rwe-run.sh" "${HOME}/bin/rwe-publish" "${HOME}/bin/rwe-weekly" "${HOME}/bin/rwe-weekly-audio"
 fi
 
 echo "reading-with-ears: synced (${SYNC_MODE}) → ${DEST_SCRIPTS} (+ skill)"

@@ -42,6 +42,7 @@ from podcast_config import (
     parse_date_and_slug_from_stem,
     parse_episode_title_from_filename,
     parse_reading_list_notebook_title,
+    parse_reading_list_weekly_notebook_title,
     slug_for_category_title,
     resolve_audio_dir,
     resolve_audio_format,
@@ -216,6 +217,29 @@ def wait_for_notebooks_for_date(
 
     while time.monotonic() < deadline:
         notebooks = find_notebooks_for_date(target_date)
+        if notebooks:
+            return notebooks
+        time.sleep(poll_s)
+
+    return {}
+
+
+def wait_for_notebooks_for_week(
+    *,
+    target_week: str,
+    max_wait_minutes: float,
+    poll_interval_seconds: float,
+) -> dict[str, str]:
+    """
+    Wait for reading-list notebooks for target ISO week to appear.
+    """
+    header("Waiting for notebooks to appear")
+    wait_s = max(0.0, max_wait_minutes * 60.0)
+    poll_s = max(1.0, poll_interval_seconds)
+    deadline = time.monotonic() + wait_s
+
+    while time.monotonic() < deadline:
+        notebooks = find_notebooks_for_week(target_week)
         if notebooks:
             return notebooks
         time.sleep(poll_s)
@@ -466,6 +490,70 @@ def find_notebooks_for_date(target_date: str) -> dict:
     if not found:
         warn(f"No reading-list notebooks found for {target_date}")
         warn("Has the reading-with-ears skill been run for this date?")
+
+    return found
+
+
+def find_notebooks_for_week(target_week: str) -> dict:
+    """
+    Scan NotebookLM for reading-list notebooks matching the given ISO week
+    (e.g. "2026-W26") — the weekly-accumulating notebooks written by
+    reading-list-builder v3.0+ (see docs/weekly-cadence-migration.md).
+    Returns {slug: notebook_id}.
+    """
+    header(f"Finding notebooks for week {target_week}")
+
+    result = run_with_retries(
+        [NLM_CLI, "notebook", "list", "--json"],
+        timeout_s=45,
+        retries=2,
+    )
+    if result.returncode != 0:
+        fail(f"nlm notebook list failed: {result.stderr.strip() or result.stdout.strip()}")
+        sys.exit(1)
+
+    try:
+        notebooks = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        fail(f"Could not parse nlm output: {result.stdout[:200]}")
+        sys.exit(1)
+
+    # Handle both list and {"notebooks": [...]} formats
+    if isinstance(notebooks, dict):
+        notebooks = notebooks.get("notebooks", [])
+
+    prefix = f"reading-list-{target_week}"
+    best: dict[str, tuple[int, str]] = {}  # slug -> (nn, notebook_id)
+    best_titles: dict[str, str] = {}
+
+    for nb in notebooks:
+        title = nb.get("title", "")
+        nb_id = nb.get("id", "")
+        if not isinstance(title, str) or not title.startswith(prefix):
+            continue
+        parsed = parse_reading_list_weekly_notebook_title(title)
+        if not parsed:
+            continue
+        wk, nn, category_title = parsed
+        if wk != target_week:
+            continue
+
+        slug = slug_for_category_title(category_title)
+        if slug:
+            prev = best.get(slug)
+            if prev is None or nn > prev[0]:
+                best[slug] = (nn, nb_id)
+                best_titles[slug] = title
+        else:
+            warn(f"Unrecognized reading-list category (no slug): {title!r}")
+
+    found = {slug: nb_id for slug, (_nn, nb_id) in best.items()}
+    for slug, nb_id in found.items():
+        ok(f"{slug:15s} → {nb_id}  ({best_titles.get(slug,'')})")
+
+    if not found:
+        warn(f"No reading-list notebooks found for week {target_week}")
+        warn("Has the weekly audio flow's notebook lookup (STEP W1) run for this week?")
 
     return found
 
@@ -799,7 +887,15 @@ Examples:
         """
     )
     parser.add_argument("--date", default=date.today().strftime("%Y-%m-%d"),
-                        help="Date to process (YYYY-MM-DD, default: today)")
+                        help="Date to process (YYYY-MM-DD, default: today). Controls the "
+                        "downloaded audio filename/manifest date; see --notebook-week for "
+                        "weekly-accumulating notebook lookup.")
+    parser.add_argument("--notebook-week", default=None,
+                        help="ISO week (YYYY-Www) to look up reading-list notebooks by, "
+                        "instead of --date. Use for the weekly audio flow (reading-list-builder "
+                        "v3.0+, see docs/weekly-cadence-migration.md) — the audio file is still "
+                        "named/dated by --date (the day it's actually published), only notebook "
+                        "discovery uses the week.")
     parser.add_argument("--show-status", action="store_true",
                         help="Show pipeline status for today and the last completed run, then exit")
     parser.add_argument("--download-only", action="store_true",
@@ -922,6 +1018,15 @@ Examples:
     if not args.dry_run:
         if args.upload_only:
             notebooks = {}  # audio files already on disk; no need to query nlm
+        elif args.notebook_week:
+            if args.wait_for_studio_status:
+                notebooks = wait_for_notebooks_for_week(
+                    target_week=args.notebook_week,
+                    max_wait_minutes=args.max_wait_minutes,
+                    poll_interval_seconds=args.poll_interval_seconds,
+                )
+            else:
+                notebooks = find_notebooks_for_week(args.notebook_week)
         elif args.wait_for_studio_status:
             notebooks = wait_for_notebooks_for_date(
                 target_date=target_date,
