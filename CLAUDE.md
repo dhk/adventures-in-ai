@@ -85,6 +85,16 @@ mkdir -p ~/.claude/skills/run-analytics && \
     -o ~/.claude/skills/run-analytics/SKILL.md
 ```
 
+## repo-template
+
+`templates/repo-template/` — starting point for new personal repos, distilled
+from patterns already working across `work-ledger`, `familiar-places`,
+`fossil`, `crucible`, `skill-map`: an honest-status README, a CLAUDE.md with
+explicit workflow rules, a living `HANDOFF.md` for session continuity (vs.
+frozen `docs/snapshots/` for permanent design records), and a gitignored
+`.scratch/` for ephemera. See `templates/repo-template/README.md` for the
+full rationale and how to use it.
+
 ## reading-with-ears pipeline
 
 Lives in `reading-with-ears/`. Pulls newsletter emails via Gmail MCP →
