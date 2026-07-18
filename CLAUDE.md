@@ -92,6 +92,43 @@ NotebookLM notebooks → audio overview → Element.fm podcast. Config in
 `reading-with-ears/config/feeds.json`. Data store in
 `dhkondata/reading-db/`.
 
+## work-ledger usage tracking
+
+[`dhk/work-ledger`](https://github.com/dhk/work-ledger) watches Claude Code
+session transcripts (`~/.claude/projects/*/*.jsonl`) for cost/token usage.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dhk/work-ledger/main/scripts/install.sh | bash
+```
+
+- `work-ledger --once` — snapshot of the most recently active session
+- `work-ledger chapters --all` — cost rollup across every session found
+- `work-ledger export --out <file>.json` — anonymized aggregate export
+  (totals + chapter-category rollups only, no chapter titles/transcript
+  paths/session IDs)
+- `chapters` and `export` (chaptering) and `limits` call the Anthropic API
+  directly, separate from the Claude Code session's own auth — set
+  `ANTHROPIC_API_KEY` first, or `ant auth login` if the Anthropic CLI is
+  installed. Not preset in claude.ai remote environments; export it for the
+  session or add it as a persistent env var in the environment's settings.
+- In a claude.ai remote/cloud environment, `~/.claude/projects/` typically
+  holds only the current session's transcript (fresh container each time),
+  so `--all`/`chapters --all` mostly reduces to one session there.
+
+### Cross-session ledger (Google Drive)
+
+Each session/container is ephemeral with no shared filesystem, so
+`work-ledger export` output is collected in a shared Drive folder rather
+than a local file:
+
+- Folder: [Claude Session Ledger](https://drive.google.com/drive/folders/18FaRSPtdLn3SMbJvtUNQvFoee-RGRXmx)
+- Convention: one JSON file per session, named `YYYY-MM-DD-<short-topic>.json`
+- The Drive MCP tools can create files but not edit one in place, hence
+  one-file-per-session instead of a single appended log — assemble/chart
+  across sessions by importing the whole folder (e.g. into a Sheet)
+- The folder's own `README.md` documents this convention for anyone
+  landing there cold
+
 ## MCP servers connected in typical sessions
 
 - Gmail (`mcp__Gmail__*`)
