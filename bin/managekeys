@@ -206,6 +206,112 @@ export_keys() {
   done
 }
 
+# PROPOSAL: minimal per-provider connectivity probes for `managekeys test`.
+#
+# Deliberately covers only a couple of providers as a starting point — add a
+# case branch per provider as needed. Each branch must:
+#   - accept the key value as a shell variable, never as a curl CLI arg
+#     (CLI args are visible to any local user via `ps`)
+#   - pass headers/body to curl via `-K -` (config read from stdin) so the
+#     key never appears in argv or shell history
+#   - discard the response body and report only an HTTP status code, so nothing
+#     from the response (which could itself echo back header values) is ever
+#     printed
+#
+# Exit codes: 0 = probe succeeded, 1 = provider rejected the key,
+# 2 = network/transport error, 3 = no probe defined for this key name.
+probe_provider() {
+  local key_name="$1"
+  local key_value="$2"
+  local http_status
+
+  case "$key_name" in
+    PERPLEXITY_API_KEY)
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          -X POST 'https://api.perplexity.ai/search' \
+          -K - <<PROBE
+header = "Authorization: Bearer ${key_value}"
+header = "Content-Type: application/json"
+data = "{\"query\": \"managekeys connectivity probe\", \"max_results\": 1, \"max_tokens_per_page\": 32}"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
+    OPENAI_API_KEY)
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          'https://api.openai.com/v1/models' \
+          -K - <<PROBE
+header = "Authorization: Bearer ${key_value}"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
+    *)
+      return 3
+      ;;
+  esac
+}
+
+test_key() {
+  local key_name="$1"
+  local key_value
+  local probe_status=0
+
+  if ! key_value="$(read_key "$key_name")"; then
+    printf "%-32s %s\n" "$key_name" "FAILED (not found in Keychain)"
+    return 1
+  fi
+
+  probe_provider "$key_name" "$key_value" || probe_status=$?
+  unset key_value
+
+  case "$probe_status" in
+    0) printf "%-32s %s\n" "$key_name" "OK" ;;
+    1) printf "%-32s %s\n" "$key_name" "FAILED (rejected by provider)" ;;
+    2) printf "%-32s %s\n" "$key_name" "FAILED (network error)" ;;
+    3) printf "%-32s %s\n" "$key_name" "SKIPPED (no probe defined)" ;;
+  esac
+
+  return "$probe_status"
+}
+
+test_keys() {
+  local -a key_names
+  local key_name
+  local overall_status=0
+
+  if (( $# > 0 )); then
+    key_names=("$@")
+  else
+    if [[ ! -s "$INDEX_FILE" ]]; then
+      print -- "No indexed keys found."
+      return 0
+    fi
+    key_names=("${(@f)$(<"$INDEX_FILE")}")
+  fi
+
+  printf "%-32s %s\n" "KEY" "RESULT"
+  printf "%-32s %s\n" "--------------------------------" "-------------"
+
+  for key_name in "${key_names[@]}"; do
+    [[ -z "$key_name" ]] && continue
+
+    validate_key_name "$key_name"
+
+    local key_status=0
+    test_key "$key_name" || key_status=$?
+
+    # A skip (no probe defined for this provider) isn't a failure.
+    if [[ "$key_status" == "1" || "$key_status" == "2" ]]; then
+      overall_status=1
+    fi
+  done
+
+  return "$overall_status"
+}
+
 show_help() {
   cat <<'EOF'
 Usage:
@@ -215,6 +321,7 @@ Usage:
   managekeys delete KEY_NAME
   managekeys track KEY_NAME
   managekeys export [KEY_NAME ...]
+  managekeys test [KEY_NAME ...]
   managekeys help
 
 Commands:
@@ -224,6 +331,10 @@ Commands:
   delete    Delete a key from Keychain and the local index.
   track     Add an existing Keychain entry to the local index.
   export    Print zsh export statements for indexed or named keys.
+  test      Probe a live API with each key to check it still works.
+            Never prints key values. PROPOSAL: only a couple of
+            providers have a probe defined so far (see probe_provider
+            in the script) — extend the case statement to cover more.
 
 Examples:
   managekeys save OPENAI_API_KEY
@@ -234,6 +345,8 @@ Examples:
   managekeys track OPENAI_API_KEY
   eval "$(managekeys export)"
   eval "$(managekeys export OPENAI_API_KEY ANTHROPIC_API_KEY)"
+  managekeys test
+  managekeys test PERPLEXITY_API_KEY
 EOF
 }
 
@@ -261,6 +374,9 @@ main() {
       ;;
     export)
       export_keys "$@"
+      ;;
+    test)
+      test_keys "$@"
       ;;
     help|-h|--help)
       show_help
