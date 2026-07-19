@@ -1,0 +1,454 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+readonly SERVICE_PREFIX="development-api-keys"
+readonly ACCOUNT_NAME="${USER}"
+readonly INDEX_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/managekeys"
+readonly INDEX_FILE="${INDEX_DIR}/keys"
+
+initialize() {
+  mkdir -p "$INDEX_DIR"
+  chmod 700 "$INDEX_DIR"
+
+  if [[ ! -f "$INDEX_FILE" ]]; then
+    touch "$INDEX_FILE"
+    chmod 600 "$INDEX_FILE"
+  fi
+}
+
+validate_key_name() {
+  local key_name="$1"
+
+  if [[ ! "$key_name" =~ '^[A-Za-z_][A-Za-z0-9_]*$' ]]; then
+    print -u2 -- "Invalid key name: $key_name"
+    print -u2 -- "Use shell-variable names such as OPENAI_API_KEY."
+    return 1
+  fi
+}
+
+keychain_service() {
+  local key_name="$1"
+  print -r -- "${SERVICE_PREFIX}.${key_name}"
+}
+
+index_key() {
+  local key_name="$1"
+
+  if ! grep -Fxq -- "$key_name" "$INDEX_FILE"; then
+    print -r -- "$key_name" >> "$INDEX_FILE"
+  fi
+}
+
+unindex_key() {
+  local key_name="$1"
+  local temporary_file
+
+  temporary_file="$(mktemp "${INDEX_FILE}.XXXXXX")"
+
+  grep -Fxv -- "$key_name" "$INDEX_FILE" > "$temporary_file" || true
+  mv "$temporary_file" "$INDEX_FILE"
+  chmod 600 "$INDEX_FILE"
+}
+
+read_key() {
+  local key_name="$1"
+
+  security find-generic-password \
+    -a "$ACCOUNT_NAME" \
+    -s "$(keychain_service "$key_name")" \
+    -w 2>/dev/null
+}
+
+save_key() {
+  local key_name="${1:-}"
+  local key_value
+
+  [[ -n "$key_name" ]] || {
+    print -u2 -- "Usage: managekeys save KEY_NAME"
+    return 1
+  }
+
+  validate_key_name "$key_name"
+
+  read -s "?Enter value for ${key_name}: " key_value
+  print
+
+  if [[ -z "$key_value" ]]; then
+    print -u2 -- "No value entered. Nothing was saved."
+    return 1
+  fi
+
+  security add-generic-password \
+    -a "$ACCOUNT_NAME" \
+    -s "$(keychain_service "$key_name")" \
+    -w "$key_value" \
+    -U >/dev/null
+
+  index_key "$key_name"
+
+  print -- "Saved ${key_name}."
+}
+
+list_keys() {
+  local names_only=0
+  local preview_chars="6"
+  local key_name
+  local key_value
+  local preview
+
+  case "${1:-}" in
+    --names-only)
+      names_only=1
+      ;;
+    "")
+      ;;
+    *)
+      preview_chars="$1"
+      ;;
+  esac
+
+  if (( ! names_only )) && { [[ ! "$preview_chars" =~ '^[0-9]+$' ]] || (( preview_chars < 1 )); }; then
+    print -u2 -- "Preview length must be a positive integer."
+    return 1
+  fi
+
+  if [[ ! -s "$INDEX_FILE" ]]; then
+    print -- "No indexed keys found."
+    return 0
+  fi
+
+  if (( names_only )); then
+    # Names only, straight from the index — no Keychain lookups at all.
+    while IFS= read -r key_name; do
+      [[ -z "$key_name" ]] && continue
+      print -r -- "$key_name"
+    done < "$INDEX_FILE"
+    return 0
+  fi
+
+  printf "%-32s %s\n" "KEY" "VALUE PREVIEW"
+  printf "%-32s %s\n" "--------------------------------" "-------------"
+
+  while IFS= read -r key_name; do
+    [[ -z "$key_name" ]] && continue
+
+    if key_value="$(read_key "$key_name")"; then
+      preview="${key_value[1,$preview_chars]}"
+
+      if (( ${#key_value} > preview_chars )); then
+        preview="${preview}…"
+      fi
+
+      printf "%-32s %s\n" "$key_name" "$preview"
+    else
+      printf "%-32s %s\n" "$key_name" "<missing>"
+    fi
+  done < "$INDEX_FILE"
+}
+
+get_key() {
+  local key_name="${1:-}"
+
+  [[ -n "$key_name" ]] || {
+    print -u2 -- "Usage: managekeys get KEY_NAME"
+    return 1
+  }
+
+  validate_key_name "$key_name"
+
+  if ! read_key "$key_name"; then
+    print -u2 -- "Key not found: $key_name"
+    return 1
+  fi
+}
+
+delete_key() {
+  local key_name="${1:-}"
+
+  [[ -n "$key_name" ]] || {
+    print -u2 -- "Usage: managekeys delete KEY_NAME"
+    return 1
+  }
+
+  validate_key_name "$key_name"
+
+  if security delete-generic-password \
+    -a "$ACCOUNT_NAME" \
+    -s "$(keychain_service "$key_name")" >/dev/null 2>&1; then
+    unindex_key "$key_name"
+    print -- "Deleted ${key_name}."
+  else
+    print -u2 -- "Key not found: $key_name"
+    return 1
+  fi
+}
+
+track_key() {
+  local key_name="${1:-}"
+
+  [[ -n "$key_name" ]] || {
+    print -u2 -- "Usage: managekeys track KEY_NAME"
+    return 1
+  }
+
+  validate_key_name "$key_name"
+
+  if read_key "$key_name" >/dev/null; then
+    index_key "$key_name"
+    print -- "Added ${key_name} to the index."
+  else
+    print -u2 -- "Key not found in Keychain: $key_name"
+    return 1
+  fi
+}
+
+export_keys() {
+  local -a key_names
+  local key_name
+  local key_value
+
+  if (( $# > 0 )); then
+    key_names=("$@")
+  else
+    key_names=("${(@f)$(<"$INDEX_FILE")}")
+  fi
+
+  for key_name in "${key_names[@]}"; do
+    [[ -z "$key_name" ]] && continue
+
+    validate_key_name "$key_name"
+
+    if key_value="$(read_key "$key_name")"; then
+      printf 'export %s=%s\n' "$key_name" "${(q)key_value}"
+    else
+      print -u2 -- "Key not found: $key_name"
+    fi
+  done
+}
+
+# PROPOSAL: minimal per-provider connectivity probes for `managekeys test`.
+#
+# Deliberately covers only a couple of providers as a starting point — add a
+# case branch per provider as needed. Each branch must:
+#   - accept the key value as a shell variable, never as a curl CLI arg
+#     (CLI args are visible to any local user via `ps`)
+#   - pass headers/body to curl via `-K -` (config read from stdin) so the
+#     key never appears in argv or shell history
+#   - discard the response body and report only an HTTP status code, so nothing
+#     from the response (which could itself echo back header values) is ever
+#     printed
+#
+# Exit codes: 0 = probe succeeded, 1 = provider rejected the key,
+# 2 = network/transport error, 3 = no probe defined for this key name.
+probe_provider() {
+  local key_name="$1"
+  local key_value="$2"
+  local http_status
+
+  case "$key_name" in
+    PERPLEXITY_API_KEY)
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          -X POST 'https://api.perplexity.ai/search' \
+          -K - <<PROBE
+header = "Authorization: Bearer ${key_value}"
+header = "Content-Type: application/json"
+data = "{\"query\": \"managekeys connectivity probe\", \"max_results\": 1, \"max_tokens_per_page\": 32}"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
+    OPENAI_API_KEY)
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          'https://api.openai.com/v1/models' \
+          -K - <<PROBE
+header = "Authorization: Bearer ${key_value}"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
+    VOYAGE_API_KEY)
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          -X POST 'https://api.voyageai.com/v1/embeddings' \
+          -K - <<PROBE
+header = "Authorization: Bearer ${key_value}"
+header = "Content-Type: application/json"
+data = "{\"input\": [\"managekeys connectivity probe\"], \"model\": \"voyage-3-lite\"}"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
+    GITHUB_TOKEN)
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          'https://api.github.com/user' \
+          -K - <<PROBE
+header = "Authorization: Bearer ${key_value}"
+header = "Accept: application/vnd.github+json"
+header = "X-GitHub-Api-Version: 2022-11-28"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
+    CLAUDE_ELEMENT_FM_KEY)
+      # Workspace UUID matches reading-with-ears/config/feeds.json — this
+      # workspace is fixed per element.fm account, not itself a secret.
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          'https://app.element.fm/api/workspaces/b08a0951-94a4-441d-a446-81cc7950749c/shows' \
+          -K - <<PROBE
+header = "Authorization: Token ${key_value}"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
+    *)
+      return 3
+      ;;
+  esac
+}
+
+test_key() {
+  local key_name="$1"
+  local key_value
+  local probe_status=0
+
+  if ! key_value="$(read_key "$key_name")"; then
+    printf "%-32s %s\n" "$key_name" "FAILED (not found in Keychain)"
+    return 1
+  fi
+
+  probe_provider "$key_name" "$key_value" || probe_status=$?
+  unset key_value
+
+  case "$probe_status" in
+    0) printf "%-32s %s\n" "$key_name" "OK" ;;
+    1) printf "%-32s %s\n" "$key_name" "FAILED (rejected by provider)" ;;
+    2) printf "%-32s %s\n" "$key_name" "FAILED (network error)" ;;
+    3) printf "%-32s %s\n" "$key_name" "SKIPPED (no probe defined)" ;;
+  esac
+
+  return "$probe_status"
+}
+
+test_keys() {
+  local -a key_names
+  local key_name
+  local overall_status=0
+
+  if (( $# > 0 )); then
+    key_names=("$@")
+  else
+    if [[ ! -s "$INDEX_FILE" ]]; then
+      print -- "No indexed keys found."
+      return 0
+    fi
+    key_names=("${(@f)$(<"$INDEX_FILE")}")
+  fi
+
+  printf "%-32s %s\n" "KEY" "RESULT"
+  printf "%-32s %s\n" "--------------------------------" "-------------"
+
+  for key_name in "${key_names[@]}"; do
+    [[ -z "$key_name" ]] && continue
+
+    validate_key_name "$key_name"
+
+    local key_status=0
+    test_key "$key_name" || key_status=$?
+
+    # A skip (no probe defined for this provider) isn't a failure.
+    if [[ "$key_status" == "1" || "$key_status" == "2" ]]; then
+      overall_status=1
+    fi
+  done
+
+  return "$overall_status"
+}
+
+show_help() {
+  cat <<'EOF'
+Usage:
+  managekeys save KEY_NAME
+  managekeys list [PREVIEW_CHARACTERS | --names-only]
+  managekeys get KEY_NAME
+  managekeys delete KEY_NAME
+  managekeys track KEY_NAME
+  managekeys export [KEY_NAME ...]
+  managekeys test [KEY_NAME ...]
+  managekeys help
+
+Commands:
+  save      Prompt for a value and save it to macOS Keychain.
+  list      Show saved key names and the first X characters.
+            --names-only prints just the tracked names (reads the
+            local index only, no Keychain lookups).
+  get       Print the complete value of one key.
+  delete    Delete a key from Keychain and the local index.
+  track     Add an existing Keychain entry to the local index.
+  export    Print zsh export statements for indexed or named keys.
+  test      Probe a live API with each key to check it still works.
+            Never prints key values. PROPOSAL: probes are defined for
+            PERPLEXITY_API_KEY, OPENAI_API_KEY, VOYAGE_API_KEY,
+            GITHUB_TOKEN, and CLAUDE_ELEMENT_FM_KEY so far (see
+            probe_provider in the script) — extend the case statement
+            to cover more.
+
+Examples:
+  managekeys save OPENAI_API_KEY
+  managekeys list
+  managekeys list 10
+  managekeys list --names-only
+  managekeys get OPENAI_API_KEY
+  managekeys delete OPENAI_API_KEY
+  managekeys track OPENAI_API_KEY
+  eval "$(managekeys export)"
+  eval "$(managekeys export OPENAI_API_KEY ANTHROPIC_API_KEY)"
+  managekeys test
+  managekeys test PERPLEXITY_API_KEY
+EOF
+}
+
+main() {
+  initialize
+
+  local command="${1:-help}"
+  shift || true
+
+  case "$command" in
+    save)
+      save_key "$@"
+      ;;
+    list)
+      list_keys "$@"
+      ;;
+    get)
+      get_key "$@"
+      ;;
+    delete|remove)
+      delete_key "$@"
+      ;;
+    track)
+      track_key "$@"
+      ;;
+    export)
+      export_keys "$@"
+      ;;
+    test)
+      test_keys "$@"
+      ;;
+    help|-h|--help)
+      show_help
+      ;;
+    *)
+      print -u2 -- "Unknown command: $command"
+      print -u2 -- "Run 'managekeys help' for usage."
+      return 1
+      ;;
+  esac
+}
+
+main "$@"
