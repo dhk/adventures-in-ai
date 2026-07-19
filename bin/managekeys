@@ -203,6 +203,44 @@ track_key() {
   fi
 }
 
+adopt_key() {
+  local key_name="${1:-}"
+  local legacy_service="${2:-}"
+  local legacy_account="${3:-$ACCOUNT_NAME}"
+  local key_value
+
+  [[ -n "$key_name" && -n "$legacy_service" ]] || {
+    print -u2 -- "Usage: managekeys adopt KEY_NAME LEGACY_SERVICE [LEGACY_ACCOUNT]"
+    return 1
+  }
+
+  validate_key_name "$key_name"
+
+  if ! key_value="$(security find-generic-password -a "$legacy_account" -s "$legacy_service" -w 2>/dev/null)"; then
+    print -u2 -- "Not found in Keychain: service=\"$legacy_service\" account=\"$legacy_account\""
+    return 1
+  fi
+
+  if [[ -z "$key_value" ]]; then
+    print -u2 -- "Legacy entry for $key_name is empty. Nothing was adopted."
+    return 1
+  fi
+
+  security add-generic-password \
+    -a "$ACCOUNT_NAME" \
+    -s "$(keychain_service "$key_name")" \
+    -w "$key_value" \
+    -U >/dev/null
+  unset key_value
+
+  index_key "$key_name"
+
+  print -- "Adopted ${key_name} from \"${legacy_service}\" (account: ${legacy_account})."
+
+  # Test result is informational — adoption itself already succeeded.
+  test_key "$key_name" || true
+}
+
 export_keys() {
   local -a key_names
   local key_name
@@ -247,6 +285,27 @@ probe_provider() {
   local http_status
 
   case "$key_name" in
+    ANTHROPIC_API_KEY)
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          'https://api.anthropic.com/v1/models' \
+          -K - <<PROBE
+header = "x-api-key: ${key_value}"
+header = "anthropic-version: 2023-06-01"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
+    GEMINI_API_KEY)
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          'https://generativelanguage.googleapis.com/v1beta/models' \
+          -K - <<PROBE
+header = "x-goog-api-key: ${key_value}"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
     PERPLEXITY_API_KEY)
       http_status="$(
         curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
@@ -377,6 +436,7 @@ Usage:
   managekeys get KEY_NAME
   managekeys delete KEY_NAME
   managekeys track KEY_NAME
+  managekeys adopt KEY_NAME LEGACY_SERVICE [LEGACY_ACCOUNT]
   managekeys export [KEY_NAME ...]
   managekeys test [KEY_NAME ...]
   managekeys help
@@ -389,13 +449,18 @@ Commands:
   get       Print the complete value of one key.
   delete    Delete a key from Keychain and the local index.
   track     Add an existing Keychain entry to the local index.
+  adopt     Copy a Keychain entry saved under some other tool's
+            service name into managekeys' own naming, index it, and
+            immediately test it. LEGACY_ACCOUNT defaults to $USER.
+            The old entry is left untouched — delete it yourself once
+            you've confirmed the adopted copy works.
   export    Print zsh export statements for indexed or named keys.
   test      Probe a live API with each key to check it still works.
             Never prints key values. PROPOSAL: probes are defined for
-            PERPLEXITY_API_KEY, OPENAI_API_KEY, VOYAGE_API_KEY,
-            GITHUB_TOKEN, and CLAUDE_ELEMENT_FM_KEY so far (see
-            probe_provider in the script) — extend the case statement
-            to cover more.
+            ANTHROPIC_API_KEY, GEMINI_API_KEY, PERPLEXITY_API_KEY,
+            OPENAI_API_KEY, VOYAGE_API_KEY, GITHUB_TOKEN, and
+            CLAUDE_ELEMENT_FM_KEY so far (see probe_provider in the
+            script) — extend the case statement to cover more.
 
 Examples:
   managekeys save OPENAI_API_KEY
@@ -405,6 +470,8 @@ Examples:
   managekeys get OPENAI_API_KEY
   managekeys delete OPENAI_API_KEY
   managekeys track OPENAI_API_KEY
+  managekeys adopt ANTHROPIC_API_KEY anthropic_api_key
+  managekeys adopt GITHUB_TOKEN github-tricorder-pat
   eval "$(managekeys export)"
   eval "$(managekeys export OPENAI_API_KEY ANTHROPIC_API_KEY)"
   managekeys test
@@ -433,6 +500,9 @@ main() {
       ;;
     track)
       track_key "$@"
+      ;;
+    adopt)
+      adopt_key "$@"
       ;;
     export)
       export_keys "$@"
