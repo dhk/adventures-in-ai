@@ -91,18 +91,39 @@ save_key() {
 }
 
 list_keys() {
-  local preview_chars="${1:-6}"
+  local names_only=0
+  local preview_chars="6"
   local key_name
   local key_value
   local preview
 
-  if [[ ! "$preview_chars" =~ '^[0-9]+$' ]] || (( preview_chars < 1 )); then
+  case "${1:-}" in
+    --names-only)
+      names_only=1
+      ;;
+    "")
+      ;;
+    *)
+      preview_chars="$1"
+      ;;
+  esac
+
+  if (( ! names_only )) && { [[ ! "$preview_chars" =~ '^[0-9]+$' ]] || (( preview_chars < 1 )); }; then
     print -u2 -- "Preview length must be a positive integer."
     return 1
   fi
 
   if [[ ! -s "$INDEX_FILE" ]]; then
     print -- "No indexed keys found."
+    return 0
+  fi
+
+  if (( names_only )); then
+    # Names only, straight from the index — no Keychain lookups at all.
+    while IFS= read -r key_name; do
+      [[ -z "$key_name" ]] && continue
+      print -r -- "$key_name"
+    done < "$INDEX_FILE"
     return 0
   fi
 
@@ -352,7 +373,7 @@ show_help() {
   cat <<'EOF'
 Usage:
   managekeys save KEY_NAME
-  managekeys list [PREVIEW_CHARACTERS]
+  managekeys list [PREVIEW_CHARACTERS | --names-only]
   managekeys get KEY_NAME
   managekeys delete KEY_NAME
   managekeys track KEY_NAME
@@ -363,6 +384,8 @@ Usage:
 Commands:
   save      Prompt for a value and save it to macOS Keychain.
   list      Show saved key names and the first X characters.
+            --names-only prints just the tracked names (reads the
+            local index only, no Keychain lookups).
   get       Print the complete value of one key.
   delete    Delete a key from Keychain and the local index.
   track     Add an existing Keychain entry to the local index.
@@ -378,6 +401,7 @@ Examples:
   managekeys save OPENAI_API_KEY
   managekeys list
   managekeys list 10
+  managekeys list --names-only
   managekeys get OPENAI_API_KEY
   managekeys delete OPENAI_API_KEY
   managekeys track OPENAI_API_KEY
