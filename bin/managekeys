@@ -248,6 +248,42 @@ PROBE
       )" || return 2
       [[ "$http_status" == "200" ]]
       ;;
+    VOYAGE_API_KEY)
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          -X POST 'https://api.voyageai.com/v1/embeddings' \
+          -K - <<PROBE
+header = "Authorization: Bearer ${key_value}"
+header = "Content-Type: application/json"
+data = "{\"input\": [\"managekeys connectivity probe\"], \"model\": \"voyage-3-lite\"}"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
+    GITHUB_TOKEN)
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          'https://api.github.com/user' \
+          -K - <<PROBE
+header = "Authorization: Bearer ${key_value}"
+header = "Accept: application/vnd.github+json"
+header = "X-GitHub-Api-Version: 2022-11-28"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
+    CLAUDE_ELEMENT_FM_KEY)
+      # Workspace UUID matches reading-with-ears/config/feeds.json — this
+      # workspace is fixed per element.fm account, not itself a secret.
+      http_status="$(
+        curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+          'https://app.element.fm/api/workspaces/b08a0951-94a4-441d-a446-81cc7950749c/shows' \
+          -K - <<PROBE
+header = "Authorization: Token ${key_value}"
+PROBE
+      )" || return 2
+      [[ "$http_status" == "200" ]]
+      ;;
     *)
       return 3
       ;;
@@ -332,9 +368,11 @@ Commands:
   track     Add an existing Keychain entry to the local index.
   export    Print zsh export statements for indexed or named keys.
   test      Probe a live API with each key to check it still works.
-            Never prints key values. PROPOSAL: only a couple of
-            providers have a probe defined so far (see probe_provider
-            in the script) — extend the case statement to cover more.
+            Never prints key values. PROPOSAL: probes are defined for
+            PERPLEXITY_API_KEY, OPENAI_API_KEY, VOYAGE_API_KEY,
+            GITHUB_TOKEN, and CLAUDE_ELEMENT_FM_KEY so far (see
+            probe_provider in the script) — extend the case statement
+            to cover more.
 
 Examples:
   managekeys save OPENAI_API_KEY
