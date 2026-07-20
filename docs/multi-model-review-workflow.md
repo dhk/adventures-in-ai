@@ -195,13 +195,18 @@ Keep Codex CLI updated — a vulnerability (CVE-2025-61260) was patched in v0.23
 
 ## Related files
 
+The `multi-model-review` skill itself moved to
+[dhk/reading-with-ears](https://github.com/dhk/reading-with-ears) on
+2026-07-10:
+
 ```
-reading-with-ears/
-├── reading-with-ears/
-│   └── skills/user/
-│       └── multi-model-review/
-│           ├── SKILL.md       — Claude's runtime instructions
-│           └── README.md      — Quick start
+reading-with-ears/            (github.com/dhk/reading-with-ears)
+└── skills/user/
+    └── multi-model-review/
+        ├── SKILL.md       — Claude's runtime instructions
+        └── README.md      — Quick start
+
+adventures-in-ai/
 └── docs/
     └── multi-model-review-workflow.md   — this file
 ```
