@@ -1,0 +1,152 @@
+[
+  {
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+    "commit": "aba9c02e5f445d2113dd6484233944d938ebbfc6",
+    "date": "2026-03-29",
+    "mean_certainty": 3.14,
+    "mean_autonomy": 2.71,
+    "concept_count": 14,
+    "negation_density": 5,
+    "vocab_diversity": 22
+  },
+  {
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+    "commit": "dd57c7e0276674aa86b206e2555b041382fd3417",
+    "date": "2026-03-29",
+    "mean_certainty": 2.93,
+    "mean_autonomy": 2.73,
+    "concept_count": 15,
+    "negation_density": 7,
+    "vocab_diversity": 49
+  },
+  {
+    "file": "reading-with-ears/skills/user/multi-model-review/SKILL.md",
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "mean_certainty": 3.5,
+    "mean_autonomy": 3.0,
+    "concept_count": 6,
+    "negation_density": 0,
+    "vocab_diversity": 0
+  },
+  {
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+    "commit": "66adc531c2d9738074ed4870516906e271b8ef08",
+    "date": "2026-03-21",
+    "mean_certainty": 3.15,
+    "mean_autonomy": 2.69,
+    "concept_count": 13,
+    "negation_density": 1,
+    "vocab_diversity": 47
+  },
+  {
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+    "commit": "754f6ab5e6580202a077ee85af3cef7a5881580a",
+    "date": "2026-04-08",
+    "mean_certainty": 3.2,
+    "mean_autonomy": 2.6,
+    "concept_count": 10,
+    "negation_density": 0,
+    "vocab_diversity": 6
+  },
+  {
+    "file": "reading-with-ears/skills/user/personal-podcast/SKILL.md",
+    "commit": "f7996b92c176bb63d83aa9957471ffd2ff6c66f3",
+    "date": "2026-04-05",
+    "mean_certainty": 3.0,
+    "mean_autonomy": 2.56,
+    "concept_count": 9,
+    "negation_density": 0,
+    "vocab_diversity": 11
+  },
+  {
+    "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+    "commit": "11c735e2071244a7cc8a152b6c72d0491eaa2e2a",
+    "date": "2026-04-27",
+    "mean_certainty": 4.0,
+    "mean_autonomy": 3.0,
+    "concept_count": 12,
+    "negation_density": 0,
+    "vocab_diversity": 12
+  },
+  {
+    "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+    "commit": "232c9f893709e4d4dfbeed3c91a42714fff46de8",
+    "date": "2026-05-13",
+    "mean_certainty": 4.0,
+    "mean_autonomy": 3.0,
+    "concept_count": 1,
+    "negation_density": 0,
+    "vocab_diversity": 8
+  },
+  {
+    "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+    "commit": "31cf926584a199eafd717f2ca791d9d0004accd0",
+    "date": "2026-04-27",
+    "mean_certainty": 3.5,
+    "mean_autonomy": 3.0,
+    "concept_count": 2,
+    "negation_density": 1,
+    "vocab_diversity": 1
+  },
+  {
+    "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+    "commit": "5085205188dc5d59720057829c7ddfb1ad3b3d00",
+    "date": "2026-04-27",
+    "mean_certainty": 4.0,
+    "mean_autonomy": 3.0,
+    "concept_count": 5,
+    "negation_density": 0,
+    "vocab_diversity": 6
+  },
+  {
+    "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+    "commit": "8997cfadf2454f439cbb269e348537fbb82e7ffa",
+    "date": "2026-05-20",
+    "mean_certainty": 4.0,
+    "mean_autonomy": 3.0,
+    "concept_count": 6,
+    "negation_density": 1,
+    "vocab_diversity": 4
+  },
+  {
+    "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+    "commit": "ade339796fe66418fe929d82444e0c843187db94",
+    "date": "2026-04-27",
+    "mean_certainty": 4.0,
+    "mean_autonomy": 3.0,
+    "concept_count": 2,
+    "negation_density": 0,
+    "vocab_diversity": 2
+  },
+  {
+    "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+    "commit": "b72c0603c2fa412c01447388542693c8f73636dc",
+    "date": "2026-05-09",
+    "mean_certainty": 3.9,
+    "mean_autonomy": 3.0,
+    "concept_count": 10,
+    "negation_density": 1,
+    "vocab_diversity": 24
+  },
+  {
+    "file": "skills/user/git-push-handoff/SKILL.md",
+    "commit": "631b5af6f8d99f6d624776c0a3f5fb0f6e7d60e6",
+    "date": "2026-03-28",
+    "mean_certainty": 3.5,
+    "mean_autonomy": 1.0,
+    "concept_count": 2,
+    "negation_density": 0,
+    "vocab_diversity": 3
+  },
+  {
+    "file": "skills/user/git-push-handoff/SKILL.md",
+    "commit": "bafc0b1a0f5757474a351aaf42b49a6ae9ac7334",
+    "date": "2026-03-28",
+    "mean_certainty": 3.1,
+    "mean_autonomy": 1.2,
+    "concept_count": 10,
+    "negation_density": 5,
+    "vocab_diversity": 41
+  }
+]

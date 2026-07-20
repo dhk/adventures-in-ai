@@ -1,0 +1,87 @@
+{
+  "file": "reading-with-ears/skills/user/reading-list-builder/SKILL.md",
+  "tier": 1,
+  "patch_size_chars": 59321,
+  "commits": [
+    {
+      "hash": "11c735e2071244a7cc8a152b6c72d0491eaa2e2a",
+      "date": "2026-04-27",
+      "message": "Add reading-list-builder skill \u2014 deterministic unified pipeline",
+      "author": "Claude",
+      "insertions": 232,
+      "deletions": 0,
+      "net_loc_delta": 232,
+      "absolute_loc": 232
+    },
+    {
+      "hash": "ade339796fe66418fe929d82444e0c843187db94",
+      "date": "2026-04-27",
+      "message": "Add per-feed sentinel files to prevent duplicates on partial retry",
+      "author": "Claude",
+      "insertions": 29,
+      "deletions": 3,
+      "net_loc_delta": 26,
+      "absolute_loc": 258
+    },
+    {
+      "hash": "8f38f3bd6c175b03d4f7495bccbd1a9d32f9739b",
+      "date": "2026-04-27",
+      "message": "Add catch-up mode for backfilling missed days",
+      "author": "Claude",
+      "insertions": 7,
+      "deletions": 0,
+      "net_loc_delta": 7,
+      "absolute_loc": 265
+    },
+    {
+      "hash": "31cf926584a199eafd717f2ca791d9d0004accd0",
+      "date": "2026-04-27",
+      "message": "Add skill version check to rwe-run and rwe-catchup",
+      "author": "Claude",
+      "insertions": 1,
+      "deletions": 0,
+      "net_loc_delta": 1,
+      "absolute_loc": 266
+    },
+    {
+      "hash": "5085205188dc5d59720057829c7ddfb1ad3b3d00",
+      "date": "2026-04-27",
+      "message": "Simplify: skill handles build only, rwe-publish handles Element.fm",
+      "author": "Claude",
+      "insertions": 50,
+      "deletions": 127,
+      "net_loc_delta": -77,
+      "absolute_loc": 189
+    },
+    {
+      "hash": "b72c0603c2fa412c01447388542693c8f73636dc",
+      "date": "2026-05-09",
+      "message": "feat(reading-list-builder): v2.1 \u2014 deep pipeline + reading-db",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 424,
+      "deletions": 70,
+      "net_loc_delta": 354,
+      "absolute_loc": 543
+    },
+    {
+      "hash": "232c9f893709e4d4dfbeed3c91a42714fff46de8",
+      "date": "2026-05-13",
+      "message": "Add model tier guidance to reading-list-builder skill (v2.1)",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 7,
+      "deletions": 0,
+      "net_loc_delta": 7,
+      "absolute_loc": 550
+    },
+    {
+      "hash": "8997cfadf2454f439cbb269e348537fbb82e7ffa",
+      "date": "2026-05-20",
+      "message": "feat(rwe): wire reading-list-builder to rwe-publish for download/publish",
+      "author": "Dave Holmes-Kinsella",
+      "insertions": 24,
+      "deletions": 27,
+      "net_loc_delta": -3,
+      "absolute_loc": 547
+    }
+  ]
+}
