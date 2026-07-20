@@ -19,6 +19,15 @@ Once a week, synthesize everything the deep pipeline collected into three output
 
 Manual trigger. Run it Friday or over the weekend. No cron for v1 — see §10.
 
+**Default target week:** `rwe-weekly` with no `--week` argument resolves to the
+**current, in-progress ISO week** (not the last fully-completed one). This matters
+because the two only coincide if you actually run it at the end of the week, per the
+stated cadence — running it mid-week (say, a Tuesday, out of curiosity) synthesizes a
+partial week. That's not treated as an error: `days_missing` in the manifest (§8)
+records exactly which days weren't there yet, so a mid-week run is visibly partial
+rather than silently pretending to be complete. If you want a specific week
+regardless of when you run it, `--week YYYY-Www` overrides the default explicitly.
+
 ---
 
 ## 2. Current state (what already exists vs. what doesn't)
@@ -137,6 +146,16 @@ rwe-weekly (new bin script)
 Steps 1, 2, 6 are pure Python and free. Steps 3-5 are the only token cost (see §7).
 Step 7 is the only step that needs `claude -p` / MCP, mirroring why the daily skill
 exists at all.
+
+**Notebook lifecycle (step 7):** each week gets a brand-new NotebookLM notebook with
+exactly one source (that week's `synthesis.md`) — created once, used once for the
+audio overview, and never touched again. This is unlike the four pre-existing shows'
+weekly-accumulating notebooks (`docs/weekly-cadence-migration.md`), which build up a
+week's sources incrementally across seven days — "Week That Was" has no equivalent
+need, since the whole synthesis doc is generated in one shot by `week_that_was.py`.
+Practical consequence: every week adds one more permanent, never-cleaned-up notebook
+to the NotebookLM workspace (~52/year). No pruning or renaming logic exists for
+these — same accepted-non-goal shape as `themes.yaml`'s unbounded growth (§10).
 
 ### 4.1 Credentials
 
@@ -417,6 +436,17 @@ and the run stops there, resumable on next invocation. Logs go to
 `~/logs/reading-with-ears/weekly-YYYY-Www.log`, same convention as
 `~/logs/reading-with-ears/YYYY-MM-DD.log` today.
 
+**This per-call retry policy is scoped to the direct Anthropic API calls (stages
+3-5) only.** Stage `notebooklm_audio` (step 7) goes through `claude -p`/MCP, not the
+direct API — there's no equivalent per-call retry inside that stage, and there
+doesn't need to be. It's a single opaque `claude -p` invocation, same as every
+other non-`section_synthesis` stage in this manifest (zeitgeist counts, narrative,
+ideation, assembly): the whole stage is the unit of retry. If it fails, it's marked
+`failed`/`pending` and re-attempted wholesale on the next invocation — no finer
+granularity is possible or needed here, since (unlike `section_synthesis`'s six
+independent Sonnet calls) there's nothing sub-dividable inside a single MCP session
+to retry separately.
+
 **Concurrency guard:** the daily pipeline's `done-YYYY-MM-DD` sentinel doubles
 as a lock against accidental double-runs — you can't start a second run once
 the first has finished, because the sentinel's already there. The weekly
@@ -466,3 +496,7 @@ same shape as the `set -euo pipefail` + `EXIT` trap conventions already used in
 - **No pruning of `themes.yaml`.** It grows one entry per tag per week, forever.
   Fine at personal-project scale; revisit only if file size or load time ever
   actually becomes a problem (see §6.3).
+- **No NotebookLM notebook cleanup.** Each week's step-7 notebook is single-use and
+  permanent (see §4) — ~52 accumulate per year with no pruning or renaming. Same
+  personal-project-scale reasoning as `themes.yaml`; revisit only if the NotebookLM
+  workspace itself becomes unwieldy to navigate.
