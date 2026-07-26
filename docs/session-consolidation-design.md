@@ -95,6 +95,36 @@ moved, why, when) to an append-only manifest for auditability.
 Deletion is not offered in v1. If it's added later, it must be a separate,
 explicitly-named confirmation step — never bundled into "archive."
 
+## Architecture: shared core, three surfaces
+
+Decision: build as an **MCP server from the start**, with a plain core module
+underneath so the CLI never needs a running server for a simple sweep.
+
+- **Core module** — Steps 1–5 above as plain functions with no MCP/CLI/web
+  dependencies: `sweep()`, `cluster()`, `classify()`, `propose_actions()`,
+  `archive()`. This is the one place the logic lives; everything else is a
+  thin surface over it.
+- **MCP server** — wraps the core functions as MCP tools (`sweep_sessions`,
+  `cluster_sessions`, `classify_sessions`, `propose_actions`,
+  `archive_sessions`), so any MCP host — Claude Desktop, another agent, or
+  this Claude Code skill via MCP instead of shelling out — can call the same
+  logic. This is what justifies "from the get-go": the capability is usable
+  outside this one CLI/skill pair immediately, not bolted on after the fact.
+- **CLI** — imports the core module directly, so a plain `sweep`/`report`
+  call doesn't require the MCP server process to be running. Subcommands
+  mirror the tool names (`sweep`, `report`, `archive --approve <ids>`).
+  Writes the Step 4 report as JSON.
+- **Web viewer** — static HTML that reads the CLI's JSON report and renders
+  it as a collapsible tree (cluster → session → classification, tier-colored
+  for safe-to-archive / needs-a-decision / keep-as-is). No server process —
+  open the file locally or view as an artifact. Approve/archive actions stay
+  in the CLI, not the browser, for v1 — the viewer is a renderer, not a
+  client, so it can't become a second place the logic drifts.
+- **Claude Code skill** — thin `SKILL.md` wrapping the CLI (same pattern as
+  the `rwe-*` scripts in `bin/` wrapped by the reading-with-ears skills), or
+  calling the MCP server directly once it's registered in the session —
+  decide at build time based on which is less installation friction.
+
 ## Open questions for the build phase
 
 - Heuristic clustering (file/keyword overlap) vs. a lightweight sub-agent read
