@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Session Consolidation Viewer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --panel: #ffffff;
+    --text: #1b1d21;
+    --muted: #6b7280;
+    --border: #e3e5e8;
+    --safe: #1a7f37;
+    --safe-bg: #e7f7ec;
+    --decision: #9a6700;
+    --decision-bg: #fff5da;
+    --keep: #4d5562;
+    --keep-bg: #eef0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --panel: #1c1f24;
+      --text: #e7e9ec;
+      --muted: #9aa1ab;
+      --border: #2c3038;
+      --safe: #4fd67a;
+      --safe-bg: #133321;
+      --decision: #e3b341;
+      --decision-bg: #382c0d;
+      --keep: #aeb4bd;
+      --keep-bg: #262a30;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1.25rem 4rem;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin: 0 0 0.25rem; }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .loader {
+    background: var(--panel);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+  .loader input { margin-top: 0.5rem; }
+  .summary {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .stat {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+  .stat b { display: block; font-size: 1.3rem; }
+  .stat.safe b { color: var(--safe); }
+  .stat.decision b { color: var(--decision); }
+  .stat.keep b { color: var(--keep); }
+  .cluster {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 0.85rem;
+    overflow: hidden;
+  }
+  .cluster > summary {
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    align-items: baseline;
+  }
+  .cluster > summary::-webkit-details-marker { display: none; }
+  .cluster > summary:before { content: "▸ "; color: var(--muted); }
+  .cluster[open] > summary:before { content: "▾ "; }
+  .cluster-meta { font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+  .sessions { border-top: 1px solid var(--border); }
+  .session {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .session:last-child { border-bottom: none; }
+  .session-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.35rem;
+  }
+  .badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .badge.safe_to_archive { color: var(--safe); background: var(--safe-bg); }
+  .badge.needs_a_decision { color: var(--decision); background: var(--decision-bg); }
+  .badge.keep_as_is { color: var(--keep); background: var(--keep-bg); }
+  .session-id { font-family: ui-monospace, monospace; font-size: 0.82rem; color: var(--muted); }
+  .classification { font-size: 0.85rem; font-weight: 600; }
+  .reason { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
+  .topic { font-size: 0.9rem; margin-bottom: 0.35rem; }
+  .files { font-size: 0.78rem; color: var(--muted); font-family: ui-monospace, monospace; }
+  .empty { color: var(--muted); text-align: center; padding: 2rem 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Session Consolidation Viewer</h1>
+  <div class="subtitle">Load a report produced by <code>session-consolidation report --out report.json</code></div>
+
+  <div class="loader">
+    Drop a report JSON file below, or
+    <div><input type="file" id="file-input" accept="application/json,.json"></div>
+  </div>
+
+  <div id="summary" class="summary"></div>
+  <div id="clusters"></div>
+  <div id="empty" class="empty">No report loaded yet.</div>
+</div>
+
+<script>
+  const TIER_LABEL = {
+    safe_to_archive: "Safe to archive",
+    needs_a_decision: "Needs a decision",
+    keep_as_is: "Keep as-is",
+  };
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str == null ? "" : String(str);
+    return div.innerHTML;
+  }
+
+  function render(report) {
+    document.getElementById("empty").style.display = "none";
+
+    const s = report.summary;
+    document.getElementById("summary").innerHTML = `
+      <div class="stat"><b>${s.total_sessions}</b>sessions</div>
+      <div class="stat"><b>${s.total_clusters}</b>clusters</div>
+      <div class="stat safe"><b>${s.safe_to_archive}</b>${TIER_LABEL.safe_to_archive}</div>
+      <div class="stat decision"><b>${s.needs_a_decision}</b>${TIER_LABEL.needs_a_decision}</div>
+      <div class="stat keep"><b>${s.keep_as_is}</b>${TIER_LABEL.keep_as_is}</div>
+    `;
+
+    const clustersEl = document.getElementById("clusters");
+    clustersEl.innerHTML = "";
+
+    for (const cluster of report.clusters) {
+      const details = document.createElement("details");
+      details.className = "cluster";
+      details.open = cluster.sessions.some(sess => sess.tier !== "keep_as_is");
+
+      const summary = document.createElement("summary");
+      summary.innerHTML = `
+        <span>${escapeHtml(cluster.project_dir || "(unknown project)")}</span>
+        <span class="cluster-meta">${cluster.session_count} session(s)</span>
+      `;
+      details.appendChild(summary);
+
+      const sessionsEl = document.createElement("div");
+      sessionsEl.className = "sessions";
+
+      for (const sess of cluster.sessions) {
+        const row = document.createElement("div");
+        row.className = "session";
+        const topic = (sess.first_user_message || "").split("\n")[0].slice(0, 160) || "(no topic captured)";
+        const files = (sess.files_touched || []).slice(0, 6).join(", ");
+        row.innerHTML = `
+          <div class="session-head">
+            <span class="badge ${sess.tier}">${TIER_LABEL[sess.tier] || sess.tier}</span>
+            <span class="classification">${escapeHtml(sess.classification)}</span>
+            <span class="session-id">${escapeHtml(sess.session_id)}</span>
+          </div>
+          <div class="reason">${escapeHtml(sess.reason)}</div>
+          <div class="topic">&ldquo;${escapeHtml(topic)}&rdquo;</div>
+          ${files ? `<div class="files">${escapeHtml(files)}${sess.files_touched.length > 6 ? " …" : ""}</div>` : ""}
+        `;
+        sessionsEl.appendChild(row);
+      }
+
+      details.appendChild(sessionsEl);
+      clustersEl.appendChild(details);
+    }
+  }
+
+  function loadFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        render(JSON.parse(reader.result));
+      } catch (e) {
+        alert("Could not parse this file as a session-consolidation report: " + e.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  document.getElementById("file-input").addEventListener("change", (e) => {
+    if (e.target.files[0]) loadFile(e.target.files[0]);
+  });
+
+  document.body.addEventListener("dragover", (e) => e.preventDefault());
+  document.body.addEventListener("drop", (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+  });
+</script>
+</body>
+</html>

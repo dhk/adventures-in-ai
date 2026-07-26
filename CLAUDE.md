@@ -32,8 +32,22 @@ ln -s ~/Documents/dev/adventures-in-ai/<path> ~/.claude/skills/<name>
 | `multi-model-review` | `reading-with-ears/skills/user/multi-model-review/` | Requires Codex registered as an MCP server (`claude mcp add codex -- npx codex mcp-server`) |
 | `personal-podcast` | `reading-with-ears/skills/user/personal-podcast/` | — |
 | `reading-list-builder` | `reading-with-ears/skills/user/reading-list-builder/` | — |
+| `session-consolidation` | `skills/user/session-consolidation/` | Wraps the `session-consolidation/` CLI (repo root) — symlinking just `SKILL.md` isn't enough, the whole `adventures-in-ai` checkout needs to be present locally so the skill can shell out to `session-consolidation/session_consolidation/cli.py`. See `session-consolidation/README.md`. |
 
-## review-document (most recently added)
+## session-consolidation (most recently added)
+
+Sweeps `~/.claude/projects/*/*.jsonl`, clusters related sessions, classifies
+each (active/completed/stale/orphaned/superseded), and proposes a tiered
+archive list (safe to archive / needs a decision / keep as-is). Never
+archives without explicit approval; archiving is always a reversible move
+under `~/.claude/projects-archive/`, never a delete. Modeled on git branch
+hygiene. Design: `docs/session-consolidation-design.md`. Implementation:
+`session-consolidation/` (core module + CLI + optional MCP server + static
+web viewer), skill wrapper at `skills/user/session-consolidation/`.
+Phase 2 (fast/deep categorization modes, a session-merge offering) is
+tracked in issue #42, not built yet.
+
+## review-document
 
 Two-mode document reviewer: review → score → offer severity-tiered edits →
 apply only on confirmation.
