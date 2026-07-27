@@ -127,8 +127,8 @@
     padding: 0.25rem 0.4rem;
     font-size: 0.85rem;
   }
+  .toolbar .buttons { margin-left: auto; display: flex; gap: 0.5rem; }
   .toolbar button {
-    margin-left: auto;
     background: var(--accent-bg);
     color: var(--accent);
     border: 1px solid var(--accent);
@@ -286,7 +286,10 @@
         <option value="duration_asc">Duration, shortest first</option>
       </select>
     </div>
-    <button id="select-safe" type="button">Select all visible safe-to-archive</button>
+    <div class="buttons">
+      <button id="select-all" type="button">Select all visible</button>
+      <button id="select-safe" type="button">Select safe-to-archive</button>
+    </div>
   </div>
 
   <div id="clusters"></div>
@@ -516,6 +519,14 @@
   document.querySelectorAll(".tier-filter").forEach(el => el.addEventListener("change", renderClusters));
   document.getElementById("sort-select").addEventListener("change", renderClusters);
   document.getElementById("include-yes").addEventListener("change", updateSelectionBar);
+
+  document.getElementById("select-all").addEventListener("click", () => {
+    document.querySelectorAll('.session:not(.hidden-by-filter) input[data-session-id]').forEach(input => {
+      input.checked = true;
+      selectedIds.add(input.dataset.sessionId);
+    });
+    updateSelectionBar();
+  });
 
   document.getElementById("select-safe").addEventListener("click", () => {
     document.querySelectorAll('.session:not(.hidden-by-filter) input[data-session-id]').forEach(input => {
