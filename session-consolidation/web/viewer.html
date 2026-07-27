@@ -323,6 +323,23 @@
     return div.innerHTML;
   }
 
+  // Sessions have no stored title (that's a claude.ai/code product feature, not
+  // present in local transcripts) -- this derives the best available stand-in
+  // from the raw first message: collapse whitespace so a short first line
+  // doesn't waste the budget, drop a conversational filler opener, and cut at
+  // a word boundary instead of mid-word.
+  const TOPIC_FILLER = /^(ok|okay|hi|hey|hello|so|well|alright|great|thanks)[,.!]?\s+/i;
+
+  function deriveTopic(message, maxLen) {
+    if (!message) return "(no topic captured)";
+    let text = message.replace(/\s+/g, " ").trim().replace(TOPIC_FILLER, "");
+    if (!text) return "(no topic captured)";
+    if (text.length <= maxLen) return text;
+    const cut = text.slice(0, maxLen);
+    const lastSpace = cut.lastIndexOf(" ");
+    return (lastSpace > maxLen * 0.4 ? cut.slice(0, lastSpace) : cut).trim() + "…";
+  }
+
   function mostRecentSession(cluster) {
     return cluster.sessions.reduce((best, s) => {
       if (!best) return s;
@@ -415,9 +432,7 @@
       details.open = cluster.sessions.some(sess => sess.tier !== "keep_as_is");
 
       const topicSession = mostRecentSession(cluster);
-      const topic = topicSession
-        ? (topicSession.first_user_message || "").split("\n")[0].slice(0, 90) || "(no topic captured)"
-        : "(no topic captured)";
+      const topic = deriveTopic(topicSession && topicSession.first_user_message, 90);
 
       const summary = document.createElement("summary");
       summary.innerHTML = `
@@ -437,7 +452,7 @@
       for (const sess of sorted) {
         const row = document.createElement("div");
         row.className = "session" + (activeTiers.has(sess.tier) ? "" : " hidden-by-filter");
-        const topicLine = (sess.first_user_message || "").split("\n")[0].slice(0, 160) || "(no topic captured)";
+        const topicLine = deriveTopic(sess.first_user_message, 160);
         const files = (sess.files_touched || []).slice(0, 6).join(", ");
         const duration = formatDuration(durationMs(sess));
         row.innerHTML = `
