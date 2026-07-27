@@ -282,6 +282,8 @@
         <option value="end_asc">Last accessed, oldest first</option>
         <option value="start_desc">Opened, newest first</option>
         <option value="start_asc">Opened, oldest first</option>
+        <option value="duration_desc">Duration, longest first</option>
+        <option value="duration_asc">Duration, shortest first</option>
       </select>
     </div>
     <button id="select-safe" type="button">Select all visible safe-to-archive</button>
@@ -325,13 +327,48 @@
     }, null);
   }
 
-  function sortKey(sess, mode) {
+  function durationMs(sess) {
+    const start = sess.start_time ? Date.parse(sess.start_time) : NaN;
+    const end = sess.end_time ? Date.parse(sess.end_time) : NaN;
+    if (isNaN(start) || isNaN(end)) return null;
+    return Math.max(0, end - start);
+  }
+
+  function formatDuration(ms) {
+    if (ms == null) return null;
+    const totalMin = Math.round(ms / 60000);
+    if (totalMin < 1) return "<1m";
+    if (totalMin < 60) return `${totalMin}m`;
+    const h = Math.floor(totalMin / 60), m = totalMin % 60;
+    if (h < 24) return m ? `${h}h ${m}m` : `${h}h`;
+    const d = Math.floor(h / 24), rh = h % 24;
+    return rh ? `${d}d ${rh}h` : `${d}d`;
+  }
+
+  function sortValue(sess, mode) {
+    if (mode === "duration_asc" || mode === "duration_desc") {
+      const ms = durationMs(sess);
+      return ms == null ? -1 : ms;
+    }
     if (mode === "start_desc" || mode === "start_asc") return sess.start_time || "";
     return sess.end_time || "";
   }
 
   function sortDirection(mode) {
     return mode.endsWith("_asc") ? 1 : -1;
+  }
+
+  function compareByMode(a, b, mode) {
+    const dir = sortDirection(mode);
+    const aVal = sortValue(a, mode), bVal = sortValue(b, mode);
+    return aVal < bVal ? -dir : aVal > bVal ? dir : 0;
+  }
+
+  function clusterRepresentativeSession(cluster, mode) {
+    return cluster.sessions.reduce((best, s) => {
+      if (!best) return s;
+      return compareByMode(s, best, mode) < 0 ? s : best;
+    }, null);
   }
 
   function currentFilters() {
@@ -355,16 +392,15 @@
     if (!currentReport) return;
 
     const mode = document.getElementById("sort-select").value;
-    const dir = sortDirection(mode);
     const activeTiers = currentFilters();
 
     const clustersEl = document.getElementById("clusters");
     clustersEl.innerHTML = "";
 
     const clusters = [...currentReport.clusters].sort((a, b) => {
-      const aKey = sortKey(mostRecentSession(a) || {}, mode);
-      const bKey = sortKey(mostRecentSession(b) || {}, mode);
-      return aKey < bKey ? -dir : aKey > bKey ? dir : 0;
+      const repA = clusterRepresentativeSession(a, mode);
+      const repB = clusterRepresentativeSession(b, mode);
+      return compareByMode(repA, repB, mode);
     });
 
     for (const cluster of clusters) {
@@ -393,16 +429,14 @@
       const sessionsEl = document.createElement("div");
       sessionsEl.className = "sessions";
 
-      const sorted = [...cluster.sessions].sort((a, b) => {
-        const aKey = sortKey(a, mode), bKey = sortKey(b, mode);
-        return aKey < bKey ? -dir : aKey > bKey ? dir : 0;
-      });
+      const sorted = [...cluster.sessions].sort((a, b) => compareByMode(a, b, mode));
 
       for (const sess of sorted) {
         const row = document.createElement("div");
         row.className = "session" + (activeTiers.has(sess.tier) ? "" : " hidden-by-filter");
         const topicLine = (sess.first_user_message || "").split("\n")[0].slice(0, 160) || "(no topic captured)";
         const files = (sess.files_touched || []).slice(0, 6).join(", ");
+        const duration = formatDuration(durationMs(sess));
         row.innerHTML = `
           <div class="session-select">
             <input type="checkbox" data-session-id="${escapeHtml(sess.session_id)}" ${selectedIds.has(sess.session_id) ? "checked" : ""}>
@@ -415,7 +449,7 @@
             </div>
             <div class="reason">${escapeHtml(sess.reason)}</div>
             <div class="topic">&ldquo;${escapeHtml(topicLine)}&rdquo;</div>
-            <div class="times">opened ${escapeHtml(sess.start_time || "?")} &middot; last active ${escapeHtml(sess.end_time || "?")}</div>
+            <div class="times">opened ${escapeHtml(sess.start_time || "?")} &middot; last active ${escapeHtml(sess.end_time || "?")}${duration ? ` &middot; ${escapeHtml(duration)} duration` : ""}</div>
             ${files ? `<div class="files">${escapeHtml(files)}${sess.files_touched.length > 6 ? " …" : ""}</div>` : ""}
           </div>
         `;
