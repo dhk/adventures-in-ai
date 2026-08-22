@@ -2,9 +2,10 @@
 
 ## What this repo is
 
-A personal collection of Claude Code skills, analytics tooling, and reading/audio
-pipeline experiments. Skills live in `skills/` (repo-level) and
-`reading-with-ears/skills/` (reading pipeline specific).
+A personal collection of Claude Code skills and analytics tooling. Skills live
+in `skills/` (repo-level). The reading/audio pipeline (reading-with-ears) was
+extracted to its own repo, [dhk/reading-with-ears](https://github.com/dhk/reading-with-ears),
+on 2026-07-10 — see "Former reading-with-ears pipeline" below.
 
 ## Local environment
 
@@ -29,9 +30,10 @@ ln -s ~/Documents/dev/adventures-in-ai/<path> ~/.claude/skills/<name>
 | `redpen` | `skills/redpen/` | Has its own INSTALL.md with a curl one-shot; `--tickets`/`--pr` require GitHub MCP connected |
 | `git-push-handoff` | `skills/user/git-push-handoff/` | — |
 | `review-document` | `skills/user/review-document/` | Must include `reference/` — SKILL.md links to it, symlinking the whole directory (not just SKILL.md) covers this. Built via PR #31 if you want the backstory. |
-| `multi-model-review` | `reading-with-ears/skills/user/multi-model-review/` | Requires Codex registered as an MCP server (`claude mcp add codex -- npx codex mcp-server`) |
-| `personal-podcast` | `reading-with-ears/skills/user/personal-podcast/` | — |
-| `reading-list-builder` | `reading-with-ears/skills/user/reading-list-builder/` | — |
+
+`multi-model-review`, `personal-podcast`, and `reading-list-builder` moved
+with the reading-with-ears pipeline extraction — see
+[dhk/reading-with-ears](https://github.com/dhk/reading-with-ears)`/skills/user/`.
 
 ## review-document (most recently added)
 
@@ -85,12 +87,13 @@ mkdir -p ~/.claude/skills/run-analytics && \
     -o ~/.claude/skills/run-analytics/SKILL.md
 ```
 
-## reading-with-ears pipeline
+## Former reading-with-ears pipeline
 
-Lives in `reading-with-ears/`. Pulls newsletter emails via Gmail MCP →
-NotebookLM notebooks → audio overview → Element.fm podcast. Config in
-`reading-with-ears/config/feeds.json`. Data store in
-`dhkondata/reading-db/`.
+Extracted to [dhk/reading-with-ears](https://github.com/dhk/reading-with-ears)
+on 2026-07-10 (full git history preserved via `git-filter-repo`). Pulls
+newsletter emails via Gmail MCP → NotebookLM notebooks → audio overview →
+Element.fm podcast. No longer lives in this repo — `reading-with-ears/`,
+`bin/rwe-*`, and `dhkondata/reading-db/` were removed here.
 
 ## work-ledger usage tracking
 
