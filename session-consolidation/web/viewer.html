@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Session Consolidation Viewer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --text: #1a1d23;
+    --muted: #64748b;
+    --border: #dde2e9;
+    --accent: #2563eb;
+    --accent-bg: #eaf1ff;
+    --safe: #1a7f37;
+    --safe-bg: #e7f7ec;
+    --decision: #9a6700;
+    --decision-bg: #fff5da;
+    --keep: #4d5562;
+    --keep-bg: #eef0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b;
+      --panel: #1b1f27;
+      --text: #e7e9ee;
+      --muted: #90a0b7;
+      --border: #2a3140;
+      --accent: #6ea8fe;
+      --accent-bg: #172338;
+      --safe: #4fd67a;
+      --safe-bg: #133321;
+      --decision: #e3b341;
+      --decision-bg: #382c0d;
+      --keep: #aeb4bd;
+      --keep-bg: #262a30;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --text: #1a1d23;
+    --muted: #64748b;
+    --border: #dde2e9;
+    --accent: #2563eb;
+    --accent-bg: #eaf1ff;
+    --safe: #1a7f37;
+    --safe-bg: #e7f7ec;
+    --decision: #9a6700;
+    --decision-bg: #fff5da;
+    --keep: #4d5562;
+    --keep-bg: #eef0f2;
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151b;
+    --panel: #1b1f27;
+    --text: #e7e9ee;
+    --muted: #90a0b7;
+    --border: #2a3140;
+    --accent: #6ea8fe;
+    --accent-bg: #172338;
+    --safe: #4fd67a;
+    --safe-bg: #133321;
+    --decision: #e3b341;
+    --decision-bg: #382c0d;
+    --keep: #aeb4bd;
+    --keep-bg: #262a30;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1.25rem 6rem;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin: 0 0 0.25rem; }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .loader {
+    background: var(--panel);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+  .loader input { margin-top: 0.5rem; }
+  .summary {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .stat {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+  .stat b { display: block; font-size: 1.3rem; }
+  .stat.safe b { color: var(--safe); }
+  .stat.decision b { color: var(--decision); }
+  .stat.keep b { color: var(--keep); }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+  }
+  .toolbar .group { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .toolbar label { display: flex; align-items: center; gap: 0.3rem; cursor: pointer; white-space: nowrap; }
+  .toolbar select {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.25rem 0.4rem;
+    font-size: 0.85rem;
+  }
+  .toolbar .buttons { margin-left: auto; display: flex; gap: 0.5rem; }
+  .toolbar button {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .cluster {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 0.85rem;
+    overflow: hidden;
+  }
+  .cluster > summary {
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: baseline;
+  }
+  .cluster > summary::-webkit-details-marker { display: none; }
+  .cluster > summary:before { content: "▸ "; color: var(--muted); }
+  .cluster[open] > summary:before { content: "▾ "; }
+  .cluster-title { font-weight: 600; text-wrap: balance; }
+  .cluster-path { color: var(--muted); font-size: 0.78rem; margin-top: 0.15rem; font-family: ui-monospace, monospace; }
+  .cluster-meta { font-weight: 400; color: var(--muted); font-size: 0.8rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .sessions { border-top: 1px solid var(--border); }
+  .session {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 0.6rem;
+  }
+  .session:last-child { border-bottom: none; }
+  .session.hidden-by-filter { display: none; }
+  .session-select { padding-top: 0.15rem; }
+  .session-select input { width: 16px; height: 16px; cursor: pointer; }
+  .session-body { flex: 1; min-width: 0; }
+  .session-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.35rem;
+  }
+  .badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .badge.safe_to_archive { color: var(--safe); background: var(--safe-bg); }
+  .badge.needs_a_decision { color: var(--decision); background: var(--decision-bg); }
+  .badge.keep_as_is { color: var(--keep); background: var(--keep-bg); }
+  .session-id { font-family: ui-monospace, monospace; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .classification { font-size: 0.85rem; font-weight: 600; }
+  .reason { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
+  .topic { font-size: 0.9rem; margin-bottom: 0.35rem; }
+  .times { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.35rem; font-variant-numeric: tabular-nums; }
+  .files { font-size: 0.78rem; color: var(--muted); font-family: ui-monospace, monospace; }
+  .empty { color: var(--muted); text-align: center; padding: 2rem 0; }
+  .selection-bar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 0.75rem 1.25rem;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+  }
+  .selection-bar.hidden { display: none; }
+  .selection-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .selection-count { font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
+  .selection-bar label { font-size: 0.8rem; display: flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+  #command-output {
+    flex: 1;
+    min-width: 240px;
+    font-family: ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.4rem 0.5rem;
+  }
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+  .selection-bar button {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .selection-bar button.primary {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Session Consolidation Viewer</h1>
+  <div class="subtitle">Load a report produced by <code>session-consolidation report --out report.json</code></div>
+
+  <div class="loader">
+    Drop a report JSON file below, or
+    <div><input type="file" id="file-input" accept="application/json,.json"></div>
+  </div>
+
+  <div id="summary" class="summary"></div>
+
+  <div id="toolbar" class="toolbar" style="display:none">
+    <div class="group">
+      <label><input type="checkbox" class="tier-filter" value="safe_to_archive" checked> Safe to archive</label>
+      <label><input type="checkbox" class="tier-filter" value="needs_a_decision" checked> Needs a decision</label>
+      <label><input type="checkbox" class="tier-filter" value="keep_as_is" checked> Keep as-is</label>
+    </div>
+    <div class="group">
+      <label for="sort-select">Sort</label>
+      <select id="sort-select">
+        <option value="end_desc">Last accessed, newest first</option>
+        <option value="end_asc">Last accessed, oldest first</option>
+        <option value="start_desc">Opened, newest first</option>
+        <option value="start_asc">Opened, oldest first</option>
+        <option value="duration_desc">Duration, longest first</option>
+        <option value="duration_asc">Duration, shortest first</option>
+      </select>
+    </div>
+    <div class="buttons">
+      <button id="select-all" type="button">Select all visible</button>
+      <button id="select-safe" type="button">Select safe-to-archive</button>
+    </div>
+  </div>
+
+  <div id="clusters"></div>
+  <div id="empty" class="empty">No report loaded yet.</div>
+</div>
+
+<div id="selection-bar" class="selection-bar hidden">
+  <div class="selection-inner">
+    <span class="selection-count" id="selection-count">0 selected</span>
+    <label><input type="checkbox" id="include-yes"> actually move files (--yes)</label>
+    <input type="text" id="command-output" readonly>
+    <button id="copy-command" class="primary" type="button">Copy command</button>
+    <button id="clear-selection" type="button">Clear</button>
+  </div>
+</div>
+
+<script>
+  const TIER_LABEL = {
+    safe_to_archive: "Safe to archive",
+    needs_a_decision: "Needs a decision",
+    keep_as_is: "Keep as-is",
+  };
+
+  let currentReport = null;
+  let reportFileName = "report.json";
+  const selectedIds = new Set();
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str == null ? "" : String(str);
+    return div.innerHTML;
+  }
+
+  // Sessions have no stored title (that's a claude.ai/code product feature, not
+  // present in local transcripts) -- this derives the best available stand-in
+  // from the raw first message: collapse whitespace so a short first line
+  // doesn't waste the budget, drop a conversational filler opener, and cut at
+  // a word boundary instead of mid-word.
+  const TOPIC_FILLER = /^(ok|okay|hi|hey|hello|so|well|alright|great|thanks)[,.!]?\s+/i;
+
+  function deriveTopic(message, maxLen) {
+    if (!message) return "(no topic captured)";
+    let text = message.replace(/\s+/g, " ").trim().replace(TOPIC_FILLER, "");
+    if (!text) return "(no topic captured)";
+    if (text.length <= maxLen) return text;
+    const cut = text.slice(0, maxLen);
+    const lastSpace = cut.lastIndexOf(" ");
+    return (lastSpace > maxLen * 0.4 ? cut.slice(0, lastSpace) : cut).trim() + "…";
+  }
+
+  function mostRecentSession(cluster) {
+    return cluster.sessions.reduce((best, s) => {
+      if (!best) return s;
+      return (s.end_time || "") > (best.end_time || "") ? s : best;
+    }, null);
+  }
+
+  function durationMs(sess) {
+    const start = sess.start_time ? Date.parse(sess.start_time) : NaN;
+    const end = sess.end_time ? Date.parse(sess.end_time) : NaN;
+    if (isNaN(start) || isNaN(end)) return null;
+    return Math.max(0, end - start);
+  }
+
+  function formatDuration(ms) {
+    if (ms == null) return null;
+    const totalMin = Math.round(ms / 60000);
+    if (totalMin < 1) return "<1m";
+    if (totalMin < 60) return `${totalMin}m`;
+    const h = Math.floor(totalMin / 60), m = totalMin % 60;
+    if (h < 24) return m ? `${h}h ${m}m` : `${h}h`;
+    const d = Math.floor(h / 24), rh = h % 24;
+    return rh ? `${d}d ${rh}h` : `${d}d`;
+  }
+
+  function sortValue(sess, mode) {
+    if (mode === "duration_asc" || mode === "duration_desc") {
+      const ms = durationMs(sess);
+      return ms == null ? -1 : ms;
+    }
+    if (mode === "start_desc" || mode === "start_asc") return sess.start_time || "";
+    return sess.end_time || "";
+  }
+
+  function sortDirection(mode) {
+    return mode.endsWith("_asc") ? 1 : -1;
+  }
+
+  function compareByMode(a, b, mode) {
+    const dir = sortDirection(mode);
+    const aVal = sortValue(a, mode), bVal = sortValue(b, mode);
+    return aVal < bVal ? -dir : aVal > bVal ? dir : 0;
+  }
+
+  function clusterRepresentativeSession(cluster, mode) {
+    return cluster.sessions.reduce((best, s) => {
+      if (!best) return s;
+      return compareByMode(s, best, mode) < 0 ? s : best;
+    }, null);
+  }
+
+  function currentFilters() {
+    return new Set(
+      Array.from(document.querySelectorAll(".tier-filter:checked")).map(el => el.value)
+    );
+  }
+
+  function renderSummary(report) {
+    const s = report.summary;
+    document.getElementById("summary").innerHTML = `
+      <div class="stat"><b>${s.total_sessions}</b>sessions</div>
+      <div class="stat"><b>${s.total_clusters}</b>clusters</div>
+      <div class="stat safe"><b>${s.safe_to_archive}</b>${TIER_LABEL.safe_to_archive}</div>
+      <div class="stat decision"><b>${s.needs_a_decision}</b>${TIER_LABEL.needs_a_decision}</div>
+      <div class="stat keep"><b>${s.keep_as_is}</b>${TIER_LABEL.keep_as_is}</div>
+    `;
+  }
+
+  function renderClusters() {
+    if (!currentReport) return;
+
+    const mode = document.getElementById("sort-select").value;
+    const activeTiers = currentFilters();
+
+    const clustersEl = document.getElementById("clusters");
+    clustersEl.innerHTML = "";
+
+    const clusters = [...currentReport.clusters].sort((a, b) => {
+      const repA = clusterRepresentativeSession(a, mode);
+      const repB = clusterRepresentativeSession(b, mode);
+      return compareByMode(repA, repB, mode);
+    });
+
+    for (const cluster of clusters) {
+      const visibleSessions = cluster.sessions.filter(s => activeTiers.has(s.tier));
+      if (visibleSessions.length === 0) continue;
+
+      const details = document.createElement("details");
+      details.className = "cluster";
+      details.open = cluster.sessions.some(sess => sess.tier !== "keep_as_is");
+
+      const topicSession = mostRecentSession(cluster);
+      const topic = deriveTopic(topicSession && topicSession.first_user_message, 90);
+
+      const summary = document.createElement("summary");
+      summary.innerHTML = `
+        <span>
+          <div class="cluster-title">${escapeHtml(topic)}</div>
+          <div class="cluster-path">${escapeHtml(cluster.project_dir || "(unknown project)")}</div>
+        </span>
+        <span class="cluster-meta">${visibleSessions.length}/${cluster.session_count} shown</span>
+      `;
+      details.appendChild(summary);
+
+      const sessionsEl = document.createElement("div");
+      sessionsEl.className = "sessions";
+
+      const sorted = [...cluster.sessions].sort((a, b) => compareByMode(a, b, mode));
+
+      for (const sess of sorted) {
+        const row = document.createElement("div");
+        row.className = "session" + (activeTiers.has(sess.tier) ? "" : " hidden-by-filter");
+        const topicLine = deriveTopic(sess.first_user_message, 160);
+        const files = (sess.files_touched || []).slice(0, 6).join(", ");
+        const duration = formatDuration(durationMs(sess));
+        row.innerHTML = `
+          <div class="session-select">
+            <input type="checkbox" data-session-id="${escapeHtml(sess.session_id)}" ${selectedIds.has(sess.session_id) ? "checked" : ""}>
+          </div>
+          <div class="session-body">
+            <div class="session-head">
+              <span class="badge ${sess.tier}">${TIER_LABEL[sess.tier] || sess.tier}</span>
+              <span class="classification">${escapeHtml(sess.classification)}</span>
+              <span class="session-id">${escapeHtml(sess.session_id)}</span>
+            </div>
+            <div class="reason">${escapeHtml(sess.reason)}</div>
+            <div class="topic">&ldquo;${escapeHtml(topicLine)}&rdquo;</div>
+            <div class="times">opened ${escapeHtml(sess.start_time || "?")} &middot; last active ${escapeHtml(sess.end_time || "?")}${duration ? ` &middot; ${escapeHtml(duration)} duration` : ""}</div>
+            ${files ? `<div class="files">${escapeHtml(files)}${sess.files_touched.length > 6 ? " …" : ""}</div>` : ""}
+          </div>
+        `;
+        row.querySelector("input[type=checkbox]").addEventListener("change", (e) => {
+          if (e.target.checked) selectedIds.add(sess.session_id);
+          else selectedIds.delete(sess.session_id);
+          updateSelectionBar();
+        });
+        sessionsEl.appendChild(row);
+      }
+
+      details.appendChild(sessionsEl);
+      clustersEl.appendChild(details);
+    }
+  }
+
+  function updateSelectionBar() {
+    const bar = document.getElementById("selection-bar");
+    const count = selectedIds.size;
+    document.getElementById("selection-count").textContent = `${count} selected`;
+    bar.classList.toggle("hidden", count === 0);
+    if (count === 0) return;
+
+    const includeYes = document.getElementById("include-yes").checked;
+    const ids = Array.from(selectedIds).join(" ");
+    const cmd = `python3 -m session_consolidation.cli archive --report ${reportFileName} --approve ${ids}${includeYes ? " --yes" : ""}`;
+    document.getElementById("command-output").value = cmd;
+  }
+
+  function render(report, fileName) {
+    currentReport = report;
+    if (fileName) reportFileName = fileName;
+    document.getElementById("empty").style.display = "none";
+    document.getElementById("toolbar").style.display = "flex";
+    renderSummary(report);
+    renderClusters();
+    updateSelectionBar();
+  }
+
+  function loadFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const report = JSON.parse(reader.result);
+        selectedIds.clear();
+        render(report, file.name || "report.json");
+      } catch (e) {
+        alert("Could not parse this file as a session-consolidation report: " + e.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  document.getElementById("file-input").addEventListener("change", (e) => {
+    if (e.target.files[0]) loadFile(e.target.files[0]);
+  });
+
+  document.body.addEventListener("dragover", (e) => e.preventDefault());
+  document.body.addEventListener("drop", (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+  });
+
+  document.querySelectorAll(".tier-filter").forEach(el => el.addEventListener("change", renderClusters));
+  document.getElementById("sort-select").addEventListener("change", renderClusters);
+  document.getElementById("include-yes").addEventListener("change", updateSelectionBar);
+
+  document.getElementById("select-all").addEventListener("click", () => {
+    document.querySelectorAll('.session:not(.hidden-by-filter) input[data-session-id]').forEach(input => {
+      input.checked = true;
+      selectedIds.add(input.dataset.sessionId);
+    });
+    updateSelectionBar();
+  });
+
+  document.getElementById("select-safe").addEventListener("click", () => {
+    document.querySelectorAll('.session:not(.hidden-by-filter) input[data-session-id]').forEach(input => {
+      const sessionId = input.dataset.sessionId;
+      const sess = (currentReport.clusters.flatMap(c => c.sessions)).find(s => s.session_id === sessionId);
+      if (sess && sess.tier === "safe_to_archive") {
+        input.checked = true;
+        selectedIds.add(sessionId);
+      }
+    });
+    updateSelectionBar();
+  });
+
+  document.getElementById("clear-selection").addEventListener("click", () => {
+    selectedIds.clear();
+    document.querySelectorAll('input[data-session-id]').forEach(input => input.checked = false);
+    updateSelectionBar();
+  });
+
+  document.getElementById("copy-command").addEventListener("click", () => {
+    const output = document.getElementById("command-output");
+    output.select();
+    navigator.clipboard?.writeText(output.value).catch(() => document.execCommand("copy"));
+  });
+</script>
+</body>
+</html>
