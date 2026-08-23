@@ -1,2 +1,0 @@
-"""Familiar Places data pipeline."""
-
