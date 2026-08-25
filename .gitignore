@@ -172,3 +172,9 @@ node_modules/
 
 # Claude Code — local worktrees / machine-specific (do not commit)
 .claude/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/

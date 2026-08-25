@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "adventures_in_ai",
+  "project_id": "04f503d0-cc06-4d12-b6a6-7959b83826f0"
+}
