@@ -97,8 +97,13 @@ Reviews everything a repo presents across four audience journeys:
 - Collect the doc surface: README, CONTRIBUTING, INSTALL/SETUP, CHANGELOG,
   LICENSE, the `docs/` tree (recursively), CLAUDE.md/AGENTS.md, issue/PR
   templates, ADRs, any index file already inside `docs/`.
-- Read `reference/doc-package-rubric.md` — the four-journey checklist and the
-  hygiene checks.
+- Read `reference/doc-package-rubric.md` — levels and trigger rules (from the
+  Doc Watson standard), the concerns grouped by journey, and the hygiene
+  checks.
+- Pick the repo's level (0–3) and note which triggers apply, with the
+  evidence for each. If one unknown fact would change the level (is anyone
+  outside the owner invited to contribute? does anything page someone?),
+  ask that one question rather than guessing.
 
 ### Step 1 — Map
 
@@ -109,15 +114,17 @@ links to nothing).
 
 ### Step 2 — Score
 
-Per `reference/doc-package-rubric.md`: a completeness score per journey (does
-it have an adequate, current, non-duplicated entry point?) plus an overall
-hygiene score (dedup, staleness, broken links, navigability). Present as a
-table: journey, score, entry point(s), gap.
+Per `reference/doc-package-rubric.md`: score each concern 0 / 1 / 2 / n/a
+against the level and triggers, then roll up each journey as points earned
+over points available. Present as a table: journey, result (e.g. `Use 5/8`),
+entry point(s), gap. Lead with the level and why. Never mark a concern the
+level doesn't require as a gap.
 
 ### Step 3 — Offer changes
 
-Same severity tiers as Mode A. Typical findings: a journey with no entry
-point at all (critical), two files claiming to be the same canonical doc
+Same severity tiers as Mode A. Typical findings: an applicable concern scored
+0 that leaves a journey with no entry point at all (critical), two files
+claiming to be the same canonical doc
 (major), a stale artifact still committed — a closed PR's review notes, an
 old session snapshot (major), a missing index when there are 10+ docs in one
 directory (minor-to-major depending on size), broken internal links (minor).
@@ -134,8 +141,9 @@ document; one "yes" shouldn't hide how many files that covers.
 ## Output
 
 End with: the per-mode score table, findings grouped by severity with the
-proposed fix for each, which fixes were applied, and — Mode B only — a
-one-line per-journey verdict ("Use: solid. Extend: no entry point at all.").
+proposed fix for each, which fixes were applied, and — Mode B only — the
+selected level and a one-line per-journey verdict ("Use: solid. Extend: no
+entry point at all.").
 
 ## Behavior rules
 
