@@ -43,8 +43,12 @@ apply only on confirmation.
 - **Mode A — single document** (`skills/user/review-document/reference/rubric.md`):
   one report/proposal/memo/README/spec, scored on 6 axes.
 - **Mode B — doc package** (`skills/user/review-document/reference/doc-package-rubric.md`):
-  a whole repo's documentation surface, scored against 4 audience journeys
+  a whole repo's documentation surface. Picks a level (0–3) and applies
+  trigger rules from the [Doc Watson standard](https://github.com/dhk/doc-watson)
+  first, then scores its 18 concerns 0/1/2/n/a grouped into 4 audience journeys
   (encounter/understand/use/extend-maintain-develop) plus a hygiene pass. The
+  level table, triggers and concern list are a copy — re-copy them when the
+  standard's version changes. The
   hygiene checks (duplicate canonical docs, stale committed artifacts, broken
   links, missing index, drifted numbers) are derived directly from the
   `dhk/skill-map` docs cleanup done in this session (see PR #15 there).
