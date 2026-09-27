@@ -16,12 +16,29 @@ changes, re-copy the level table, trigger rules, and concern list.
 A repo is only scored on what its level and triggers require. Choose the
 smallest level the evidence supports and say why in one line.
 
-| Level | Typical repository | Required baseline |
-|---|---|---|
-| 0 | Experiment, personal script, or archive | Purpose, status, quick usage, licence posture |
-| 1 | Active early tool or library | Standard README, truthful setup/usage, licence posture, guides when non-trivial, agent memory when revisited |
-| 2 | Mature system or service | Level 1 plus architecture, ownership, operations/install detail, major ADRs, runbooks only when alerts/on-call exist |
-| 3 | Credible public OSS with outside consumers | Level 2 public surface plus licence file and contribution/security/community material as participation requires |
+Typical repositories: Level 0 an experiment, personal script, or archive;
+Level 1 an active early tool or library; Level 2 a mature system or service;
+Level 3 credible public OSS with outside consumers. What each level requires:
+
+| Concern | Level 0 — experiment | Level 1 — active early | Level 2 — mature system | Level 3 — public OSS |
+|---|---|---|---|---|
+| README | Minimal | Standard | Standard | Public-facing |
+| Licence posture | Explicit | Explicit | Explicit | Licence file required |
+| Install | One truthful path | Reliable common path | Complete supported paths | Published, direct/source, careful paths where available |
+| Usage | One example | First successful outcome | Core workflows | User guides and examples |
+| Status and limits | Required | Required | Required | Required, including support posture |
+| Repository map | If non-obvious | If multi-part | Required | Required |
+| “So what” | One sentence | Required | Required | Required |
+| Architecture | If helpful | One useful context/flow | Context and containers | As needed; avoid code mirrors |
+| Security/privacy | Risks named | Data, credentials, permissions, side effects | Policy and operating boundaries | Public reporting and support posture |
+| Ownership/contribution | Not normally | When others participate | Ownership required | Contribution path required |
+| Operations | Not normally | For real operational needs | Deployment/recovery; triggered runbooks | For hosted surfaces |
+| Decisions | Not normally | For a real tradeoff | Major ADRs | Major ADRs |
+| Machine contract | If parsed | If parsed | If API/schema exists | If applicable |
+| Agent memory | If agents return | If agents return | If agents return | If agents return |
+
+Levels are baselines, not cumulative. A triggered need overrides the typical
+row.
 
 ### Trigger rules
 
