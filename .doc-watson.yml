@@ -1,0 +1,61 @@
+# Doc Watson enrollment: this repository's documentation contract.
+# Schema: https://github.com/dhk/doc-watson/blob/main/schemas/enrollment.schema.json
+# Level, audience, trigger decisions and exemptions are owner-declared facts.
+# Tools may question them; only the owner changes them.
+# Declared by the owner 2026-09-28 from the baseline audit's drafts.
+
+schema: 1
+standard: 0.3.0 # standard version last audited against
+level: 1 # declared by the owner, 2026-09-28
+audience: The owner, and agents that install or extend the skills for the owner.
+
+# One decision per trigger rule, each with its reason.
+triggers:
+  install-guide:
+    applies: true
+    reason: Skills install by curl one-shot or manual copy (skills/redpen/INSTALL.md, skills/user/run-analytics/INSTALL.md) or by symlink (CLAUDE.md:18-25); more than one path.
+  user-guides:
+    applies: false
+    reason: Each runnable component's README reaches first use with a compact example (e.g. session-consolidation/README.md:25-49).
+  architecture:
+    applies: false
+    reason: A collection with no shared runtime; the one multi-part tool documents its layout in session-consolidation/README.md:11-23.
+  adrs:
+    applies: false
+    reason: No repository-wide decision with real alternatives; design notes live in component docs (docs/session-consolidation-design.md).
+  agent-memory:
+    applies: true
+    reason: Agents return across sessions; CLAUDE.md and AGENTS.md hold context and Beads workflow rules.
+  machine-contracts:
+    applies: true
+    reason: Claude Code parses SKILL.md frontmatter (skills/*/SKILL.md); Chrome parses tab-tamer/manifest.json and server-location*/manifest.json.
+  codeowners:
+    applies: false
+    reason: One owner; .github/CODEOWNERS lists only @dhk and is documentation, not a merge gate (.github/CODEOWNERS:1-5).
+  contributing:
+    applies: false
+    reason: Outside contributions are not invited (owner, 2026-09-28).
+  governance:
+    applies: false
+    reason: One maintainer (.github/CODEOWNERS:5).
+  roadmap:
+    applies: false
+    reason: No public audience asking for direction; README.md:21-27 is an owner to-do list and GitHub issues track work.
+  runbooks:
+    applies: false
+    reason: Nothing pages anyone; number-finder (number-finder/Procfile) is not hosted (owner, 2026-09-28).
+  handover:
+    applies: false
+    reason: No other party operates anything in this repository.
+
+# Concerns deliberately not met. Truthfulness, hygiene and duplication, and
+# maintenance and verification cannot be exempted.
+exemptions: []
+
+last_audit:
+  revision: "59acf86"
+  date: "2026-09-28"
+  record: https://github.com/dhk/doc-watson-audit/tree/main/audits/dhk/adventures-in-ai/2026-09-28
+
+# What a sweep may do on divergence: issue-and-draft-pr, issue, or report.
+on_drift: issue-and-draft-pr
