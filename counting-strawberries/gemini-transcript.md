@@ -1,6 +1,6 @@
 # This is the unedited transcript of my gemini session
 If you want to reproduce my steps exactly,
-* [Start a session with gemini](www.gemini.google.com)
+* [Start a session with gemini](https://www.gemini.google.com)
 * copy the `**User:**` content and paste it in, one section at a time
 ---
 **User:** how many Rs in the word "strawberry"
