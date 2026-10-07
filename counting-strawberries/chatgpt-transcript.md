@@ -1,6 +1,6 @@
 # This is the unedited transcript of my chatgpt session
 If you want to reproduce my steps exactly,
-* [Start a session with chatgpt](www.chatgpt.com)
+* [Start a session with chatgpt](https://www.chatgpt.com)
 * copy the `**User:**` content and paste it in, one section at a time
 ---
 **User:** How many Rs in the word "strawberry"?

@@ -1,6 +1,6 @@
 # This is the unedited transcript of my claude session
 If you want to reproduce my steps exactly,
-* [Start a session with claude](www.claude.ai)
+* [Start a session with claude](https://www.claude.ai)
 * copy the `## Human` content and paste it in, one section at a time
 ---
 # Conversation Transcript

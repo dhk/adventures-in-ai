@@ -33,8 +33,8 @@ triggers:
     applies: false
     reason: One owner; .github/CODEOWNERS lists only @dhk and is documentation, not a merge gate (.github/CODEOWNERS:1-5).
   contributing:
-    applies: false
-    reason: Outside contributions are not invited (owner, 2026-09-28).
+    applies: true
+    reason: The repository is public and outside contributions are invited; every change merges only with the owner\'s approval (owner, 2026-10-07). CONTRIBUTING.md states this.
   governance:
     applies: false
     reason: One maintainer (.github/CODEOWNERS:5).
