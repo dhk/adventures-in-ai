@@ -178,3 +178,6 @@ node_modules/
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Session context notes (save-context skill) — local only
+.scratch/
