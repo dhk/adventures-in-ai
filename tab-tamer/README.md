@@ -80,7 +80,7 @@ No host permissions — Tab Tamer never reads page content.
 
 ## Publishing (Chrome Web Store)
 
-> Not yet published. This section tracks what's needed.
+> Published: [Tab Tamer on the Chrome Web Store](https://chromewebstore.google.com/detail/tab-tamer/nmkphanafkfffgbknccplapekachjnma). The checklist below records what the first submission needed.
 
 - [ ] Final icon assets (professional versions of 16, 48, 128px)
 - [ ] Privacy policy page (required by Google)
